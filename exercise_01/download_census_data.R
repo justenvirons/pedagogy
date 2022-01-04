@@ -4,13 +4,20 @@
 # geometries with attribute data.
 #
 # Author: C. Scott Smith 
-# Organization: Cook County Department of Public Health
-# Contact Email: christopher.smith@cookcountyhealth.org
+# Organization: DePaul University
+# Contact Email: c.scott.smith@depaul.edu
 # 
 # Date Created: 2/28/2020 
 # Last Updated: 2/28/2020 
 
-# Activate packages
+# Install (if necessary) and activate packages
+
+# install.packages(c("censusapi", 
+#                     "tigris",
+#                     "tidyverse",
+#                     "dplyr",
+#                     "sf")) 
+
 library(censusapi)
 library(tigris) 
 library(tidyverse)
@@ -34,6 +41,9 @@ CookCounty_geom <- IL_Counties_geom %>%
 
 # Use censusapi package to retrieve attribute data from the different datasets
 # Use below to list all census apis available
+# If you don't have one, request a data key using following link 
+# https://api.census.gov/data/key_signup.html
+
 apis <- listCensusApis()
 View(apis)
 
