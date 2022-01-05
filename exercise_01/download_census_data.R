@@ -48,6 +48,8 @@ apis <- listCensusApis()
 View(apis)
 
 # Download complete list of ACS 5-year tables
+# source api: https://api.census.gov/data/2019/acs/acs5
+
 ayear <- "2019"
 acs_groups_tables <- listCensusMetadata(
   name = "acs/acs5",
