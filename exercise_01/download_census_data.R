@@ -12,11 +12,11 @@
 
 # Install (if necessary) and activate packages
 
-# install.packages(c("censusapi", 
+# install.packages(c("censusapi",
 #                     "tigris",
 #                     "tidyverse",
 #                     "dplyr",
-#                     "sf")) 
+#                     "sf"))
 
 library(censusapi)
 library(tigris) 
@@ -29,6 +29,8 @@ library(sf)
 IL_Counties_geom <- counties("IL", cb=TRUE, class="sf")
 IL_Tracts_geom <- tracts("IL", cb=TRUE, class="sf")
 IL_Places_geom <- places("IL", cb=TRUE, class="sf")
+
+plot(IL_Places_geom["GEOID"])
 
 # Project to UTM North Zone 16
 IL_Counties_geom <- st_transform(IL_Counties_geom, crs = 26916)
