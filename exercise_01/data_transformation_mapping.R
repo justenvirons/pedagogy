@@ -24,6 +24,7 @@ library(leaflet)
 # Download census block, census tract and place geographies
 # cb = cartographic boundary
 # Project both to UTM North Zone 16
+# https://geocompr.robinlovelace.net/reproj-geo-data.html
 cc_county_geom <- counties("IL", cb=TRUE, class="sf", year="2019") %>% filter(COUNTYFP=="031") %>% st_transform(crs = 26916)
 cc_tracts_geom <- tracts("IL", cb=TRUE, class="sf", year="2019") %>% filter(COUNTYFP=="031") %>% st_transform(crs = 26916)
 cc_places_geom <- places("IL", cb=TRUE, class="sf", year="2019") %>% st_transform(crs = 26916)
@@ -32,7 +33,8 @@ cc_places_geom <- places("IL", cb=TRUE, class="sf", year="2019") %>% st_transfor
 # Use below to list all census apis available
 apis <- listCensusApis()
 
-# Download complete list of ACS 5-year subject tables
+# Download complete list of ACS 5-year detailed tables
+# https://www.census.gov/programs-surveys/acs
 ayear <- "2019"
 acs_groups_tables <- listCensusMetadata(
   name = "acs/acs5",
@@ -80,6 +82,7 @@ acs_groups_vars <- acs_groups_vars %>%
 assign(paste("acs_table_vars_",agroup,"_",ayear, sep=""),acs_groups_vars)
 rm(acs_groups_vars)
 
+# download data for all variables in listed tables
 grouplist <- c("B01001","B03002")
 yearlist <- c(2019)
 for (agroup in grouplist) {
@@ -146,6 +149,10 @@ places_2021_tract_measures <- places_2021_tract %>%
   group_by(Category,Measure, MeasureId) %>% 
   summarise()
 
+write_csv(cc_places_2021_tract, "cc_places_2021_tract.csv")
+
+# now for some data wrangling
+# https://github.com/rstudio/cheatsheets/blob/main/tidyr.pdf
 cc_places_2021_tract_sub <- cc_places_2021_tract %>% 
   filter(MeasureId=="CSMOKING" | 
            MeasureId=="CANCER" | 
@@ -165,7 +172,7 @@ cc_tracts_geom_census_places <- cc_tracts_geom_census %>%
 # https://jtr13.github.io/cc19/different-ways-of-plotting-u-s-map-in-r.html
 
 # create basic legend with five categories
-pal <- brewer.pal(5, "OrRd")
+pal <- colbrewer.pal(5, "OrRd")
 
 plot(cc_tracts_geom_census_places["PopDep_pct"], 
      main = "% Dependent Population", 
@@ -173,6 +180,10 @@ plot(cc_tracts_geom_census_places["PopDep_pct"],
      pal = pal)
 
 # create interactive map in leaflet
+# https://rstudio.github.io/leaflet/colors.html
+# https://rstudio.github.io/leaflet/choropleths.html
+# https://www.r-graph-gallery.com/179-show-a-map-with-leaflet-r.html
+
 pal_fun <- colorQuantile("RdBu", NULL, n = 5, reverse = TRUE) # creates color pattern for all maps
 
 # create descriptive statistics pop-up
@@ -181,17 +192,18 @@ tract_popup <- paste("<strong>Tract #: </strong>", GEOID,
                      "<br>Population: ", round(TotPop,digits=2),"<br>",
                      "% 18 Under: ", round(Pop18Un_pct,digits=2),"<br>",
                      "% 65 Older: ", round(Pop65Pl_pct,digits=2),"<br>",
+                     "Cancer Rate: ", round(CANCER,digits=2),"<br>",
                      sep="")
 
 leaflet(cc_tracts_geom_census_places) %>% 
   addPolygons(stroke = FALSE, 
-              fillColor = ~pal_fun(PopDep_pct), 
+              fillColor = ~pal_fun(DIABETES), 
               fillOpacity = 0.5, 
               smoothFactor = 0.5, 
               popup = tract_popup) %>% 
   addTiles() %>% 
   addLegend(pal = pal_fun, 
-            values = PopDep_pct, 
+            values = DIABETES, 
             opacity = 0.7, 
             title = NULL, 
             position = "bottomright") %>% 
