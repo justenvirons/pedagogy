@@ -114,3 +114,34 @@ write_clip(groupvars_B28001_2020)
 write_csv(groupvars_B28001_2020,"C:/Users/scott/Desktop/delete/groupvars_B28001_2019.csv")
 
 
+# Part Two: Create themes, select variables/indicators to highlight -----------------
+
+
+# The following code allows you to download datasets from multiple tables
+grouplist <- c("B01001")
+
+# Download places
+yearlist <- c(2019)
+for (agroup in grouplist) {
+  for (ayear in yearlist) {
+    agroupname = paste("group(",agroup,")",sep="")
+    acs_group <- getCensus(name = "acs/acs5",
+                           vintage = ayear,
+                           vars = c("NAME", agroupname),
+                           region = "zip code tabulation area:*", # tracts
+                           regionin="state:17", # places, counties, not msas
+                           key="8f6a0a83c8a2466e3e018a966846c86412d0bb6e")
+    attach(acs_group)
+    acs_group <- acs_group %>% select(-contains("EA"))
+    acs_group <- acs_group %>% select(-contains("MA"))
+    acs_group <- acs_group %>% select(-contains("GEO_ID"))
+    acs_group <- acs_group %>% select(-contains("M_1"))
+    acs_group <- acs_group %>% select(-contains("M"))
+    acs_group$year<-ayear 
+    acs_group$GEOID_place<-paste0(state,place)
+    assign(paste(agroup,name,ayear,sep="_"),acs_group)
+    rm(acs_group)
+    detach(acs_group)
+  }
+}
+
