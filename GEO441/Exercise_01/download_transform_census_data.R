@@ -27,10 +27,10 @@ library(sf)
 # Part One: Select profile community, download, transform spatial  --------
 # Download  census geographies
 # cb = cartographic boundary
-IL_State_geom <- states(resolution='500k', cb=TRUE, class="sf")
+US_Places_geom <- places(cb=TRUE, class="sf")
+US_State_geom <- states(resolution='500k', cb=TRUE, class="sf")
 IL_Counties_geom <- counties("IL", cb=TRUE, class="sf")
 IL_Tracts_geom <- tracts("IL", cb=TRUE, class="sf")
-IL_Places_geom <- places("US", cb=TRUE, class="sf")
 
 # Project to appropriate UTM zone
 # Project to UTM North Zone 16
@@ -116,20 +116,21 @@ write_csv(groupvars_B28001_2020,"C:/Users/scott/Desktop/delete/groupvars_B28001_
 
 # Part Two: Create themes, select variables/indicators to highlight -----------------
 
-
 # The following code allows you to download datasets from multiple tables
 grouplist <- c("B01001")
 
-# Download places
-yearlist <- c(2019)
+# Download data for tracts
+ayear = "2020"
+astateFIPS = "17" # state in which place is located
+acountyFIPS = "031" # county in which place is located
+
 for (agroup in grouplist) {
-  for (ayear in yearlist) {
     agroupname = paste("group(",agroup,")",sep="")
     acs_group <- getCensus(name = "acs/acs5",
                            vintage = ayear,
                            vars = c("NAME", agroupname),
-                           region = "zip code tabulation area:*", # tracts
-                           regionin="state:17", # places, counties, not msas
+                           region = "tract:*", 
+                           regionin= paste0("state:",astateFIPS,"+county:",acountyFIPS), 
                            key="8f6a0a83c8a2466e3e018a966846c86412d0bb6e")
     attach(acs_group)
     acs_group <- acs_group %>% select(-contains("EA"))
@@ -138,10 +139,11 @@ for (agroup in grouplist) {
     acs_group <- acs_group %>% select(-contains("M_1"))
     acs_group <- acs_group %>% select(-contains("M"))
     acs_group$year<-ayear 
-    acs_group$GEOID_place<-paste0(state,place)
-    assign(paste(agroup,name,ayear,sep="_"),acs_group)
+    acs_group$GEOID<-paste0(state,county,tract)
+    assign(paste(agroup,ayear,sep="_"),acs_group)
     rm(acs_group)
     detach(acs_group)
-  }
 }
+
+
 
