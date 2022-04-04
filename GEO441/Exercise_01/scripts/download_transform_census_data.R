@@ -1,14 +1,17 @@
-# Name: Census ACS and TIGER/Line file downloads
-
-# Purpose: Downloads TIGER/Line files and ACS attribute data. Joins TIGER/Line
-# geometries with attribute data.
-#
-# Author: C. Scott Smith 
-# Organization: DePaul University
-# Contact Email: c.scott.smith@depaul.edu
-# 
-# Date Created: 2/28/2020 
-# Last Updated: 2/28/2020 
+## ---------------------------
+##
+## Script name: 
+## Purpose of script:
+## Author: C. Scott Smith, PhD AICP
+## Date Created: 2022-03-30
+## Date Last Updated: 2022-03-30
+## Email: c.scott.smith@depaul.edu
+## ---------------------------
+##
+## Notes:
+##   
+##
+## ---------------------------
 
 # Install (if necessary) and activate packages
 
@@ -18,18 +21,17 @@
 #                     "dplyr",
 #                     "sf"))
 
-library(censusapi)
-library(tigris) 
+library(censusapi) # used to access census attribute data
+library(tigris)  # used to access census geometries 
 library(tidyverse)
 library(dplyr) 
-library(sf) 
+library(sf)
+library(clipr)
 
 # Part One: Select profile community, download, transform spatial  --------
 # Download  census geographies
 # cb = cartographic boundary
 US_Places_geom <- places(cb=TRUE, class="sf")
-US_State_geom <- states(resolution='500k', cb=TRUE, class="sf")
-IL_Counties_geom <- counties("IL", cb=TRUE, class="sf")
 IL_Tracts_geom <- tracts("IL", cb=TRUE, class="sf")
 
 # Project to appropriate UTM zone
@@ -113,7 +115,6 @@ rm(acs_groups_vars)
 write_clip(groupvars_B28001_2020)
 write_csv(groupvars_B28001_2020,"C:/Users/scott/Desktop/delete/groupvars_B28001_2019.csv")
 
-
 # Part Two: Create themes, select variables/indicators to highlight -----------------
 
 # The following code allows you to download datasets from multiple tables
@@ -121,7 +122,7 @@ grouplist <- c("B01001")
 
 # Download data for tracts
 ayear = "2020"
-astateFIPS = "17" # state in which place is located
+astateFIPS = "*" # state in which place is located
 acountyFIPS = "031" # county in which place is located
 
 for (agroup in grouplist) {
@@ -145,5 +146,34 @@ for (agroup in grouplist) {
     detach(acs_group)
 }
 
+for (agroup in grouplist) {
+  agroupname = paste("group(",agroup,")",sep="")
+  acs_group <- getCensus(name = "acs/acs5",
+                         vintage = ayear,
+                         vars = c("NAME", agroupname),
+                         region = "place:*", 
+                         regionin= paste0("state:",astateFIPS), 
+                         key="8f6a0a83c8a2466e3e018a966846c86412d0bb6e")
+  attach(acs_group)
+  acs_group <- acs_group %>% select(-contains("EA"))
+  acs_group <- acs_group %>% select(-contains("MA"))
+  acs_group <- acs_group %>% select(-contains("GEO_ID"))
+  acs_group <- acs_group %>% select(-contains("M_1"))
+  acs_group <- acs_group %>% select(-contains("M"))
+  acs_group$year<-ayear 
+  assign(paste(agroup,ayear,sep="_"),acs_group)
+  rm(acs_group)
+  detach(acs_group)
+}
 
+# 
+population_by_place_2020 <- B01001_2020 %>%
+  mutate(GEOID = paste0(state,place)) %>%
+  select(state, place, GEOID, pop_2020 = B01001_001E) %>%
+  left_join(US_Places_geom, by="GEOID") %>%
+  st_as_sf() %>%
+  st_drop_geometry() %>%
+  filter(pop_2020>=100000)
 
+write_clip(population_by_place_2020)
+  
