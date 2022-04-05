@@ -1,4 +1,4 @@
-## script description ------------------------------------------------------
+## Script header ------------------------------------------------------
 
 ## Script name: 
 ## Purpose of script:
@@ -10,7 +10,7 @@
 ## Notes: Use this script to create indicator shapefile by census tract and other
 ## feature layers to create maps for community health atlas
 
-# install and activate R packages -----------------------------------------
+# Install and activate R packages -----------------------------------------
 
 # install.packages(c("censusapi",
 #                    "tigris",
@@ -28,13 +28,21 @@ library(sf) # used for processing, transforming spatial features
 library(clipr) # used for copying tables to clipboard
 library(units) # used for setting units in feature layers
 
-# assign census key code
-# This is my personal key code but feel free to request your own via this URL
+
+
+# Assign census key code variable -----------------------------------------
+
+# Note that the key below is my personal key code. Feel free to use this key for
+# Exercise #1. However, I please request your own census API key code via URL
+# below for future exercises.
 # https://api.census.gov/data/key_signup.html
+
 akey = "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
 
-# download and process census geographies ----------------------
+# FYI. To download a comprehensive list of census APIs, uncomment and run
+# apis <- listCensusApis()
 
+# Download and process census geographies ----------------------
 # identify appropriate NAD 83 UTM zone and projected coordinate system using the World
 # UTM Grid in ArcGIS Pro and the https://spatialreference.org website.
 
@@ -76,7 +84,7 @@ plot(state_geom['geoid_state'])
 plot(place_geom['geoid_place'])
 plot(tracts_geom['geoid_tract'])
 
-# select and download table variables and data ---------------------------------
+# Select and download table variables and data ---------------------------------
 
 # download complete list of variables for selected tables (use to identify
 # particular indicators you'd like to include in atlas)
@@ -166,12 +174,12 @@ acs_group[acs_group == -666666666] <- NA
 assign(paste("indicators_tract", ayear, sep = "_"), acs_group)
 rm(acs_group)
 
-# join indicator data to census tract geometries ---------------
+# Join indicator data to census tract geometries ---------------
 
 indicators_tract_2020_geom <- tracts_geom %>%
   left_join(indicators_tract_2020, by="geoid_tract")
 
-# write census geometries to shapefiles ---------------
+# Write census geographies and indicator layer to shapefiles ---------------
 # revise path name for layers directory if necessary
 
 # START EDIT
