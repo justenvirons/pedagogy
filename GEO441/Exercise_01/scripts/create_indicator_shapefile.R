@@ -7,10 +7,14 @@
 ## Date Last Updated: 2022-03-30
 ## Email: c.scott.smith@depaul.edu
 ##
-## Notes: Use this script to create indicator shapefile by census tract and other
-## feature layers to create maps for community health atlas
+## Notes: Use this script to download census data and create a custom indicator
+## shapefile by census tract. The indicator shapefile will be used in ArcGIS Pro
+## to create maps for your community health atlas and complete GEO 441 exercise #1. 
 
-# Install and activate R packages -----------------------------------------
+## IMPORTANT: Leave script as is aside from code located within "START EDIT" and
+## "END EDIT" tags. Edit those areas as directed.
+
+# Install (if needed) and attach R packages -----------------------------------------
 
 # install.packages(c("censusapi",
 #                    "tigris",
@@ -28,9 +32,7 @@ library(sf) # used for processing, transforming spatial features
 library(clipr) # used for copying tables to clipboard
 library(units) # used for setting units in feature layers
 
-
-
-# Assign census key code variable -----------------------------------------
+# Assign US Census API key code variable -----------------------------------------
 
 # Note that the key below is my personal key code. Feel free to use this key for
 # Exercise #1. However, I please request your own census API key code via URL
@@ -39,10 +41,11 @@ library(units) # used for setting units in feature layers
 
 akey = "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
 
-# FYI. To download a comprehensive list of census APIs, uncomment and run
+# FYI. To download a comprehensive list of census APIs, uncomment and run code
+# on next line.
 # apis <- listCensusApis()
 
-# Download and process census geographies ----------------------
+# Part One: Download and process census geographies ----------------------
 # identify appropriate NAD 83 UTM zone and projected coordinate system using the World
 # UTM Grid in ArcGIS Pro and the https://spatialreference.org website.
 
@@ -79,12 +82,12 @@ tracts_geom <- tracts(state=state_code,
   mutate(tract_sqmi = set_units(st_area(geometry),"mi^2")) %>%
   filter(tract_sqmi > set_units(0.01,"mi^2"))
 
-# plot basic map of place and tracts
+# plot basic map of state, place and census tracts
 plot(state_geom['geoid_state'])
 plot(place_geom['geoid_place'])
 plot(tracts_geom['geoid_tract'])
 
-# Select and download table variables and data ---------------------------------
+# Part Two: Select and download table variables and data ---------------------------------
 
 # download complete list of variables for selected tables (use to identify
 # particular indicators you'd like to include in atlas)
@@ -112,8 +115,10 @@ for(agroup in agrouplist) {
   rm(acs_groups_vars)
 }
 
-# download complete table data for select place (use to examine values and for
-# reporting reference indicator in atlas)
+
+# Part Two: Select indicators from table-specific variable lists ----------
+# Examine values in these tables to be certain that the variables you select are
+# represented as percentages, not counts and that missing values are minimal.
 
 for (agroup in agrouplist) {
     agroupname = paste("group(",agroup,")",sep="")
@@ -137,7 +142,13 @@ for (agroup in agrouplist) {
     rm(acs_group)
 }
 
-# download data by census tract for indicator variables only
+
+# Part Three: Download indicator data and create associated shapefile --------
+# Once you are comfortable with the indicators you’ve selected, modify the lists
+# below with specific variable names ("aindicatorvarlist"). Also rename the
+# variables in the process so they are more intuitive ("aindicatornameslist").
+# Be certain that the variables and corresponding names are in identical order.
+
 # START EDIT
 aindicatorvarlist <- c("S0101_C01_001E",
                        "S0101_C01_034E",
@@ -151,6 +162,8 @@ aindicatornameslist <- c("totalpop",
                          "walked",
                          "fromhome") # rename variables (max length = 8 chars) in order
 # END EDIT
+
+# download the variables by census tract, transform table based on information provided in above lists 
 
 acs_group <- getCensus(
   name = "acs/acs5/subject",
@@ -174,12 +187,12 @@ acs_group[acs_group == -666666666] <- NA
 assign(paste("indicators_tract", ayear, sep = "_"), acs_group)
 rm(acs_group)
 
-# Join indicator data to census tract geometries ---------------
+# Perform an attribute join to attach indicator data to census tract geographies
 
 indicators_tract_2020_geom <- tracts_geom %>%
   left_join(indicators_tract_2020, by="geoid_tract")
 
-# Write census geographies and indicator layer to shapefiles ---------------
+# Write census geographies and indicator layer to shapefiles
 # revise path name for layers directory if necessary
 
 # START EDIT
