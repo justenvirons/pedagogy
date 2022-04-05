@@ -45,7 +45,7 @@ akey = "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
 # on next line.
 # apis <- listCensusApis()
 
-# Part One: Download and process census geographies ----------------------
+# Part One: Download, project spatial data for selected community ----------------------
 # identify appropriate NAD 83 UTM zone and projected coordinate system using the World
 # UTM Grid in ArcGIS Pro and the https://spatialreference.org website.
 
@@ -87,7 +87,7 @@ plot(state_geom['geoid_state'])
 plot(place_geom['geoid_place'])
 plot(tracts_geom['geoid_tract'])
 
-# Part Two: Select and download table variables and data ---------------------------------
+# Part Two: Select indicators from table-specific variable lists ---------------------------------
 
 # download complete list of variables for selected tables (use to identify
 # particular indicators you'd like to include in atlas)
@@ -96,7 +96,7 @@ plot(tracts_geom['geoid_tract'])
 
 # START EDIT
 ayear = 2020 # insert data year
-agrouplist = c("S0101","S0801","S1501") # insert list of selected tables (in quotes, separated by commas)
+agrouplist = c("S0101","S0801","S1501") # insert list of selected ACS subject tables (in quotes, separated by commas)
 # END EDIT
 
 for(agroup in agrouplist) {
@@ -115,10 +115,9 @@ for(agroup in agrouplist) {
   rm(acs_groups_vars)
 }
 
-
-# Part Two: Select indicators from table-specific variable lists ----------
-# Examine values in these tables to be certain that the variables you select are
-# represented as percentages, not counts and that missing values are minimal.
+# Download variable data for selected tables by community/place. Examine values
+# in these tables to be certain that the variables you select are represented as
+# percentages, not counts and that missing values are minimal.
 
 for (agroup in agrouplist) {
     agroupname = paste("group(",agroup,")",sep="")
@@ -192,7 +191,7 @@ rm(acs_group)
 indicators_tract_2020_geom <- tracts_geom %>%
   left_join(indicators_tract_2020, by="geoid_tract")
 
-# Write census geographies and indicator layer to shapefiles
+# Write census geographies and indicator layer to shapefiles.
 # revise path name for layers directory if necessary
 
 # START EDIT
