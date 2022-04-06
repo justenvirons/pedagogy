@@ -71,21 +71,26 @@ place_geom <- places(state=state_code,
          geoid_place = GEOID)
 
 tracts_geom <- tracts(state=state_code, 
-                     cb=TRUE, 
-                     class="sf") %>% 
+                      cb=TRUE, 
+                      class="sf") %>% 
   st_transform(crs=crs_code) %>%
   select(geoid_state = STATEFP,
          geoid_county = COUNTYFP,
          geoid_tract = GEOID) %>%
   st_intersection(place_geom) %>%
   st_as_sf() %>%
+  mutate(dimension = st_dimension(geometry)) %>%
+  filter(dimension==2) %>%
+  select(-dimension) %>%
+  st_make_valid() %>%
+  st_cast("POLYGON") %>%
   mutate(tract_sqmi = set_units(st_area(geometry),"mi^2")) %>%
   filter(tract_sqmi > set_units(0.01,"mi^2"))
 
 # plot basic map of state, place and census tracts
 plot(state_geom['geoid_state'])
 plot(place_geom['geoid_place'])
-plot(tracts_geom['geoid_tract'])
+plot(tracts_geom['dimension'])
 
 # Part Two: Select indicators from table-specific variable lists ---------------------------------
 
@@ -96,7 +101,7 @@ plot(tracts_geom['geoid_tract'])
 
 # START EDIT
 ayear = 2020 # insert data year
-agrouplist = c("S0101","S0801","S1501") # insert list of selected ACS subject tables (in quotes, separated by commas)
+agrouplist = c("S0101","S0801","S2801","S2301") # insert list of selected ACS subject tables (in quotes, separated by commas)
 # END EDIT
 
 for(agroup in agrouplist) {
@@ -141,7 +146,6 @@ for (agroup in agrouplist) {
     rm(acs_group)
 }
 
-
 # Part Three: Download indicator data and create associated shapefile --------
 # Once you are comfortable with the indicators you’ve selected, modify the lists
 # below with specific variable names ("aindicatorvarlist"). Also rename the
@@ -153,13 +157,15 @@ aindicatorvarlist <- c("S0101_C01_001E",
                        "S0101_C01_034E",
                        "S0801_C01_003E",
                        "S0801_C01_010E",
-                       "S0801_C01_013E") # insert list of selected tables (in quotes, separated by commas)
+                       "S0801_C01_013E",
+                       "S2301_C02_013E") # insert list of selected tables (in quotes, separated by commas)
 
 aindicatornameslist <- c("totalpop",
                          "agedep",
                          "drovealone",
                          "walked",
-                         "fromhome") # rename variables (max length = 8 chars) in order
+                         "fromhome",
+                         "lfblack") # rename variables (max length = 8 chars) in order
 # END EDIT
 
 # download the variables by census tract, transform table based on information provided in above lists 
@@ -182,7 +188,7 @@ acs_group <- acs_group %>%
   ) %>%
   rename_at(vars(aindicatorvarlist), ~ aindicatornameslist) %>%
   as.data.frame()
-acs_group[acs_group == -666666666] <- NA
+acs_group[acs_group < 0] <- NA
 assign(paste("indicators_tract", ayear, sep = "_"), acs_group)
 rm(acs_group)
 
@@ -195,7 +201,7 @@ indicators_tract_2020_geom <- tracts_geom %>%
 # revise path name for layers directory if necessary
 
 # START EDIT
-apathname = "Exercise_01/layers/"
+apathname = "Layers/"
 # END EDIT
 
 st_write(indicators_tract_2020_geom,paste0(apathname,"indicators_tract.shp"), append = FALSE)
