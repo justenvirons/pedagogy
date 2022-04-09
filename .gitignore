@@ -1,3 +1,6 @@
+# Project file
+*.Rproj
+
 # History files
 .Rhistory
 .Rapp.history
@@ -37,3 +40,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Files in layers and maps directories
+/Layers/*.*
+/Maps/*.*

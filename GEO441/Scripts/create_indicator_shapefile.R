@@ -90,7 +90,7 @@ tracts_geom <- tracts(state=state_code,
 # plot basic map of state, place and census tracts
 plot(state_geom['geoid_state'])
 plot(place_geom['geoid_place'])
-plot(tracts_geom['dimension'])
+plot(tracts_geom['geoid_tract'])
 
 # Part Two: Select indicators from table-specific variable lists ---------------------------------
 
