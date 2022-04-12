@@ -16,14 +16,6 @@
 
 # Install (if needed) and attach R packages -----------------------------------------
 
-# install.packages(c("censusapi",
-#                    "tigris",
-#                    "tidyverse",
-#                    "dplyr",
-#                    "sf",
-#                    "clipr",
-#                    "units"))
-
 library(censusapi) # used to access census attribute data
 library(tigris)  # used to access census geometries 
 library(tidyverse) # used for data wrangling

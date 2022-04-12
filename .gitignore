@@ -42,5 +42,5 @@ vignettes/*.pdf
 .Renviron
 
 # Files in layers and maps directories
-/Layers/*.*
-/Maps/*.*
+*/Layers/
+*/Maps/
