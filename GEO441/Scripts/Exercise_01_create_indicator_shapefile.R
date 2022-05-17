@@ -42,9 +42,9 @@ akey = "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
 # UTM Grid in ArcGIS Pro and the https://spatialreference.org website.
 
 # START EDIT
-place_code = "60000" # insert selected place code from GEOID column in places_subject_tables.xlsx spreadsheet
-state_code = "42" # insert associated state code from GEOID column in places_subject_tables.xlsx spreadsheet
-crs_code = 26918 # insert projected coordinate system (aka coordinate reference system) code associated with place location
+place_code = "14000" # insert selected place code from GEOID column in places_subject_tables.xlsx spreadsheet
+state_code = "17" # insert associated state code from GEOID column in places_subject_tables.xlsx spreadsheet
+crs_code = 26916 # insert projected coordinate system (aka coordinate reference system) code associated with place location
 # END EDIT
 
 state_geom <- states(cb=TRUE, 
@@ -93,7 +93,7 @@ plot(tracts_geom['geoid_tract'])
 
 # START EDIT
 ayear = 2020 # insert data year
-agrouplist = c("S0101","S0801","S2801","S2301") # insert list of selected ACS subject tables (in quotes, separated by commas)
+agrouplist = c("S0101","S1401","S1501","S1701","S2502") # insert list of selected ACS subject tables (in quotes, separated by commas)
 # END EDIT
 
 for(agroup in agrouplist) {
@@ -146,18 +146,33 @@ for (agroup in agrouplist) {
 
 # START EDIT
 aindicatorvarlist <- c("S0101_C01_001E",
-                       "S0101_C01_034E",
-                       "S0801_C01_003E",
-                       "S0801_C01_010E",
-                       "S0801_C01_013E",
-                       "S2301_C02_013E") # insert list of selected tables (in quotes, separated by commas)
+                       "S1401_C04_016E",
+                       "S1401_C04_018E",
+                       "S1401_C04_020E",
+                       "S1401_C04_001E",
+                       "S0901_C01_005E",
+                       "S0901_C01_026E",
+                       "S0901_C01_034E",
+                       "S0901_C02_031E",
+                       "S0901_C04_031E",
+                       "S0901_C03_031E",
+                       "S0901_C01_031E")
+# insert list of selected tables (in quotes, separated by commas)
 
 aindicatornameslist <- c("totalpop",
-                         "agedep",
-                         "drovealone",
-                         "walked",
-                         "fromhome",
-                         "lfblack") # rename variables (max length = 8 chars) in order
+                         "age5_9P",
+                         "a10_14P",
+                         "a15_17p",
+                         "al3_UPp",
+                         "Race",
+                         "housep",
+                         "Poverty",
+                         "WedSNAP",
+                         "FSNAP",
+                         "MSNAP",
+                         "kidSNAP")
+# rename variables (max length = 8 chars) in order
+
 # END EDIT
 
 # download the variables by census tract, transform table based on information provided in above lists 

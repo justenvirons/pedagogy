@@ -85,7 +85,7 @@ gtfs_data_catalog <- read_csv("https://storage.googleapis.com/storage/v1/b/mdb-c
 # Hint: Make sure to use forward slashes instead of backslashes in path name.
 
 # START EDIT
-gtfs_filename = "GEO441/Data/gtfs.zip"
+gtfs_filename = "GEO441/Data/gtfs_minneapolis.zip"
 # END EDIT
 
 # input GTFS data from file
@@ -93,6 +93,8 @@ local_gtfs <- read_gtfs(gtfs_filename)
 
 # system summary (number of routes, trips, stops)
 summary(local_gtfs)
+
+transit_stops_geom %>% st_drop_geometry %>% group_by(location_type) %>% summarize(n())
 
 # create transit stops data table convert to simple feature dataset
 transit_stops <- local_gtfs$stops # save stops data as separate data table
@@ -117,7 +119,7 @@ apathname = "GEO441/Layers/"
 # END EDIT
 
 st_write(tracts_centroids_geom,paste0(apathname,"tract_centroids.shp"), append = FALSE)
-st_write(transit_stops_geom,paste0(apathname,"transit_stops.shp"), append = FALSE)
+st_write(transit_stops_geom,paste0(apathname,"transit_stops_min.shp"), append = FALSE)
 
 # Part two: Calculate accessibility using a container approach ------------
 # spatially join transit stops with census tracts
@@ -132,6 +134,12 @@ tracts_by_stops <- tracts_geom %>%
   left_join(stops_by_tract, by="geoid_tract") %>%
   mutate(count = ifelse(is.na(count), 0, count))
 
+table <- tracts_by_stops %>%
+  st_drop_geometry() %>%
+  group_by(count) %>%
+  summarise(sum = n())
+
+hist(tracts_by_stops$count)
 # create thematic map showing number/count of stops by census tract
 
 
