@@ -1,9 +1,12 @@
 # Folders
 
 # Files
+*.R
 *.RData
 *.png
 *.pdf
+#*.csv
+
 
 # History files
 .Rhistory

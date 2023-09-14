@@ -7,7 +7,7 @@ date: "`r format(Sys.time(), '%d %B %Y')`"
 format: 
   html:
     echo: true
-    eval: true
+    eval: false
     warning: false
     code-tools: true
     code-fold: true
@@ -24,16 +24,18 @@ This exercise uses [Centers for Disease Control PLACES](https://www.cdc.gov/plac
 
 Bivariate or multivariate maps are a type of thematic cartographic representation that displays two or more variables on a single map by using a common symbology. The technique can reveal relationships between variables more effectively than a side-by-side comparison of multiple corresponding univariate maps, but also has the potential to be confusing if the symbols and patterns are overly complex and difficult to understand.
 
-Students will save maps and summaries of spatial analyses in a [PowerPoint presentation](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2023_FallQuarter/Exercise_01/Exercise01_SlidesTemplate.pptx) (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own custom study area and variables for mapping.
+Students will save maps and summaries of spatial analyses in a [PowerPoint presentation](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2023_FallQuarter/Exercise_01/exercise01-template.pptx) (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own custom study area and variables for mapping.
 
 The sections below step you through the process to create the above deliverable. For some of the more complicated procedures, online videos will be made available on the course D2L under the Exercise #1 content folder.
 
 # Create new R project and associated project directories
 
-In RStudio, create a project within a new directory (e.g., GEO336/exercise_01) of your general course folder. Here you will save files related to exercise #1. Create the following folders within the new exercise-specific directory: "data" and "maps". [Download data](data/exercise_01_example.RData) into data directory. Next, install and/or activate the following packages in R using the below code. 
+In RStudio, create a project within a new directory (e.g., GEO336/exercise_01) of your general course folder. Here you will save files related to exercise #1. Create the following folders within the new exercise-specific directory: "data" and "maps". [Download data](data/exercise01.RData) into data directory. Next, install and/or activate the following packages in R using the below code. 
 
 ```{r}
 #| label: Install and activate R packages
+#| eval: true
+#| echo: false
 
 library(censusapi) # retrieving census attribute data
 library(tigris) # retrieving census geometries
@@ -59,7 +61,7 @@ options(scipen=999, digits = 2) # format output for data tables
 #      svi_data_dicionary,
 #      file="data/exercise_01_example.RData")
 
-load("C:/Users/christopher.smith/OneDrive - Cook County Health/git_repos/justenvirons/pedagogy/GEO346_2023_FallQuarter/Exercise_01/data/exercise_01_example.RData")
+load("data/exercise01.RData")
 
 ```
 
@@ -95,6 +97,8 @@ Download census attributes using *censusapi* package in R. If you don't have a c
 ```{r}
 #| label: tbl-populationbycounty
 #| tbl-cap: Descriptive Statistics of Counties by Population Quintile, 2020
+#| echo: false
+#| eval: true
 
 # censusapikey <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e" # Scott's key
 # 
@@ -300,16 +304,14 @@ places_2021_tracts_sel_geom <- places_2021_tracts_sel %>%
 
 ## Import and format social vulnerability data
 
-The [CDC's Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) was initially designed to help public health officials and emergency response planners identify communities that will most likely need support before, during, and after a hazardous event. However, it has proven to be an effective indicator for evaluating other public health phenomena.
-
-The 2018 version of the SVI ranks census tracts on 15 social factors, including unemployment, minority status, and disability, and further groups them into four related themes. Thus, each tract receives a ranking for each census variable and for each of the four themes, as well as an overall ranking.
+The [CDC's Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) was initially designed to help public health officials and emergency response planners identify communities that will most likely need support before, during, and after a hazardous event. However, it has proven to be an effective indicator for evaluating other public health phenomena. The 2020 version of the SVI ranks census tracts on 15 social factors, including unemployment, minority status, and disability, and further groups them into four related themes. Thus, each tract receives a ranking for each census variable and for each of the four themes, as well as an overall ranking.
 
 ```{r}
 #| label: tbl-svidatadictionary
 #| tbl-cap: SVI Data Dictionary, 2018
 
 # Download 2018 SVI by census tract
-# svi_2018_tracts_all <- read_csv("https://data.cdc.gov/api/views/4d8n-kk8a/rows.csv?accessType=DOWNLOAD&bom=true&format=true")
+svi_tracts_all <- read_csv("https://data.cdc.gov/api/views/4d8n-kk8a/rows.csv?accessType=DOWNLOAD&bom=true&format=true")
 
 # Import data dictionary from course GitHub
 svi_data_dicionary <- read_csv("https://raw.githubusercontent.com/justenvirons/pedagogy/main/GEO346_2022_FallQuarter/Exercise_01/data/svi_2018_datadictionary.csv") %>%

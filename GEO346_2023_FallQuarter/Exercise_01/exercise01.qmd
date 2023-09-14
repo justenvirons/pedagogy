@@ -1,0 +1,328 @@
+---
+title: "GEO 3/446 Exercise #1"
+subtitle: "Bivariate Choropleth Mapping in R using CDC PLACES and SVI Data"
+author: C. Scott Smith, PhD AICP (Instructor)
+email: c.scott.smith@depaul.edu
+date: "`r format(Sys.time(), '%d %B %Y')`"
+format: 
+  html:
+    echo: true
+    eval: false
+    warning: false
+    code-tools: true
+    code-fold: true
+    theme: [flatly, "styles.scss"]
+    toc: true
+    reference-location: document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: install R packages
+#| eval: true
+#| echo: false
+
+library(censusapi) # retrieving census attribute data
+library(tigris) # retrieving census geometries
+library(sf) # manipulating geometry data
+library(leaflet) # making interactive maps
+library(leaflet.extras) # extra map controls
+library(dplyr) # data wrangling, pip format
+library(tidyverse) # data wrangling
+library(biscale) # bivariate mapping
+library(ggplot2) # needed for bivariate mapping
+library(cowplot) # needed to combine bivariate map with legend
+library(corrplot) # correlation plot
+library(scales) # used for rescaling data
+library(RColorBrewer) # standard color palettes
+library(kableExtra) # table formatting
+library(data.table)
+library(DT)
+
+options(scipen=999, digits = 2) # format output for data tables
+
+```
+
+# Purpose
+
+This exercise uses [Centers for Disease Control PLACES](https://www.cdc.gov/places/index.html) and [Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) data in [RStudio](https://posit.co/) and [ArcGIS Pro](https://www.esri.com/en-us/arcgis/products/arcgis-pro/overview) to create a series of bivariate choropleth maps and related figures and tables to explore select public health and sociodemographic relationships.
+
+Students will save maps and summaries of spatial analyses in a [PowerPoint presentation](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2023_FallQuarter/Exercise_01/exercise01-template.pptx) (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own custom study area and variables for mapping.
+
+The sections below step you through the process to create the above deliverable. For some of the more complicated procedures, online videos will be made available on the course D2L under the Exercise #1 content folder.
+
+# Step 1. Create new R project, folders, and data processing script 
+
+Effective file management is a foundational aspect of geographic information systems (GIS) that contributes to data organization, integrity, collaboration, efficiency, security, scalability, documentation, compliance, version control, and data accessibility. Ignoring file management can lead to data loss, errors, and inefficiencies in GIS projects, whereas conscientious file management enhances the overall efficiency and reliability of GIS workflows.
+
+That said, in RStudio, create a project within a new directory (e.g., GEO336/exercise_01) of your general course folder. Here you will save files related to exercise #1. Create the following folders within the new exercise-specific directory: "scripts" (for storing R code), "layers" (for storing geographic feature layers) and "maps" (for storing ArcGIS Pro projects).
+
+## Create data processing script in R
+
+In RStudio, create a new script file for storing data processing code relevant to this exercise. Create the blank script file by first navigating to the "scripts" directory you created in your project working directory and clicking "New Blank File" in the files pane. Name the script something intuitive (e.g., "exercise01.R").
+
+## Activate relevant packages
+
+Next, use the following code to activate needed R packages. If the packages are not yet installed, you can install multiple packages by passing a vector of package names to the "install.packages" function, for example:
+
+`install.packages(c("censusapi", "tigris"))`
+
+```{r}
+#| label: activate R packages
+#| eval: true
+#| code-fold: false
+
+# install packages if necessary
+# install.packages(c("censusapi", "tigris"))
+
+# activate packages
+library(censusapi) # retrieving census attribute data
+library(tigris) # retrieving census geometries
+library(sf) # manipulating geometry data
+library(dplyr) # data wrangling, pip format
+library(tidyverse) # data wrangling
+library(biscale) # bivariate mapping
+library(corrplot) # correlation plot
+
+options(scipen=999, digits = 2) # format output for data tables
+
+```
+
+# Section 2. Select a study area and download boundary files
+
+For this exercise, you will select a custom, large (i.e., having over 500,000 population), urban county located in the contiguous United States to be your study area. Browse the interactive map of US counties below to identify a study area that interests you. Make note of the county's name and unique "geoid". The "geoid" combines the unique two-digit state code with a three-digit county code (e.g., 17031, for example, is the geoid for Cook County, Illinois). 
+
+```{r}
+#| label: fig-popbycountymap
+#| fig-cap: Total Population by US County, 2021
+#| eval: false
+#| echo: true
+
+
+censusapikey <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e" # Scott's key
+
+# Download American Community Survey (ACS) 5-year population estimates by county
+# agroup refers to tables, varlist refers to variables within tables
+agroup <- c("B01001")
+varlist <- c("B01001_001E")
+yearlist <- c(2021)
+
+for (ayear in yearlist) {
+  agroupname = paste("group(",agroup,")",sep="")
+  acs_group <- getCensus(name = "acs/acs5",
+                         vintage = ayear,
+                         vars = c("NAME",varlist),
+                         region = "county:*",
+                         regionin="state:*",
+                         key=censusapikey)
+  acs_group <- acs_group %>% select(-contains(c("EA",
+                                                "MA",
+                                                "GEO_ID",
+                                                "M_1"))) %>%
+    mutate(year = ayear,
+           GEOID = paste0(state,county))
+
+  assign(paste(agroup,ayear,sep="_"),acs_group)
+  rm(acs_group)
+}
+
+# download US county geographic boundaries for contiguous United States
+us_counties_geom <- counties(cb=TRUE, class="sf", year = 2020) %>%
+  mutate(STATEFP_NO = as.numeric(STATEFP)) %>%
+  filter(STATEFP_NO <= 56, STATEFP_NO != 15, STATEFP_NO != 2)
+
+# join counties to latest population data
+us_counties_population_geo <- us_counties_geom %>%
+  select(NAME,
+         STATE_NAME,
+         GEOID) %>%
+  left_join(B01001_2020 %>%
+              select("GEOID",
+                     pop_2020 = B01001_001E),
+            by="GEOID")  %>%
+  mutate(pop_2020_q = ntile(pop_2020, 5)) %>%
+  st_as_sf()
+
+# Make interactive map of US counties by population using leaflet package
+
+# assign bins for population thematic map loosely based on quintile breaks
+counties_bins <- c(0, 10000, 20000, 50000, 999999, Inf) 
+
+# create palette using colorblind/accessible colors 
+counties_pal <- colorBin(
+  palette="viridis", 
+  domain=us_counties_population_geo$pop_2020, 
+  na.color="transparent",
+  bins = counties_bins,
+  reverse = TRUE
+  )
+
+# format/generate popup labels for map
+labels = sprintf(
+  "<strong>%s, %s</strong><br/>
+  Population (2020): %s<br/>
+  GEOID: %s <br/>
+  Quintile group: %s",
+  us_counties_population_geo$NAME, 
+  us_counties_population_geo$STATE_NAME,
+  format(us_counties_population_geo$pop_2020, big.mark = ","),
+  us_counties_population_geo$GEOID,
+  us_counties_population_geo$pop_2020_q) %>% 
+  lapply(htmltools::HTML)
+
+# create thematic map using leaflet
+leaflet() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(group = "US counties",
+              data=us_counties_population_geo %>% st_transform(crs=4326),
+              # fillColor = "orange",
+              fillColor = ~counties_pal(pop_2020),
+              weight = 0.5,
+              opacity = 0.5,
+              color = "white",
+              dashArray = "3",
+              fillOpacity = 0.7,
+              highlight = highlightOptions(
+                weight = 5,
+                color = "#666",
+                dashArray = "",
+                fillOpacity = 1,
+                bringToFront = FALSE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  addLegend("topright", pal = counties_pal, values = us_counties_population_geo$pop_2020,
+            title = paste0("Population (2020)"),
+            opacity = 1) %>%
+  addScaleBar(position = "bottomleft") %>%
+    addFullscreenControl()
+
+```
+
+## Set geoid and coordinate reference system (CRS) variables
+
+At times it is useful to set variables for objects that have the potential to change across use cases. In this example, you set variables for your county's unique identification code and coordinate reference system code. To determine the county's CRS code, first identify its UTM NAD83 zone (e.g., the UTM zone for Cook County, Illinois is *UTM Zone 16N*) using the [ArcGIS Hub web page](https://hub.arcgis.com/datasets/esri::world-utm-grid), then search the UTM Zone using the [EPSG web page](https://epsg.io/?q=UTM) to return the associated code (e.g., the EPSG code for UTM Zone 16N is *26916*). Append the following code to the bottom of your exercise data processing script to set the county identification and coordinate reference system (CRS) variables (i.e., *county_geoid* and *crs_code*) for your study area.
+
+```{r}
+#| label: set county geoid and crs variables
+#| eval: true
+#| code-fold: false
+
+# customize the county_fips variable with unique county GEOID as character string
+county_geoid = "17031"
+
+# insert EPSG code associated with county location
+crs_code = 26916 
+```
+
+## Download county and census tract layers for your study area
+
+The *tigris* package in R can be used to download US county and other geographic layers managed by the US Census Bureau. Specifically, these [and other cartographic boundaries in the census geographic hierarchy](https://www.census.gov/programs-surveys/geography/guidance/hierarchy.html) are made available via the [US Census Bureau's TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) program. The below code can be used in R to download all counties in the United States in a standard [NAD83 coordinate reference system, EPSG 4269](https://epsg.io/4269). Use the below code to download the county and the census tract boundaries for your study area. 
+
+```{r}
+#| label: download 2010 vintage county and census tract boundaries for study area
+#| eval: false
+
+county_boundary_geom <- counties(state =  substr(county_geoid,1,2),
+                           cb=TRUE, 
+                           class="sf", 
+                           year = 2010) %>%
+  mutate(sqmi = CENSUSAREA,
+         geoid_county = paste0(STATE,COUNTY)) %>%
+  select(geoid_county, sqmi) %>%
+  filter(geoid_county == county_geoid) %>%
+  st_as_sf() %>%
+  st_transform(crs=crs_code)
+
+tract_boundaries_geom <- tracts(state =  substr(county_geoid,1,2), 
+                           county = substr(county_geoid,3,5), 
+                           cb=TRUE, 
+                           class="sf", 
+                           year = 2010) %>%
+  st_transform(crs=crs_code) %>%
+  mutate(sqmi = CENSUSAREA,
+         geoid_county = paste0(STATE,COUNTY),
+         geoid_tract = paste0(STATE,COUNTY,TRACT)) %>%
+  select(geoid_county, geoid_tract, sqmi) %>%
+  st_as_sf()
+
+# create a simple plot of the county  
+plot(county_boundary_geom['geoid_county'])
+
+# create a simple plot of the census tracts  
+plot(tract_boundaries_geom['geoid_tract'])
+
+```
+
+# Section 3. Assemble public health and vulnerability indicators by census tract
+
+Now that you have your custom geographic layers, the next step is to download some meaningful attributes for analysis. In this section you will combine public health and social vulnerability indicators by census tract into a single feature layer suitable for mapping in ArcGIS Pro.
+
+## Import, explore and subset public health prevalence data
+
+The [Centers for Disease Control (CDC) PLACES](https://www.cdc.gov/places/index.html) data provides health outcome, prevention, risk behavior and health status estimates for small areas across the United States. These data allow local health departments and jurisdictions to better understand the relative burden and geographic distribution of health measures in their areas and assist them in planning public health interventions. The data are available for download on the CDC PLACES web page by county, place (both incorporated municipalities and census designated places), census tract, and ZIP Code Tabulation Area (ZCTAs) across the United States.
+
+For this exercise, we will use census tracts--the most granular scale available in the PLACES dataset--as the unit of analysis. In the July 2023 release, 29 of the estimates are based on Behavioral Risk Factor Surveillance System (BRFSS) 2021 data and 7 are based on the 2020 survey data. Use the following code to import the PLACES dataset by census tract and data dictionary into R. This is a large file (~ 57MB), so please be patient. The code also subsets the data to your county of interest. 
+
+```{r}
+#| label: Import and subset PLACES data by census tract
+#| eval: false
+ 
+
+places_tracts_all <- read_csv("https://data.cdc.gov/api/views/yjkw-uj5s/rows.csv?accessType=DOWNLOAD") 
+
+# subset PLACES to study area county using county_geoid variable
+places_tracts_county <- places_tracts_all %>%
+    filter(CountyFIPS==county_geoid) %>%
+  select(-ends_with("Crude95CI"), -Geolocation)
+
+# download PLACES data dictionary
+places_data_dictionary <- read_csv("https://data.cdc.gov/api/views/m35w-spkz/rows.csv?accessType=DOWNLOAD")
+
+```
+
+### Review and format public health data for your county
+
+```{r}
+#| label: tbl-placesdatadictionary
+#| tbl-cap: PLACES Data Dictionary and Descriptive Statistics
+#| eval: true
+#| echo: false
+
+# create data dictionary for PLACES measures
+# select at least four measures to evaluate in your county
+places_data_dictionary %>%
+  select(MeasureID, Name = `Measure short name`,Category = `Category name`) %>%
+  
+
+```
+
+```{r}
+
+# Customize the four MeasureIDs in this list with those you'd like to evaluate
+places_measures_list <- c("CANCER","CHD","STROKE","DIABETES")
+
+# create detailed data table of selected PLACES measures in wide format
+places_2021_tracts_sel <- places_2021_tracts_county %>%
+  filter(CountyFIPS==county_fips, MeasureId %in% places_measures_list) %>%
+  select(GEOID = LocationName,
+         MeasureId,
+         Data_Value,
+         Population = TotalPopulation) %>%
+  pivot_wider(names_from=MeasureId, 
+              values_from = Data_Value)
+
+# perform attribute join detailed data table to census geometries mapping of PLACES measures
+places_2021_tracts_sel_geom <- places_2021_tracts_sel %>% 
+  left_join(tract_boundaries_geom, by = "GEOID") %>%
+  mutate(Population_density = Population/SQMI) %>%
+  st_as_sf()
+
+```
+
+## Create bivariate choropleth map in ArcGIS Pro
+
+Bivariate or multivariate maps are a type of thematic cartographic representation that displays two or more variables on a single map by using a common symbology. The technique can reveal relationships between variables more effectively than a side-by-side comparison of multiple corresponding univariate maps, but also has the potential to be confusing if the symbols and patterns are overly complex and difficult to understand.
