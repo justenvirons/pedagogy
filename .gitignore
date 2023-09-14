@@ -3,7 +3,7 @@
 # Files
 *.R
 *.RData
-*.png
+#*.png
 *.pdf
 #*.csv
 
