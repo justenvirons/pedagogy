@@ -1,3 +1,10 @@
+# Folders
+
+# Files
+*.RData
+*.png
+*.pdf
+
 # History files
 .Rhistory
 .Rapp.history

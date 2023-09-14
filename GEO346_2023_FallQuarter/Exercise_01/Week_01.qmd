@@ -1,0 +1,470 @@
+---
+title: "GEO 3/446 Exercise #1"
+subtitle: "Bivariate Choropleth Mapping in R using CDC PLACES and SVI Data"
+author: C. Scott Smith, PhD AICP (Instructor)
+email: c.scott.smith@depaul.edu
+format: 
+  html:
+    echo: false
+    code-tools: true
+    code-fold: true
+    theme: flatly
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    reference-location: document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+# bibliography: references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+# Purpose
+
+This project uses [Centers for Disease Control PLACES](https://www.cdc.gov/places/index.html) and [Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) data in [RStudio](https://posit.co/) to create a series of bivariate choropleth maps and related tables designed to explore select public health and sociodemographic variables.
+
+Bivariate or multivariate maps are a type of thematic cartographic representation that displays two or more variables on a single map by using a common symbology. The technique can reveal relationships between variables more effectively than a side-by-side comparison of multiple corresponding univariate maps, but also has the potential to be confusing if the symbols and patterns are overly complex and difficult to understand.
+
+::: {layout-ncol="2"}
+![](maps/map1_bivariate.png)
+![](maps/map1_bivariate.png)
+:::
+
+Students will save maps and summaries of spatial analyses in a [PowerPoint presentation](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_01/Exercise01_SlidesTemplate.pptx) (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own custom study area and variables for mapping.
+
+The sections below step you through the process to create the above deliverable. For some of the more complicated procedures, online videos will be made available on the course D2L under the Exercise #1 content folder.
+
+# Create new R project and associated project directories
+
+[Download data](data/exercise_01_example.RData) into data directory.
+
+In RStudio, create a project within a new directory (e.g., GEO336/exercise_01) of your general course folder. Here you will save files related to exercise #1. Create the following folders within the new exercise-specific directory: "data" and "maps". Install and/or activate the following packages in R using the below code.
+
+```{r}
+#| label: Install and activate R packages
+
+library(censusapi) # retrieving census attribute data
+library(tigris) # retrieving census geometries
+library(sf) # manipulating geometry data
+library(leaflet) # making interactive maps
+library(dplyr) # data wrangling, pip format
+library(tidyverse) # data wrangling
+library(biscale) # bivariate mapping
+library(ggplot2) # needed for bivariate mapping
+library(cowplot) # needed to combine bivariate map with legend
+library(corrplot) # correlation plot
+library(scales) # used for rescaling data
+library(RColorBrewer) # standard color palettes
+library(kableExtra) # table formatting
+
+options(scipen=999, digits = 2) # format output for data tables
+
+# save(us_counties_geom,
+#      B01001_2020,
+#      tract_boundaries_geom,
+#      places_2021_tracts_county,
+#      svi_2018_tracts_all,
+#      svi_data_dicionary,
+#      file="data/exercise_01_example.RData")
+
+load("data/exercise_01_example.RData")
+
+```
+
+# Select large, urban county for your study area
+
+In this section you will import county census geometries, combine/join these geometries with census population data and make an interactive map of US counties to explore and select your study area.
+
+## Import census geometries
+
+Use the *tigris* package in R to download US county geometries. These [and other cartographic boundaries in the census geographic hierarchy](https://www.census.gov/programs-surveys/geography/guidance/hierarchy.html) are made available via the [US Census Bureau's TIGER/Line](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html) program.
+
+```{r}
+#| label: fig-uscounties
+#| fig-cap: US Counties by State, 2020
+
+# Download 2020 county census geometries in contiguous US with tigris package
+# cb = cartographic boundary
+# sf = simple feature
+# remove/filter out areas outside contiguous US
+# us_counties_geom <- counties(cb=TRUE, class="sf", year = 2020) %>%
+#   mutate(STATEFP_NO = as.numeric(STATEFP)) %>%
+#   filter(STATEFP_NO <= 56, STATEFP_NO != 15, STATEFP_NO != 2)
+
+# create simple plot of counties by state
+plot(us_counties_geom['STATEFP'])
+
+```
+
+## Download and join population data to county geometries
+
+Download census attributes using *censusapi* package in R. If you don't have a census API key, request one using following link https://api.census.gov/data/key_signup.html. The package imports 2020 data from the American Community Survey 5-year estimates via [this API](https://api.census.gov/data/2020/acs/acs5).
+
+```{r}
+#| label: tbl-populationbycounty
+#| tbl-cap: Descriptive Statistics of Counties by Population Quintile, 2020
+
+# censusapikey <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e" # Scott's key
+# 
+# # Download 2020 American Community Survey (ACS) 5-year population estimates by county
+# # agroup refers to tables, varlist refers to variables within tables
+# agroup <- c("B01001")
+# varlist <- c("B01001_001E")
+# yearlist <- c(2020)
+# 
+# for (ayear in yearlist) {
+#   agroupname = paste("group(",agroup,")",sep="")
+#   acs_group <- getCensus(name = "acs/acs5",
+#                          vintage = ayear,
+#                          vars = c("NAME",varlist),
+#                          region = "county:*",
+#                          regionin="state:*",
+#                          key=censusapikey)
+#   acs_group <- acs_group %>% select(-contains(c("EA",
+#                                                 "MA",
+#                                                 "GEO_ID",
+#                                                 "M_1"))) %>%
+#     mutate(year = ayear,
+#            GEOID = paste0(state,county))
+# 
+#   assign(paste(agroup,ayear,sep="_"),acs_group)
+#   rm(acs_group)
+# }
+# 
+# Join population data to county geometries
+us_counties_population_geo <- us_counties_geom %>%
+  select(NAME,
+         STATE_NAME,
+         GEOID) %>%
+  left_join(B01001_2020 %>%
+              select("GEOID",
+                     pop_2020 = B01001_001E),
+            by="GEOID")  %>%
+  mutate(pop_2020_q = ntile(pop_2020, 5)) %>%
+  st_as_sf()
+
+# Summary table of counties by population quintile category
+  us_counties_population_geo %>% 
+    st_drop_geometry() %>%
+    group_by(pop_2020_q) %>%
+    summarise(count = n(),
+              min_pop = min(pop_2020),
+              max_pop = max(pop_2020),
+              avg_pop = mean(pop_2020),
+              sd_pop = sd(pop_2020)) %>%
+    mutate_if(is.numeric, format, digits = 2, big.mark = ",") %>%
+    kable(align = "crrrrr") %>%
+    kable_styling(
+      bootstrap_options = c("striped", "hover", "condensed"),
+      font_size = 12)
+
+```
+
+## Make interactive map of US counties by population size
+
+Use *leaflet* package to create an interactive population map of the United States.
+
+```{r}
+#| label: fig-popbycountymap
+#| fig-cap: Total Population by US County, 2020
+
+# Make interactive map of US counties by population using leaflet package
+
+# assign bins for population thematic map loosely based on quintile breaks
+counties_bins <- c(0, 10000, 20000, 50000, 999999, Inf) 
+
+# create palette using colorblind/accessible colors 
+counties_pal <- colorBin(
+  palette="viridis", 
+  domain=us_counties_population_geo$pop_2020, 
+  na.color="transparent",
+  bins = counties_bins,
+  reverse = TRUE
+  )
+
+# format/generate popup labels for map
+labels = sprintf(
+  "<strong>%s, %s</strong><br/>
+  Population (2020): %s<br/>
+  GEOID: %s <br/>
+  Quintile group: %s",
+  us_counties_population_geo$NAME, 
+  us_counties_population_geo$STATE_NAME,
+  format(us_counties_population_geo$pop_2020, big.mark = ","),
+  us_counties_population_geo$GEOID,
+  us_counties_population_geo$pop_2020_q) %>% 
+  lapply(htmltools::HTML)
+
+# create thematic map using leaflet
+leaflet() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(group = "US counties",
+              data=us_counties_population_geo %>% st_transform(crs=4326),
+              # fillColor = "orange",
+              fillColor = ~counties_pal(pop_2020),
+              weight = 0.5,
+              opacity = 0.5,
+              color = "white",
+              dashArray = "3",
+              fillOpacity = 0.7,
+              highlight = highlightOptions(
+                weight = 5,
+                color = "#666",
+                dashArray = "",
+                fillOpacity = 1,
+                bringToFront = FALSE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  addLegend("topright", pal = counties_pal, values = us_counties_population_geo$pop_2020,
+            title = paste0("Population (2020)"),
+            opacity = 1) %>%
+  addScaleBar(position = "bottomleft")
+
+# Customize the county_fips variable with unique county GEOID
+county_fips = "17031" # insert the unique five-character code from the GEOID column in us_counties_large_population dataframe
+crs_code = 4326 # insert projected coordinate system (aka coordinate reference system) code associated with place location
+
+```
+
+# Create public health and vulnerability dataset by census tract
+
+In this section you will combine public health and social vulnerability variables by census tract into a single feature dataset for mapping.
+
+## Download census tract geometries for your selected county
+
+```{r}
+#| eval: false
+tract_boundaries_geom <- tracts(state =  substr(county_fips,1,2), 
+                           county = substr(county_fips,3,5), 
+                           cb=TRUE, 
+                           class="sf", 
+                           year = 2010) %>%
+  st_transform(crs=crs_code) %>%
+  # mutate(SQMI = ALAND*0.0000003861) %>%
+  mutate(SQMI = CENSUSAREA,
+         GEOID = paste0(STATE,COUNTY,TRACT)) %>%
+  select(GEOID, SQMI) %>%
+  st_as_sf()
+```
+
+## Import public health prevalence data
+
+The [Centers for Disease Control (CDC) PLACES](https://www.cdc.gov/places/index.html) data provides health outcome, prevention, risk behavior and health status estimates for small areas across the United States. These data allow local health departments and jurisdictions to better understand the relative burden and geographic distribution of health measures in their areas and assist them in planning public health interventions. The data are available for download on the CDC PLACES web page by county, place (both incorporated municipalities and census designated places), census tract, and ZIP Code Tabulation Area (ZCTAs) across the United States.
+
+For this exercise, we will use census tracts--the most granular scale available in the PLACES dataset--as our unit of analysis. In the 2021 release, 22 of the estimates are based on Behavioral Risk Factor Surveillance System (BRFSS) 2019 data and 7 are based on 2018 data. Use the following code to import the PLACES dataset by census tract into R.
+
+```{r}
+#| label: Import 2021 PLACES data by census tract
+#| eval: false
+ 
+places_2021_tracts_all <- read_csv("https://chronicdata.cdc.gov/api/views/cwsq-ngmh/rows.csv?accessType=DOWNLOAD&bom=true&format=true")
+
+```
+
+## Review and format public health data for your county
+
+```{r}
+#| label: tbl-placesdatadictionary
+#| tbl-cap: PLACES Data Dictionary and Descriptive Statistics, 2022
+
+# create data dictionary for PLACES measures
+# select at least four measures to evaluate in your county
+places_2021_tracts_county %>%
+  filter(CountyFIPS==county_fips) %>%
+  group_by(Category, Measure, MeasureId) %>%
+  summarise(mean = mean(Data_Value),  
+            min = min(Data_Value), 
+            max = max(Data_Value), 
+            sd = sd(Data_Value)) %>%
+  kable(align = "lllrrrr") %>%
+    kable_styling(
+      bootstrap_options = c("striped", "hover", "condensed"),
+      font_size = 12
+    )
+
+# Customize the four MeasureIDs in this list with those you'd like to evaluate
+places_measures_list <- c("CANCER","CHD","STROKE","DIABETES")
+
+# create detailed data table of selected PLACES measures in wide format
+places_2021_tracts_sel <- places_2021_tracts_county %>%
+  filter(CountyFIPS==county_fips, MeasureId %in% places_measures_list) %>%
+  select(GEOID = LocationName,
+         MeasureId,
+         Data_Value,
+         Population = TotalPopulation) %>%
+  pivot_wider(names_from=MeasureId, 
+              values_from = Data_Value)
+
+# perform attribute join detailed data table to census geometries mapping of PLACES measures
+places_2021_tracts_sel_geom <- places_2021_tracts_sel %>% 
+  left_join(tract_boundaries_geom, by = "GEOID") %>%
+  mutate(Population_density = Population/SQMI) %>%
+  st_as_sf()
+
+```
+
+## Import and format social vulnerability data
+
+The [CDC's Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) was initially designed to help public health officials and emergency response planners identify communities that will most likely need support before, during, and after a hazardous event. However, it has proven to be an effective indicator for evaluating other public health phenomena.
+
+The 2018 version of the SVI ranks census tracts on 15 social factors, including unemployment, minority status, and disability, and further groups them into four related themes. Thus, each tract receives a ranking for each census variable and for each of the four themes, as well as an overall ranking.
+
+```{r}
+#| label: tbl-svidatadictionary
+#| tbl-cap: SVI Data Dictionary, 2018
+
+# Download 2018 SVI by census tract
+# svi_2018_tracts_all <- read_csv("https://data.cdc.gov/api/views/4d8n-kk8a/rows.csv?accessType=DOWNLOAD&bom=true&format=true")
+
+# Import data dictionary from course GitHub
+svi_data_dicionary <- read_csv("https://raw.githubusercontent.com/justenvirons/pedagogy/main/GEO346_2022_FallQuarter/Exercise_01/data/svi_2018_datadictionary.csv") %>%
+  filter(str_detect(Name, "EP_|RPL_")) %>%
+  arrange(Theme)
+
+# Replace the four SVI variable names in this list with those you'd like to evaluate
+svi_factors_list <- c("RPL_THEME1","RPL_THEME2","RPL_THEME3","RPL_THEME4")
+
+# create detailed data table of selected SVI factors 
+svi_2018_tracts_sel <- svi_2018_tracts_all %>%
+  filter(substr(FIPS,1,5)==county_fips) %>%
+  select(GEOID = FIPS,
+         contains(svi_factors_list)) %>%
+  mutate(across(where(is.numeric), ~na_if(., -999))) %>%
+  mutate_at(svi_factors_list, function(x) rescale(x,to = c(0,100))) %>% 
+  drop_na()
+```
+
+## Combine/join selected public health and vulnerability data
+
+```{r}
+# Create comprehensive table containing both PLACES and SVI data
+svi_places_tracts_sel_geom <- svi_2018_tracts_sel %>%
+  left_join(places_2021_tracts_sel_geom, by = "GEOID") %>%
+  st_as_sf()
+```
+
+# Examine bivariate relationships of selected variables
+
+You will create a bivariate correlation plot and maps to explore both statistical and spaial relationships between the PLACES and SVI variables you selected.
+
+## Create bivariate correlation plot
+
+```{r}
+#| label: fig-bivariatecorrplot
+#| fig-cap: Bivariate Correlations of Select Variables 
+
+svi_places_tracts_sel_sub <- svi_places_tracts_sel_geom %>%
+  st_drop_geometry() %>%
+  drop_na() %>%
+  select(-c(GEOID,Population,SQMI,Population_density))
+
+variable_biv_correlations <- cor(svi_places_tracts_sel_sub)
+
+corrplot(variable_biv_correlations, method="number", col=c("black","white"), order="hclust", bg="lightgrey", tl.col = "grey")
+
+corrplot(variable_biv_correlations, col=c("black","white"), order="hclust", bg="lightgrey", tl.col = "grey")
+
+```
+
+# Create custom, single variable (univariate) and bivariate thematic/choropleth maps
+
+```{r}
+#| label: fig-bivariatemaps
+#| fig-cap: Bivariate Maps of Selected Variables
+
+# Create custom, single variable (univariate) and bivariate thematic/choropleth maps 
+# modify variable(s) to be mapped and legend names/titles for all maps
+
+# map1.PLACES
+map1.Places <- ggplot() + geom_sf(data=svi_places_tracts_sel_geom,
+                                  mapping = aes(fill = ntile(CHD, 5)),
+                               size = 0.1) + 
+  scale_fill_distiller(name="CHD", 
+                       palette = "Greys", 
+                       breaks = pretty_breaks(),
+                       direction = 1) + 
+  theme_minimal()
+
+# save as PNG
+ggsave(map1.Places,
+       filename = "map1_CHD.png",
+       scale = 1,
+       dpi = 300,
+       width = 5.5,
+       height = 5.5,
+       units="in")
+
+map1.Places
+       
+# map1.SVI
+map1.SVI <- ggplot() + geom_sf(data=svi_places_tracts_sel_geom,
+                   mapping = aes(fill = ntile(RPL_THEME1, 5)),
+                   size = 0.1) + 
+  scale_fill_distiller(name="Socioeconomic", 
+                       palette = "Greys", 
+                       breaks = pretty_breaks(n=4),
+                       direction = 1) + 
+  theme_minimal()
+
+map1.SVI
+  
+ggsave(map1.SVI,
+       filename = "map1_SVITheme1.png",
+       scale = 1,
+       dpi = 300,
+       width = 5.5,
+       height = 5.5,
+       units="in")
+
+# create custom bivariate map based on two component variables
+# bivariate map1 data
+map1.data <- bi_class(svi_places_tracts_sel_geom, 
+                 x = CHD, 
+                 y = RPL_THEME1, 
+                 style = "quantile", dim = 3)
+
+# bivariate map 1 plot
+# Available palettes: "Bluegill", "BlueGold", "BlueOr", "BlueYl",
+# "Brown"/"Brown2", "DkBlue"/"DkBlue2", "DkCyan"/"DkCyan2",
+# "DkViolet"/"DkViolet2", "GrPink"/"GrPink2", "PinkGrn", "PurpleGrn", or
+# "PurpleOr"
+
+map1 <- ggplot() +
+  geom_sf(data = map1.data, 
+          mapping = aes(fill = bi_class), 
+          color = "grey", 
+          size = 0.01, 
+          show.legend = FALSE) +
+  bi_scale_fill(pal = "BlueGold", dim = 3) + 
+  bi_theme()
+
+# bivariate map 1 legend
+map1.legend <- bi_legend(pal = "BlueGold",
+                    dim = 3,
+                    xlab = "Higher CHD",
+                    ylab = "Higher SVI",
+                    size = 8,
+                    pad_width = 1)
+
+map1.bivariate <- ggdraw() +
+  draw_plot(map1, 0, 0, 1, 1) +
+  draw_plot(map1.legend, 0.2, 0.45, 0.35, 0.2)
+
+# draw bivariate map
+map1.bivariate
+
+# save to file
+ggsave(map1.bivariate,
+       filename = "maps/map1_bivariate.png",
+       scale = 1,
+       dpi = 300,
+       width = 6.5,
+       height = 5.5,
+       units="in")
+
+
+# END EDIT
+```
