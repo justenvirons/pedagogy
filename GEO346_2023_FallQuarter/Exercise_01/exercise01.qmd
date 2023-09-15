@@ -84,6 +84,7 @@ library(dplyr) # data wrangling, pip format
 library(tidyverse) # data wrangling
 library(biscale) # bivariate mapping
 library(corrplot) # correlation plot
+library(scales) # used for rescaling data
 
 options(scipen=999, digits = 2) # format output for data tables
 
@@ -341,7 +342,7 @@ places_tracts_county_sub <- places_tracts_county %>%
 
 The next step is to add social vulnerability data to the custom geographic layer to allow more analytical options. The [CDC's Social Vulnerability Index (SVI)](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) was initially designed to help public health officials and emergency response planners identify communities that will most likely need support before, during, and after a hazardous event. However, it has proven to be an effective indicator for evaluating other public health phenomena. 
 
-Similar to the PLACES dataset, we will use census tracts--the most granular scale available in the SVI dataset--as the unit of analysis. Append the following code into your data processing script to import the SVI dataset by census tract into R. This is a large file (> 100MB), so please be patient. The code also subsets the data to your county of interest. 
+Similar to the PLACES dataset, we will use census tracts--the most granular scale available in the SVI dataset--as the unit of analysis. Append the following code into your data processing script to import the SVI dataset by census tract into R. This is a large file (> 200MB), so please be patient. The code also subsets the data to your county of interest. 
 
 ```{r}
 #| label: download SVI data
@@ -414,8 +415,8 @@ places_svi_tracts_county_sub_geom <- tract_boundaries_geom %>%
 plot(places_svi_tracts_county_sub_geom['geoid_tract'])
 
 # save comprehensive census tract and county geographic layers as shapefiles in layers directory
-st_write(places_svi_tracts_county_sub_geom, "layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
-st_write(county_boundary_geom, "layers/county_boundary_geom.shp", append = FALSE)
+st_write(places_svi_tracts_county_sub_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
+st_write(county_boundary_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/county_boundary_geom.shp", append = FALSE)
 ```
 
 # Step 4. Examine bivariate relationships of selected variables
@@ -447,9 +448,9 @@ corrplot(variable_biv_correlations, col=c("black","white"), order="hclust", bg="
 
 ::: {#fig-bivariate-correlation-plots layout-ncol=2}
 
-![Bivariate Correlation Plot](images/corr-plot-sample-01.png){#fig-bivariate-sample-01}
+![Bivariate Correlation Plot A](images/corr-plot-sample-01.png){#fig-bivariate-sample-01}
 
-![Bivariate Correlation Plot](images/corr-plot-sample-02.png){#fig-bivariate-sample-02}
+![Bivariate Correlation Plot B](images/corr-plot-sample-02.png){#fig-bivariate-sample-02}
 
 Bivariate Correlation Plots
 :::
