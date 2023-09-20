@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="C. Scott Smith, PhD AICP (Instructor)">
+<meta name="dcterms.date" content="2023-09-18">
+
+<title>GEO 3/446 Exercise #2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="Exercise_02_AirDispersionModeling_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Exercise_02_AirDispersionModeling_files/libs/quarto-html/quarto.js"></script>
+<script src="Exercise_02_AirDispersionModeling_files/libs/quarto-html/popper.min.js"></script>
+<script src="Exercise_02_AirDispersionModeling_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Exercise_02_AirDispersionModeling_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Exercise_02_AirDispersionModeling_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Exercise_02_AirDispersionModeling_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Exercise_02_AirDispersionModeling_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Exercise_02_AirDispersionModeling_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Exercise_02_AirDispersionModeling_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#create-a-new-r-project" id="toc-create-a-new-r-project" class="nav-link" data-scroll-target="#create-a-new-r-project">Create a new R project</a></li>
+  <li><a href="#part-two-process-input-data-in-rstudio" id="toc-part-two-process-input-data-in-rstudio" class="nav-link" data-scroll-target="#part-two-process-input-data-in-rstudio">Part Two: Process input data in RStudio</a>
+  <ul class="collapse">
+  <li><a href="#tri-nei-and-rsei-pollutant-data-for-california" id="toc-tri-nei-and-rsei-pollutant-data-for-california" class="nav-link" data-scroll-target="#tri-nei-and-rsei-pollutant-data-for-california">TRI, NEI and RSEI pollutant data for California</a></li>
+  <li><a href="#create-and-write-shapefiles" id="toc-create-and-write-shapefiles" class="nav-link" data-scroll-target="#create-and-write-shapefiles">Create and write shapefiles</a></li>
+  </ul></li>
+  <li><a href="#part-three-create-and-add-data-to-arcgis-pro-project" id="toc-part-three-create-and-add-data-to-arcgis-pro-project" class="nav-link" data-scroll-target="#part-three-create-and-add-data-to-arcgis-pro-project">Part Three: Create and add data to ArcGIS Pro project</a>
+  <ul class="collapse">
+  <li><a href="#add-and-download-spatial-data" id="toc-add-and-download-spatial-data" class="nav-link" data-scroll-target="#add-and-download-spatial-data">Add and download spatial data</a></li>
+  </ul></li>
+  <li><a href="#part-four-create-study-area" id="toc-part-four-create-study-area" class="nav-link" data-scroll-target="#part-four-create-study-area">Part Four: Create Study Area</a></li>
+  <li><a href="#part-five-model-facility-and-cumulative-impact-of-criteria-air-emissions-so2" id="toc-part-five-model-facility-and-cumulative-impact-of-criteria-air-emissions-so2" class="nav-link" data-scroll-target="#part-five-model-facility-and-cumulative-impact-of-criteria-air-emissions-so2">Part Five: Model facility and cumulative impact of criteria air emissions (SO2)</a></li>
+  <li><a href="#part-six-model-seasonal-variation-in-toxic-air-concentrations-optional" id="toc-part-six-model-seasonal-variation-in-toxic-air-concentrations-optional" class="nav-link" data-scroll-target="#part-six-model-seasonal-variation-in-toxic-air-concentrations-optional">Part Six: Model seasonal variation in toxic air concentrations <em>(optional)</em></a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">GEO 3/446 Exercise #2</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<p class="subtitle lead">Air Dispersion Modeling and Visualization</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>C. Scott Smith, PhD AICP (Instructor) </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 18, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>Air quality (both outdoor/ambient and indoor/household) is associated with a broad range of disease outcomes (e.g., asthma, cancer) and is globally responsible for millions of deaths each year <span class="citation" data-cites="landrigan2017">(<a href="#ref-landrigan2017" role="doc-biblioref">Landrigan 2017</a>)</span>. The Clean Air Act (CAA) is the comprehensive US federal law that regulates air emissions from stationary and mobile sources<span class="citation" data-cites="usepa2013">(<a href="#ref-usepa2013" role="doc-biblioref">US EPA 2013</a>)</span>. Among other things, the Act authorizes the US Environmental Protection Agency (EPA) to establish National Ambient Air Quality Standards (NAAQS) <span class="citation" data-cites="usepa2014">(<a href="#ref-usepa2014" role="doc-biblioref">EPA 2014</a>)</span> designed to protect public health from six outdoor air pollutants: particulate matter, ozone, nitrogen oxides, sulfur dioxide, carbon monoxide and lead (“criteria” pollutants). The EPA is also required to identify and regulate emissions of hazardous air pollutants (HAPs) which, since 1990, includes <a href="https://www.epa.gov/haps/initial-list-hazardous-air-pollutants-modifications">188 pollutants</a>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Additional reading on the effects of air pollution on health
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Each year, the American Lung Association publishes its annual “State of the Air” report <span class="citation" data-cites="ala2022">(<a href="#ref-ala2022" role="doc-biblioref">ALA 2022</a>)</span>which examines two of the most widespread and dangerous pollutants from this group, particulate matter and ozone. Other readings concerning the environmental justice implications of land use planning and toxic air pollution include “Incompatible Land Uses and the Topology of Cumulative Risk” <span class="citation" data-cites="lejano2006b">(<a href="#ref-lejano2006b" role="doc-biblioref">Lejano and Smith 2006</a>)</span> and “Concentrating risk? The geographic concentration of health risk from industrial air toxics across America” <span class="citation" data-cites="ard2020">(<a href="#ref-ard2020" role="doc-biblioref">Ard and Bullock 2020</a>)</span>.</p>
+</div>
+</div>
+</div>
+<p>This exercise involves the evaluation of ambient air concentrations of criteria and toxic pollutants within a student-specified area in California. Students will model concentrations using regularly updated, facility-level emissions made available from the EPA (i.e., <a href="https://www.epa.gov/air-emissions-inventories/national-emissions-inventory-nei">AirData National Emmissions Inventory</a> and <a href="https://www.epa.gov/toxics-release-inventory-tri-program">Toxic Release Inventory</a>), hourly meteorological data from local weather stations and <a href="https://www.epa.gov/scram/air-quality-dispersion-modeling-preferred-and-recommended-models">AERMOD</a>, an air dispersion model developed by the EPA.</p>
+<p>AERMOD is presently the model recommended for US government agencies to estimate pollutant concentrations from stationary (and mobile) sources in urban areas. AERMOD allows for the specification of multiple sources, facility-specific release patterns (it also allows for specification of uneven terrain and effects of nearby building downwash, but we won’t take advantage of these functions in this exercise). The model requires that hourly wind patterns (direction and speed) and temperature data be input. Near-field models like AERMOD differ from far-field models in that the former are able to capture initial mixing phenomena that occur just after the plume leaves the source (such as a smokestack). The AERMOD near-field model is best suited for study areas no greater than 50km by 50km. For this exercise, students will model a custom study area with dimensions 10km by 10km.</p>
+<div class="quarto-layout-panel">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="images/fisk.png" class="img-fluid"></p>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img src="images/emissions.png" class="img-fluid"></p>
+</div>
+</div>
+</div>
+<p>Students will save maps, tables and summaries of spatial analyses in a <a href="https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/Exercise02_AirDispersion_SlidesTemplate.pptx">PowerPoint presentation</a> (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own study areas that have different distributions of pollution sources (and therefore different patterns of air pollutant concentrations). Of course the interpretations will also be your own. As in all assignments for this class, you will be asked to not only produce attractive (strive for cartographic perfection!) and meaningful maps, but also describe patterns presented within them. The three sections below step you through the process to create the above deliverable. (For some of the more complicated procedures, online videos will be made available on the course D2L under the Exercise #2 content folder.)</p>
+</section>
+<section id="create-a-new-r-project" class="level2">
+<h2 class="anchored" data-anchor-id="create-a-new-r-project">Create a new R project</h2>
+<p>In RStudio, create a project within a new directory (e.g., GEO336/exercise_02) of your general course folder. Here you will save files related to exercise #2. Create the following folders within the new exercise-specific directory, “aermod”, “data”, “maps” and “scripts”. Install and/or activate the following packages in R using the below code. Download and unzip the <a href="https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/aermod.zip">aermod folder contents</a> into your project directory from the GitHub repository.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages(c("dplyr", "tidyverse", "openxlsx","sf", "sp")) # uncomment and run if install is necessary</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr) <span class="co"># data wrangling with pipe syntax</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># data wrangling</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx) <span class="co"># use for importing data in Excel format</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf) <span class="co"># simple features data package </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sp) <span class="co"># spatial data package</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="part-two-process-input-data-in-rstudio" class="level2">
+<h2 class="anchored" data-anchor-id="part-two-process-input-data-in-rstudio">Part Two: Process input data in RStudio</h2>
+<section id="tri-nei-and-rsei-pollutant-data-for-california" class="level3">
+<h3 class="anchored" data-anchor-id="tri-nei-and-rsei-pollutant-data-for-california">TRI, NEI and RSEI pollutant data for California</h3>
+<p>Students will draw from two publicly available datasets for this assignment: NEI and TRI. The <a href="https://www.epa.gov/air-emissions-inventories/national-emissions-inventory-nei">National Emissions Inventory</a> (NEI) is a comprehensive and detailed estimate of air emissions of criteria pollutants, criteria precursors, and hazardous air pollutants from air emissions sources. The NEI is released every three years based primarily upon data provided by State, Local, and Tribal air agencies for sources in their jurisdictions and supplemented by data developed by the US EPA. The NEI is built using the Emissions Inventory System (EIS) first to collect the data from State, Local, and Tribal air agencies and then to blend that data with other data sources.</p>
+<p>The US EPA’s <a href="https://www.epa.gov/toxics-release-inventory-tri-program/what-toxics-release-inventory">Toxics Release Inventory</a> (TRI) program tracks the management of certain toxic chemicals that pose a threat to human health and the environment. Large US facilities (i.e., those emitting 10 tons or more per year) in different industry sectors must report annually how much of each chemical is released to the environment and/or managed through recycling, energy recovery and treatment. Data containing the 100 most-used data fields from the TRI Reporting Form R and Form A Certification Statement are made available in various formats on the <a href="https://www.epa.gov/toxics-release-inventory-tri-program/tri-basic-data-files-calendar-years-1987-present">TRI Basic Data web page</a> for reporting years 1987 to 2020. The data can be downloaded for the entire US or by state.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># National Emissions Inventory (zip format)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(<span class="st">"https://gaftp.epa.gov/air/nei/2017/data_summaries/2017v1/2017neiJan_facility.zip"</span>,temp)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>NEI_2017_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">unz</span>(temp, <span class="st">"emis_sum_fac_15420.csv"</span>))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(temp)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># format NEI data</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># filter sulfur dioxide releases in California</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>NEI_2017_form <span class="ot">&lt;-</span> NEI_2017_raw <span class="sc">%&gt;%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_name =</span> <span class="st">`</span><span class="at">company name</span><span class="st">`</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">site_name =</span> <span class="st">`</span><span class="at">site name</span><span class="st">`</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_street =</span> address,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_city =</span> city,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_state =</span> <span class="st">`</span><span class="at">postal abbreviation</span><span class="st">`</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_zip =</span> <span class="st">`</span><span class="at">zip code</span><span class="st">`</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">naics_code =</span> <span class="st">`</span><span class="at">naics code</span><span class="st">`</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">naics_desc =</span> <span class="st">`</span><span class="at">naics description</span><span class="st">`</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">latitude =</span> <span class="st">`</span><span class="at">site latitude</span><span class="st">`</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">longitude =</span> <span class="st">`</span><span class="at">site longitude</span><span class="st">`</span>,</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_code =</span> <span class="st">`</span><span class="at">pollutant code</span><span class="st">`</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_desc =</span> <span class="st">`</span><span class="at">pollutant desc</span><span class="st">`</span>,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_type =</span> <span class="st">`</span><span class="at">pollutant type(s)</span><span class="st">`</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="st">`</span><span class="at">emissions uom</span><span class="st">`</span>,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions =</span> <span class="st">`</span><span class="at">total emissions</span><span class="st">`</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    site_name,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    fac_city,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    fac_state,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    fac_zip,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    naics_code,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    naics_desc,</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    pollutant_code,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    pollutant_desc,</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    pollutant_type,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    emissions_uom,</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    emissions</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fac_state <span class="sc">==</span> <span class="st">"CA"</span>,</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>         pollutant_code <span class="sc">==</span> <span class="st">"SO2"</span>)</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Toxics Release Inventory (csv format)</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>TRI_2020_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://enviro.epa.gov/enviro/efservice/MV_TRI_BASIC_DOWNLOAD/year/=/2020/fname/TRI_2020_US.csv/CSV?.csv"</span>)</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="co"># format TRI data</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="co"># filter data stack air releases in California</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>TRI_2020_form <span class="ot">&lt;-</span> TRI_2020_raw <span class="sc">%&gt;%</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="dv">1</span>,</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_name =</span> <span class="dv">4</span>,</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_street =</span> <span class="dv">5</span>,</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_city =</span> <span class="dv">6</span>,</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_county =</span> <span class="dv">7</span>,</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_state =</span> <span class="dv">8</span>,</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_zip =</span> <span class="dv">9</span>,</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">latitude =</span> <span class="dv">12</span>,</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">longitude =</span> <span class="dv">13</span>,</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">parent_co =</span> <span class="dv">15</span>,</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">sector_code =</span> <span class="dv">19</span>,</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">sector_name =</span> <span class="dv">20</span>,</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">chemical =</span> <span class="dv">34</span>,</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">casno =</span> <span class="dv">37</span>,</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">srsid =</span> <span class="dv">38</span>,</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">caa_chemical =</span> <span class="dv">39</span>,</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">carcinogen =</span> <span class="dv">43</span>,</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">pfas =</span> <span class="dv">44</span>,</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="dv">46</span>,</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">fugitive_air =</span> <span class="dv">47</span>,</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    <span class="at">stack_air =</span> <span class="dv">48</span>,</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">water =</span> <span class="dv">49</span>,</span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">underground =</span> <span class="dv">50</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>    year,</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    fac_city,</span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>    fac_county,</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>    fac_state,</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    fac_zip,</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    parent_co,</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>    sector_code,</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>    sector_name,</span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>    chemical,</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a>    casno,</span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>    srsid,</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>    caa_chemical,</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>    carcinogen,</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a>    pfas,</span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>    emissions_uom,</span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>    fugitive_air,</span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>    stack_air,</span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>    water,</span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>    underground</span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fac_state <span class="sc">==</span> <span class="st">"CA"</span>,</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a>         stack_air <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a><span class="co"># RSEI data (Excel format)</span></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>RSEI_v2310_raw <span class="ot">&lt;-</span> <span class="fu">read.xlsx</span>(<span class="st">"https://www.epa.gov/system/files/other-files/2022-02/toxicity_data_rsei_v2310.xlsx"</span>, <span class="at">sheet=</span><span class="dv">2</span>)</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>RSEI_v2310_form <span class="ot">&lt;-</span> RSEI_v2310_raw <span class="sc">%&gt;%</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">casno =</span> CASStandard) <span class="sc">%&gt;%</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">itw =</span> <span class="fu">as.numeric</span>(ITW)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(casno, </span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>         itw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>EPA’s Risk-Screening Environmental Indicators (RSEI) model helps policy makers, researchers, and communities explore data on releases of toxic substances from industrial and federal facilities. The model considers the fate and transport of chemicals through the environment, each chemical’s relative toxicity, and potential human exposure. When combined with the total releases of chemicals by location, RSEI model results can be used to help identify locations of toxic hot spots, monitor potential human health impacts over time, prioritize investigative work and prioritize the allocation of agency resources, more generally. Use the following code to join RSEI toxicity weights to the TRI data.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Join TRI with RSEI inhalation toxicity weights (ITW)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>TRI_2020_form_wtd <span class="ot">&lt;-</span> TRI_2020_form <span class="sc">%&gt;%</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(RSEI_v2310_form, <span class="at">by =</span> <span class="st">"casno"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">stack_air_itw =</span> stack_air <span class="sc">*</span> itw<span class="sc">/</span><span class="dv">10000000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(stack_air_itw) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>itw)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="create-and-write-shapefiles" class="level3">
+<h3 class="anchored" data-anchor-id="create-and-write-shapefiles">Create and write shapefiles</h3>
+<p>Save the NEI and TRI air pollution tables as shapefiles into your working directory, perhaps in the “data” folder. If you are choosing to examine an area located within northern California, use UTM 10N (EPSG: 26910) and UTM 11N (EPSG: 26911) if your study area is in southern California. See a general map of the UTM zones for the contiguous United States below.</p>
+<p><img src="images/fig44.gif" class="img-fluid"></p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TRI_2020_form_wtd_geom <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(TRI_2020_form_wtd, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4269</span>) <span class="sc">%&gt;%</span> <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">26911</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="co"># or crs = 26910 if in northern California</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(TRI_2020_form_wtd_geom, <span class="st">"enter working directory and desired file name"</span>,<span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>NEI_2017_form_geom <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(NEI_2017_form, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4269</span>) <span class="sc">%&gt;%</span> <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">26911</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="co"># or crs = 26910 if in northern California</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(NEI_2017_form_geom, <span class="st">"enter working directory and desired file name"</span>,<span class="at">append=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="part-three-create-and-add-data-to-arcgis-pro-project" class="level2">
+<h2 class="anchored" data-anchor-id="part-three-create-and-add-data-to-arcgis-pro-project">Part Three: Create and add data to ArcGIS Pro project</h2>
+<section id="add-and-download-spatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="add-and-download-spatial-data">Add and download spatial data</h3>
+<p>Create a new ArcGIS Pro project on your computer under the maps directory in your R project folder. In your ArcGIS Pro map project, under the “Map” menu, click the “Add Data” option on the toolbar and navigate to the directory where you exported the NEI and TRI datasets. You may need to click the “Connect to Folder” and navigate to your project directory. Select all three of the files and add to the map frame. They should draw automatically and appear in the table of contents.</p>
+<p>Also download the <a href="https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip">California county, air basin and air district boundary file</a> from the <a href="https://ww2.arb.ca.gov/geographical-information-system-gis-library">California Air Resources Board (CARB) GIS Library web page</a>. These boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data given that AERMOD requires such data to estimate the geographic distribution of releases over time.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Meteorological data
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>The California Air Resources Board (CARB) makes available <a href="https://ww2.arb.ca.gov/resources/documents/harp-aermod-meteorological-files">AERMOD-ready meteorological data for 28 select weather stations throughout the state</a> while the various air quality districts make available similarly formatted data for weather stations within their respective jurisdictions. Links to the district-specific weather station and data are also available on the <a href="https://ww2.arb.ca.gov/resources/documents/harp-aermod-meteorological-files">ARB meteorological data webpage</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="part-four-create-study-area" class="level2">
+<h2 class="anchored" data-anchor-id="part-four-create-study-area">Part Four: Create Study Area</h2>
+<p>You will need to create a custom and spatially explicit study area in order to run the needed calculations. Create your custom study area by doing the following:</p>
+<ul>
+<li><p>Under the “View” menu, click the “Catalog Pane” option to view project contents. Navigate to your project folder and right-click on the “Data” directory to create a new shapefile. With your project directory selected, open the File menu and select the “New/Shapefile” option. In the “Create Feature Class” dialog box, give your polygonal shapefile an appropriate name (e.g., studyarea). Be sure the output coordinate system corresponds with the other shapefiles in your map frame (i.e., UTM Zone 10N, NAD 1983). When finished, add the new shapefile to the map.</p>
+<p><img src="images/paste-D249D986.png" class="img-fluid" style="width:3in"></p></li>
+<li><p>In the “Edit” menu, click “Create” to begin delineating the study area polygon. In the “Create Features” dialog, use the square template to construct the polygon. With the pencil tool activated, create a 10km by 10km square by clicking the map to create the initial vertex. Don’t be concerned about the specific location of the initial vertex (and study area) at this time. While still editing, right-click inside the map frame and select the “Direction/Size” option to make visible the associated dialog box. Enter “0” for direction and 10km for both length and width. When finished entering the dimensions click the Enter key on your keyboard to create the new feature.</p>
+<p><img src="images/paste-F8F29155.png" class="img-fluid" style="width:1.5in"></p></li>
+</ul>
+</section>
+<section id="part-five-model-facility-and-cumulative-impact-of-criteria-air-emissions-so2" class="level2">
+<h2 class="anchored" data-anchor-id="part-five-model-facility-and-cumulative-impact-of-criteria-air-emissions-so2">Part Five: Model facility and cumulative impact of criteria air emissions (SO2)</h2>
+<p>In this part of the exercise you will analyze the concentrations of sulfur dioxide emitted from a specific facility and then compare this with the cumulative sulfur dioxide emissions (from all facilities) within (and/or near) your study area.</p>
+<ul>
+<li><p>First, identify a single facility in the NEI facilities shapefile that emits considerable amounts of sulfur dioxide (SO2).</p></li>
+<li><p>Next, center the study area so that the facility you identified is located in the (approximate) center. Do this by clicking on the “Edit” menu and selecting the study area polygon. Use the “Move” tool to position the polygon in the desired location. Under the “Share” menu, click “Capture to Clipboard” and paste the NEI facilities map into the appropriate PowerPoint slide.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/paste-8B95D98A.png" class="img-fluid figure-img" style="width:2in"></p>
+<figcaption class="figure-caption">“10kmx10km study area with facilities mappeed by annual SO2 emissions (tons)”</figcaption>
+</figure>
+</div></li>
+</ul>
+<p>Now you will use AERMOD to model emissions from the facility you selected. Read through the AERMOD Primer in Appendix C before proceeding.</p>
+<ul>
+<li><p>Using a text editor (such as notepad or my preference is notetab light freeware), edit aermod.inp so that the source (SO LOCATION) pathway location coordinates (X and Y) reflect those of your selected facility and the source (SO SRCPARAM) parameters reflect the SO2 emissions from the selected facility in the proper units (grams per second). Convert the tons per year to grams per second using the <a href="https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/AERMODFormatting.xls">AERMOD_Formatting.xlsx</a> spreadsheet which uses the following formula: quantity in g/s = (tons/year*2000 pounds/year*453.59237 grams/pound)/(365 days/year * 24 hrs/day * 60 minutes/hour * 60 seconds/minute)). Use the default (i.e., existing) settings for the release height, stack gas exit temperature, stack gas exit velocity, and stack diameter (e.g., 76. 353. 5. 3.0) for the facility.</p></li>
+<li><p>Also edit in aermod.inp the receptor (or RE) pathway so that the bottom, left (southwest vertex in this case) coordinates (the anchor point of the Cartesian grid) reflect those of your study area (you can identify coordinates via the status bar at the bottom right of the ArcGIS Pro map frame or via the Properties/Source/Extent menu by right-clicking on feature layer). Use the existing 200m x 50m parameters for the Cartesian receptor grid (e.g., XYINC 50 [bottom left X coordinate of study area] and 200 [bottom left Y coordinate of study area]). You can again use the <a href="https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/AERMODFormatting.xls">AERMODFormatting.xlsx</a> spreadsheet to format this parameter for the aermod.inp file.</p></li>
+<li><p>Note that we may need to reduce processing time by calculating concentrations for fewer days than what is available in the meteorology files. If it takes too long for your machine to calculate over multiple years it may be necessary to spread the analysis across a select number of days over different months for a single year in order to account for seasonal variations (1/1-1/7; 4/1-4/7; 10/1-10/7; 7/1-7/7). Be sure that the meteorological (ME) pathway refers to the meteorological files for the entire study period/year.</p></li>
+<li><p>Next set the output (OU) pathway to create four plot files, with each representing key concentrations over given periods of time. The default input file calculates maximum concentrations averaged over one- and three-hour periods. Concentrations will be estimated for each of the 2,500 receptors in your study area. Also rename the output plot files in the OU parameters so they are more informative (e.g., NEI_3HRMAX.PLT, NEI_1HRMAX.PLT).</p></li>
+<li><p>Now you are ready to run the newly specified model. To run the model, navigate to the directory where aermod.inp, aermod.exe and the associated meteorological files are located. Double-click the aermod.exe executable file (or drag and release aermod.inp over aermod.exe). Allow AERMOD to cycle through the 365 days of each year represented in your meteorological data. If you receive an error, check the sources of the error by reading the ERROR.OUT file in notepad or other text editor.</p></li>
+<li><p>Once AERMOD has completed the procedure, you will need to re-format the data in the plot file so that it is readable in ArcGIS Pro. First, open the 1-hour maximum concentrations plot file in notepad (under the “Format” menu, be sure the word wrap is off, not checked). Remove much of the header documentation, remove spaces in column names in the plot file so that it appears as follows. Save the edited plot file.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/paste-B5992985.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Sample of AERMOD output file</figcaption>
+</figure>
+</div></li>
+<li><p>Next, open the plot file in Excel using the default fixed width settings. Remove any spaces and parentheses from the column names (ArcGIS Pro only allows numbers, characters and underscores in field names). Save the text file as a CSV file. Also be sure to close the file in Excel before attempting to open it in ArcGIS Pro.</p></li>
+<li><p>Return to ArcGIS Pro and open the annual, comma delimited text file. In order to display the model output, click the “Add Data” option in the “Map” menu and select the “XY Point Data” option. ArcGIS Pro will open a “XY Table to Point” dialog. Navigate to the input CSV table you just created. ArcGIS Pro should automatically recognize the X and Y fields in the input file. Specify the output location and feature class as a layer in the project geodatabase (“.shp” suffix). Edit the coordinate system information so that it corresponds with the other shapefiles in the map frame (e.g., UTM Zone 11N, NAD 1983). When finished, click “Run” and the new point layer should be added to the map table of contents. Make visible the layer to show the series of receptor points specified in the AERMOD input file. Next, open the plot file in Excel using the default fixed width settings. Remove any spaces and parentheses from the column names (ArcGIS Pro only allows numbers, characters and underscores in field names). Save the text file as a CSV file. Also be sure to close the file in Excel before attempting to open it in ArcGIS Pro.</p></li>
+<li><p>Return to ArcGIS Pro and open the annual, tab-delimited text file. In order to display the model output, click the “Add Data” option in the “Map” menu and select the “XY Point Data” option. ArcGIS Pro will open a “XY Table to Point” dialog. Navigate to the input CSV table you just created. ArcGIS Pro should automatically recognize the X and Y fields in the input file. Specify the output location and feature class as a layer in the project geodatabase (“.shp” suffix). Edit the coordinate system information so that it corresponds with the other shapefiles in the map frame (i.e., UTM Zone 11N, NAD 1983). When finished, click “Run” and the new point layer should be added to the map table of contents. Make visible the layer to show the series of receptor points specified in the AERMOD input file.</p>
+<p><img src="images/paste-24DE3A0C.png" class="img-fluid" style="width:2.5in"></p></li>
+<li><p>In order to better display variations in concentrations within your study area, convert the points to grid cells. Do this by clicking the “Tools” option under the “Analysis” menu. In the “Geoprocessing” dialog, type “Point to Raster” to open the associated conversion tool. Specify the output cell size as 200 (to correspond with the parameters specified in the AERMOD input file) and click Run when finished. Create a histogram to show the distributions of values within the raster layer, including the mean, median and standard deviation. Copy and paste the 1-hour maximum concentration map, legend and histogram into the appropriate slide within the <a href="https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/Exercise02_AirDispersion_SlidesTemplate.pptx">PowerPoint template</a>. Also, view the “metadata” tab on the Properties dialog for the raster layer to view statistics for the concentrations field. Populate the appropriate column in the PowerPoint table template (Slide 5) with corresponding values.</p>
+<p><img src="images/paste-C52CEE31.png" class="img-fluid" style="width:2.5in"></p></li>
+<li><p>Repeat the above three procedures to map the 3-hour concentration plot for the single facility. To complete the remaining maps for part two, refer to the above steps to calculate SO2 emissions from multiple facilities within your study area. For the multiple facilities (or cumulative analysis), begin by selecting all facilities inside and within one kilometer of your study area (hint: use the buffer distance option under the “select by location” option under the “Select” menu). Open the attribute table with selected facilities that emit criteria pollutants. Use the export tool to save selected records in dbf format. Open the dBase file in Excel. In Excel sort the facilities to identify the top five emitters of SO2 and use the provided AERMODFormatting.xls spreadsheet to format source location and source parameter specifications for the five AERMOD facilities.</p></li>
+<li><p>Lastly compare the modeled pollutant concentrations in your study area to the regulatory reference concentrations (<a href="https://www.epa.gov/criteria-air-pollutants/naaqs-table">US EPA national air quality standards</a> are organized by pollutant and average concentration period) and write-up your findings. In your write-up, respond to questions concerning the degree to which the primary facility you selected contributes to the pollution burden within your study area. Also consider any limitations or concerns you may have about the model (e.g., what is excluded from the model).</p></li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="true" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Comparison concentrations
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse show">
+<div class="callout-body-container callout-body">
+<p>Note that you will need to <a href="https://www.breeze-technologies.de/blog/air-pollution-how-to-convert-between-mgm3-%C2%B5gm3-ppm-ppb/">convert the ppb and ppm standards to ug/m^3</a> in order to compare with AERMOD output. The 1-hour average primary standard 75 ppb is equal to 196.5 ug/m^3 and the 3-hour average 0.5 ppm secondary standard is equal to 1,310 ug/m^3</p>
+</div>
+</div>
+</div>
+</section>
+<section id="part-six-model-seasonal-variation-in-toxic-air-concentrations-optional" class="level2">
+<h2 class="anchored" data-anchor-id="part-six-model-seasonal-variation-in-toxic-air-concentrations-optional">Part Six: Model seasonal variation in toxic air concentrations <em>(optional)</em></h2>
+<p>Air toxics, unlike “criteria” air pollutants such as ground-level ozone and oxides of nitrogen whose main health impact is their contribution to smog, are more localized in their impact. These substances can contribute to risk of cancer, respiratory illness, and other harms when inhaled. Their unequal distribution across the country and even within communities has often not been remedied successfully even as the Clean Air Act has been relatively successful at cleaning criteria pollutants from the air.</p>
+<p>In this part of the exercise, you will estimate toxic air releases within your study area from large, industrial facilities represented in the latest (2020) EPA’s Toxics Release Inventory or TRI report. The TRI reports emissions by facility for each of the 650 toxics and toxic compounds. Given that every chemical has a different dose-response curve or, more simply, a different toxicological profile, you will adjust chemical releases using inhalation toxicity weighted factors (ITW) from EPA’s Risk-Screening Environmental Indicators (RSEI) model. The toxicity-weighted concentrations are provided are an appropriate metric for comparing levels of potential impact between geographic areas and for smaller-scale environmental justice analyses. Further, toxicity-weighted allows concentrations to be added across chemicals for the same geographic area.</p>
+<p>For Part Six, you will explore only the maximum 3-hour concentration plot files for the inhalation toxicity weighted (ITW) emissions arising from all facilities within the study area (select multiple facilities using the same procedure used above).</p>
+<p>You will alter parameters in the (ME) pathway in order to estimate how the distribution of air concentrations differs seasonally due to changes in wind direction, wind speed and air temperature. This said, you will run four AERMOD models; one for each season. In order to run the season-specific models, change the meteorological pathway (ME) parameters so that it references the appropriate season-specific upper air and surface files (e.g., we will go over the seasonal date ranges in class). As before, for the multiple facilities (or cumulative analysis), select the five facilities within the study area with the highest ITW concentrations. Use the AERMODFormatting.xls spreadsheet to format data for AERMOD input files. Create associated maps and update the corresponding table (Slide 10). Summarize your findings in the write-up for (Slide 11).</p>
+<!-- -->
+
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-ala2022" class="csl-entry" role="listitem">
+ALA. 2022. <span>“State of the <span>Air</span> 202.”</span> <span>Chicago, IL</span>: <span>American Lung Association</span>.
+</div>
+<div id="ref-ard2020" class="csl-entry" role="listitem">
+Ard, Kerry, and Clair Bullock. 2020. <span>“Chapter 12 - <span>Concentrating</span> Risk? <span>The</span> Geographic Concentration of Health Risk from Industrial Air Toxics Across <span>America</span>.”</span> In <em>Spatiotemporal <span>Analysis</span> of <span>Air Pollution</span> and <span>Its Application</span> in <span>Public Health</span></em>, edited by Lixin Li, Xiaolu Zhou, and Weitian Tong, 277–92. <span>Elsevier</span>. <a href="https://doi.org/10.1016/B978-0-12-815822-7.00012-1">https://doi.org/10.1016/B978-0-12-815822-7.00012-1</a>.
+</div>
+<div id="ref-usepa2014" class="csl-entry" role="listitem">
+EPA, US. 2014. <span>“<span>NAAQS Table</span>.”</span> Other {{Policies}} and {{Guidance}}. https://www.epa.gov/criteria-air-pollutants/naaqs-table.
+</div>
+<div id="ref-landrigan2017" class="csl-entry" role="listitem">
+Landrigan, Philip J. 2017. <span>“Air Pollution and Health.”</span> <em>The Lancet Public Health</em> 2 (1): e4–5. <a href="https://doi.org/10.1016/S2468-2667(16)30023-8">https://doi.org/10.1016/S2468-2667(16)30023-8</a>.
+</div>
+<div id="ref-lejano2006b" class="csl-entry" role="listitem">
+Lejano, Raul P., and C. Scott Smith. 2006. <span>“Incompatible <span>Land Uses</span> and the <span>Topology</span> of <span>Cumulative Risk</span>.”</span> <em>Environmental Management</em> 37 (2): 230–46.
+</div>
+<div id="ref-usepa2013" class="csl-entry" role="listitem">
+US EPA, OP. 2013. <span>“Summary of the <span>Clean Air Act</span>.”</span> Overviews and {{Factsheets}}. https://www.epa.gov/laws-regulations/summary-clean-air-act.
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb5" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "GEO 3/446 Exercise #2"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Air Dispersion Modeling and Visualization"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> C. Scott Smith, PhD AICP (Instructor)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="an">email:</span><span class="co"> c.scott.smith@depaul.edu</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "`r format(Sys.time(), '%d %B %Y')`"</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> </span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">    echo: true</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">    eval: false</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">    warning: false</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">    theme: [flatly, "../../styles.scss"]</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">    toc: true</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">    reference-location: document</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="an">editor_options:</span><span class="co"> </span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">  chunk_output_type: console</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> "../../references.bib"</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="fu">## Background</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>Air quality (both outdoor/ambient and indoor/household) is associated with a broad range of disease outcomes (e.g., asthma, cancer) and is globally responsible for millions of deaths each year <span class="co">[</span><span class="ot">@landrigan2017</span><span class="co">]</span>. The Clean Air Act (CAA) is the comprehensive US federal law that regulates air emissions from stationary and mobile sources<span class="co">[</span><span class="ot">@usepa2013</span><span class="co">]</span>. Among other things, the Act authorizes the US Environmental Protection Agency (EPA) to establish National Ambient Air Quality Standards (NAAQS) <span class="co">[</span><span class="ot">@usepa2014</span><span class="co">]</span> designed to protect public health from six outdoor air pollutants: particulate matter, ozone, nitrogen oxides, sulfur dioxide, carbon monoxide and lead ("criteria" pollutants). The EPA is also required to identify and regulate emissions of hazardous air pollutants (HAPs) which, since 1990, includes <span class="co">[</span><span class="ot">188 pollutants</span><span class="co">](https://www.epa.gov/haps/initial-list-hazardous-air-pollutants-modifications)</span>.</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="false"}</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="fu">## Additional reading on the effects of air pollution on health</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>Each year, the American Lung Association publishes its annual "State of the Air" report <span class="co">[</span><span class="ot">@ala2022</span><span class="co">]</span>which examines two of the most widespread and dangerous pollutants from this group, particulate matter and ozone. Other readings concerning the environmental justice implications of land use planning and toxic air pollution include "Incompatible Land Uses and the Topology of Cumulative Risk" <span class="co">[</span><span class="ot">@lejano2006b</span><span class="co">]</span> and "Concentrating risk? The geographic concentration of health risk from industrial air toxics across America" <span class="co">[</span><span class="ot">@ard2020</span><span class="co">]</span>.</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>This exercise involves the evaluation of ambient air concentrations of criteria and toxic pollutants within a student-specified area in California. Students will model concentrations using regularly updated, facility-level emissions made available from the EPA (i.e., <span class="co">[</span><span class="ot">AirData National Emmissions Inventory</span><span class="co">](https://www.epa.gov/air-emissions-inventories/national-emissions-inventory-nei)</span> and <span class="co">[</span><span class="ot">Toxic Release Inventory</span><span class="co">](https://www.epa.gov/toxics-release-inventory-tri-program)</span>), hourly meteorological data from local weather stations and <span class="co">[</span><span class="ot">AERMOD</span><span class="co">](https://www.epa.gov/scram/air-quality-dispersion-modeling-preferred-and-recommended-models)</span>, an air dispersion model developed by the EPA.</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>AERMOD is presently the model recommended for US government agencies to estimate pollutant concentrations from stationary (and mobile) sources in urban areas. AERMOD allows for the specification of multiple sources, facility-specific release patterns (it also allows for specification of uneven terrain and effects of nearby building downwash, but we won't take advantage of these functions in this exercise). The model requires that hourly wind patterns (direction and speed) and temperature data be input. Near-field models like AERMOD differ from far-field models in that the former are able to capture initial mixing phenomena that occur just after the plume leaves the source (such as a smokestack). The AERMOD near-field model is best suited for study areas no greater than 50km by 50km. For this exercise, students will model a custom study area with dimensions 10km by 10km.</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>::: {layout-ncol="2"}</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/fisk.png)</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/emissions.png)</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>Students will save maps, tables and summaries of spatial analyses in a <span class="co">[</span><span class="ot">PowerPoint presentation</span><span class="co">](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/Exercise02_AirDispersion_SlidesTemplate.pptx)</span> (or, optionally, a document created with Quarto markdown in R) to be submitted via the course web page. Students are welcome to work collectively with classmates to overcome obstacles experienced while completing the required tasks, although all submissions will be unique given that students will choose their own study areas that have different distributions of pollution sources (and therefore different patterns of air pollutant concentrations). Of course the interpretations will also be your own. As in all assignments for this class, you will be asked to not only produce attractive (strive for cartographic perfection!) and meaningful maps, but also describe patterns presented within them. The three sections below step you through the process to create the above deliverable. (For some of the more complicated procedures, online videos will be made available on the course D2L under the Exercise #2 content folder.)</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Create a new R project</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>In RStudio, create a project within a new directory (e.g., GEO336/exercise_02) of your general course folder. Here you will save files related to exercise #2. Create the following folders within the new exercise-specific directory, "aermod", "data", "maps" and "scripts". Install and/or activate the following packages in R using the below code. Download and unzip the <span class="co">[</span><span class="ot">aermod folder contents</span><span class="co">](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/aermod.zip)</span> into your project directory from the GitHub repository.</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: Install and activate R packages</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages(c("dplyr", "tidyverse", "openxlsx","sf", "sp")) # uncomment and run if install is necessary</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr) <span class="co"># data wrangling with pipe syntax</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># data wrangling</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx) <span class="co"># use for importing data in Excel format</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf) <span class="co"># simple features data package </span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sp) <span class="co"># spatial data package</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part Two: Process input data in RStudio</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="fu">### TRI, NEI and RSEI pollutant data for California</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>Students will draw from two publicly available datasets for this assignment: NEI and TRI. The <span class="co">[</span><span class="ot">National Emissions Inventory</span><span class="co">](https://www.epa.gov/air-emissions-inventories/national-emissions-inventory-nei)</span> (NEI) is a comprehensive and detailed estimate of air emissions of criteria pollutants, criteria precursors, and hazardous air pollutants from air emissions sources. The NEI is released every three years based primarily upon data provided by State, Local, and Tribal air agencies for sources in their jurisdictions and supplemented by data developed by the US EPA. The NEI is built using the Emissions Inventory System (EIS) first to collect the data from State, Local, and Tribal air agencies and then to blend that data with other data sources.</span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>The US EPA's <span class="co">[</span><span class="ot">Toxics Release Inventory</span><span class="co">](https://www.epa.gov/toxics-release-inventory-tri-program/what-toxics-release-inventory)</span> (TRI) program tracks the management of certain toxic chemicals that pose a threat to human health and the environment. Large US facilities (i.e., those emitting 10 tons or more per year) in different industry sectors must report annually how much of each chemical is released to the environment and/or managed through recycling, energy recovery and treatment. Data containing the 100 most-used data fields from the TRI Reporting Form R and Form A Certification Statement are made available in various formats on the <span class="co">[</span><span class="ot">TRI Basic Data web page</span><span class="co">](https://www.epa.gov/toxics-release-inventory-tri-program/tri-basic-data-files-calendar-years-1987-present)</span> for reporting years 1987 to 2020. The data can be downloaded for the entire US or by state.</span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: Download, format and save essential datasets</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="co"># National Emissions Inventory (zip format)</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(<span class="st">"https://gaftp.epa.gov/air/nei/2017/data_summaries/2017v1/2017neiJan_facility.zip"</span>,temp)</span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>NEI_2017_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">unz</span>(temp, <span class="st">"emis_sum_fac_15420.csv"</span>))</span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(temp)</span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="co"># format NEI data</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a><span class="co"># filter sulfur dioxide releases in California</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>NEI_2017_form <span class="ot">&lt;-</span> NEI_2017_raw <span class="sc">%&gt;%</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_name =</span> <span class="st">`</span><span class="at">company name</span><span class="st">`</span>,</span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>    <span class="at">site_name =</span> <span class="st">`</span><span class="at">site name</span><span class="st">`</span>,</span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_street =</span> address,</span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_city =</span> city,</span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_state =</span> <span class="st">`</span><span class="at">postal abbreviation</span><span class="st">`</span>,</span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_zip =</span> <span class="st">`</span><span class="at">zip code</span><span class="st">`</span>,</span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>    <span class="at">naics_code =</span> <span class="st">`</span><span class="at">naics code</span><span class="st">`</span>,</span>
+<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>    <span class="at">naics_desc =</span> <span class="st">`</span><span class="at">naics description</span><span class="st">`</span>,</span>
+<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>    <span class="at">latitude =</span> <span class="st">`</span><span class="at">site latitude</span><span class="st">`</span>,</span>
+<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>    <span class="at">longitude =</span> <span class="st">`</span><span class="at">site longitude</span><span class="st">`</span>,</span>
+<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_code =</span> <span class="st">`</span><span class="at">pollutant code</span><span class="st">`</span>,</span>
+<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_desc =</span> <span class="st">`</span><span class="at">pollutant desc</span><span class="st">`</span>,</span>
+<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>    <span class="at">pollutant_type =</span> <span class="st">`</span><span class="at">pollutant type(s)</span><span class="st">`</span>,</span>
+<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="st">`</span><span class="at">emissions uom</span><span class="st">`</span>,</span>
+<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions =</span> <span class="st">`</span><span class="at">total emissions</span><span class="st">`</span></span>
+<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
+<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>    site_name,</span>
+<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
+<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>    fac_city,</span>
+<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>    fac_state,</span>
+<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>    fac_zip,</span>
+<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>    naics_code,</span>
+<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    naics_desc,</span>
+<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    pollutant_code,</span>
+<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    pollutant_desc,</span>
+<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    pollutant_type,</span>
+<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    emissions_uom,</span>
+<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>    emissions</span>
+<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fac_state <span class="sc">==</span> <span class="st">"CA"</span>,</span>
+<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>         pollutant_code <span class="sc">==</span> <span class="st">"SO2"</span>)</span>
+<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a><span class="co"># Toxics Release Inventory (csv format)</span></span>
+<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>TRI_2020_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://enviro.epa.gov/enviro/efservice/MV_TRI_BASIC_DOWNLOAD/year/=/2020/fname/TRI_2020_US.csv/CSV?.csv"</span>)</span>
+<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a><span class="co"># format TRI data</span></span>
+<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a><span class="co"># filter data stack air releases in California</span></span>
+<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>TRI_2020_form <span class="ot">&lt;-</span> TRI_2020_raw <span class="sc">%&gt;%</span></span>
+<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="dv">1</span>,</span>
+<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_name =</span> <span class="dv">4</span>,</span>
+<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_street =</span> <span class="dv">5</span>,</span>
+<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_city =</span> <span class="dv">6</span>,</span>
+<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_county =</span> <span class="dv">7</span>,</span>
+<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_state =</span> <span class="dv">8</span>,</span>
+<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>    <span class="at">fac_zip =</span> <span class="dv">9</span>,</span>
+<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>    <span class="at">latitude =</span> <span class="dv">12</span>,</span>
+<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>    <span class="at">longitude =</span> <span class="dv">13</span>,</span>
+<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>    <span class="at">parent_co =</span> <span class="dv">15</span>,</span>
+<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>    <span class="at">sector_code =</span> <span class="dv">19</span>,</span>
+<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>    <span class="at">sector_name =</span> <span class="dv">20</span>,</span>
+<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>    <span class="at">chemical =</span> <span class="dv">34</span>,</span>
+<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>    <span class="at">casno =</span> <span class="dv">37</span>,</span>
+<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a>    <span class="at">srsid =</span> <span class="dv">38</span>,</span>
+<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>    <span class="at">caa_chemical =</span> <span class="dv">39</span>,</span>
+<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>    <span class="at">carcinogen =</span> <span class="dv">43</span>,</span>
+<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>    <span class="at">pfas =</span> <span class="dv">44</span>,</span>
+<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="dv">46</span>,</span>
+<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a>    <span class="at">fugitive_air =</span> <span class="dv">47</span>,</span>
+<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>    <span class="at">stack_air =</span> <span class="dv">48</span>,</span>
+<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>    <span class="at">water =</span> <span class="dv">49</span>,</span>
+<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>    <span class="at">underground =</span> <span class="dv">50</span></span>
+<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>    year,</span>
+<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
+<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
+<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>    fac_city,</span>
+<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>    fac_county,</span>
+<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>    fac_state,</span>
+<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>    fac_zip,</span>
+<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>    latitude,</span>
+<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>    longitude,</span>
+<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>    parent_co,</span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>    sector_code,</span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>    sector_name,</span>
+<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>    chemical,</span>
+<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>    casno,</span>
+<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>    srsid,</span>
+<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>    caa_chemical,</span>
+<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>    carcinogen,</span>
+<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>    pfas,</span>
+<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a>    emissions_uom,</span>
+<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>    fugitive_air,</span>
+<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a>    stack_air,</span>
+<span id="cb5-178"><a href="#cb5-178" aria-hidden="true" tabindex="-1"></a>    water,</span>
+<span id="cb5-179"><a href="#cb5-179" aria-hidden="true" tabindex="-1"></a>    underground</span>
+<span id="cb5-180"><a href="#cb5-180" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-181"><a href="#cb5-181" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fac_state <span class="sc">==</span> <span class="st">"CA"</span>,</span>
+<span id="cb5-182"><a href="#cb5-182" aria-hidden="true" tabindex="-1"></a>         stack_air <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb5-183"><a href="#cb5-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-184"><a href="#cb5-184" aria-hidden="true" tabindex="-1"></a><span class="co"># RSEI data (Excel format)</span></span>
+<span id="cb5-185"><a href="#cb5-185" aria-hidden="true" tabindex="-1"></a>RSEI_v2310_raw <span class="ot">&lt;-</span> <span class="fu">read.xlsx</span>(<span class="st">"https://www.epa.gov/system/files/other-files/2022-02/toxicity_data_rsei_v2310.xlsx"</span>, <span class="at">sheet=</span><span class="dv">2</span>)</span>
+<span id="cb5-186"><a href="#cb5-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-187"><a href="#cb5-187" aria-hidden="true" tabindex="-1"></a>RSEI_v2310_form <span class="ot">&lt;-</span> RSEI_v2310_raw <span class="sc">%&gt;%</span></span>
+<span id="cb5-188"><a href="#cb5-188" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">casno =</span> CASStandard) <span class="sc">%&gt;%</span></span>
+<span id="cb5-189"><a href="#cb5-189" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">itw =</span> <span class="fu">as.numeric</span>(ITW)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-190"><a href="#cb5-190" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(casno, </span>
+<span id="cb5-191"><a href="#cb5-191" aria-hidden="true" tabindex="-1"></a>         itw)</span>
+<span id="cb5-192"><a href="#cb5-192" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-193"><a href="#cb5-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-194"><a href="#cb5-194" aria-hidden="true" tabindex="-1"></a>EPA's Risk-Screening Environmental Indicators (RSEI) model helps policy makers, researchers, and communities explore data on releases of toxic substances from industrial and federal facilities. The model considers the fate and transport of chemicals through the environment, each chemical's relative toxicity, and potential human exposure. When combined with the total releases of chemicals by location, RSEI model results can be used to help identify locations of toxic hot spots, monitor potential human health impacts over time, prioritize investigative work and prioritize the allocation of agency resources, more generally. Use the following code to join RSEI toxicity weights to the TRI data.</span>
+<span id="cb5-195"><a href="#cb5-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-198"><a href="#cb5-198" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb5-199"><a href="#cb5-199" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: Join RSEI toxicity weights to the TRI data</span></span>
+<span id="cb5-200"><a href="#cb5-200" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb5-201"><a href="#cb5-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-202"><a href="#cb5-202" aria-hidden="true" tabindex="-1"></a><span class="co"># Join TRI with RSEI inhalation toxicity weights (ITW)</span></span>
+<span id="cb5-203"><a href="#cb5-203" aria-hidden="true" tabindex="-1"></a>TRI_2020_form_wtd <span class="ot">&lt;-</span> TRI_2020_form <span class="sc">%&gt;%</span> </span>
+<span id="cb5-204"><a href="#cb5-204" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(RSEI_v2310_form, <span class="at">by =</span> <span class="st">"casno"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-205"><a href="#cb5-205" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">stack_air_itw =</span> stack_air <span class="sc">*</span> itw<span class="sc">/</span><span class="dv">10000000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-206"><a href="#cb5-206" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(stack_air_itw) <span class="sc">%&gt;%</span></span>
+<span id="cb5-207"><a href="#cb5-207" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>itw)</span>
+<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-209"><a href="#cb5-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a><span class="fu">### Create and write shapefiles</span></span>
+<span id="cb5-211"><a href="#cb5-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-212"><a href="#cb5-212" aria-hidden="true" tabindex="-1"></a>Save the NEI and TRI air pollution tables as shapefiles into your working directory, perhaps in the "data" folder. If you are choosing to examine an area located within northern California, use UTM 10N (EPSG: 26910) and UTM 11N (EPSG: 26911) if your study area is in southern California. See a general map of the UTM zones for the contiguous United States below.</span>
+<span id="cb5-213"><a href="#cb5-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-214"><a href="#cb5-214" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/fig44.gif)</span></span>
+<span id="cb5-215"><a href="#cb5-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-218"><a href="#cb5-218" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb5-219"><a href="#cb5-219" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: Create and write shapefiles for importing into ArcGIS Pro</span></span>
+<span id="cb5-220"><a href="#cb5-220" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb5-221"><a href="#cb5-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-222"><a href="#cb5-222" aria-hidden="true" tabindex="-1"></a>TRI_2020_form_wtd_geom <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(TRI_2020_form_wtd, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4269</span>) <span class="sc">%&gt;%</span> <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">26911</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-223"><a href="#cb5-223" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="co"># or crs = 26910 if in northern California</span></span>
+<span id="cb5-224"><a href="#cb5-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-225"><a href="#cb5-225" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(TRI_2020_form_wtd_geom, <span class="st">"enter working directory and desired file name"</span>,<span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb5-226"><a href="#cb5-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-227"><a href="#cb5-227" aria-hidden="true" tabindex="-1"></a>NEI_2017_form_geom <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(NEI_2017_form, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4269</span>) <span class="sc">%&gt;%</span> <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="dv">26911</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-228"><a href="#cb5-228" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="co"># or crs = 26910 if in northern California</span></span>
+<span id="cb5-229"><a href="#cb5-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-230"><a href="#cb5-230" aria-hidden="true" tabindex="-1"></a><span class="fu">st_write</span>(NEI_2017_form_geom, <span class="st">"enter working directory and desired file name"</span>,<span class="at">append=</span><span class="cn">FALSE</span>)</span>
+<span id="cb5-231"><a href="#cb5-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-232"><a href="#cb5-232" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb5-233"><a href="#cb5-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-234"><a href="#cb5-234" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part Three: Create and add data to ArcGIS Pro project</span></span>
+<span id="cb5-235"><a href="#cb5-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-236"><a href="#cb5-236" aria-hidden="true" tabindex="-1"></a><span class="fu">### Add and download spatial data</span></span>
+<span id="cb5-237"><a href="#cb5-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-238"><a href="#cb5-238" aria-hidden="true" tabindex="-1"></a>Create a new ArcGIS Pro project on your computer under the maps directory in your R project folder. In your ArcGIS Pro map project, under the "Map" menu, click the "Add Data" option on the toolbar and navigate to the directory where you exported the NEI and TRI datasets. You may need to click the "Connect to Folder" and navigate to your project directory. Select all three of the files and add to the map frame. They should draw automatically and appear in the table of contents.</span>
+<span id="cb5-239"><a href="#cb5-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-240"><a href="#cb5-240" aria-hidden="true" tabindex="-1"></a>Also download the <span class="co">[</span><span class="ot">California county, air basin and air district boundary file</span><span class="co">](https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip)</span> from the <span class="co">[</span><span class="ot">California Air Resources Board (CARB) GIS Library web page</span><span class="co">](https://ww2.arb.ca.gov/geographical-information-system-gis-library)</span>. These boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data given that AERMOD requires such data to estimate the geographic distribution of releases over time.</span>
+<span id="cb5-241"><a href="#cb5-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-242"><a href="#cb5-242" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="false"}</span>
+<span id="cb5-243"><a href="#cb5-243" aria-hidden="true" tabindex="-1"></a><span class="fu">## Meteorological data</span></span>
+<span id="cb5-244"><a href="#cb5-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-245"><a href="#cb5-245" aria-hidden="true" tabindex="-1"></a>The California Air Resources Board (CARB) makes available <span class="co">[</span><span class="ot">AERMOD-ready meteorological data for 28 select weather stations throughout the state</span><span class="co">](https://ww2.arb.ca.gov/resources/documents/harp-aermod-meteorological-files)</span> while the various air quality districts make available similarly formatted data for weather stations within their respective jurisdictions. Links to the district-specific weather station and data are also available on the <span class="co">[</span><span class="ot">ARB meteorological data webpage</span><span class="co">](https://ww2.arb.ca.gov/resources/documents/harp-aermod-meteorological-files)</span>.</span>
+<span id="cb5-246"><a href="#cb5-246" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb5-247"><a href="#cb5-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-248"><a href="#cb5-248" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part Four: Create Study Area</span></span>
+<span id="cb5-249"><a href="#cb5-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-250"><a href="#cb5-250" aria-hidden="true" tabindex="-1"></a>You will need to create a custom and spatially explicit study area in order to run the needed calculations. Create your custom study area by doing the following:</span>
+<span id="cb5-251"><a href="#cb5-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-252"><a href="#cb5-252" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Under the "View" menu, click the "Catalog Pane" option to view project contents. Navigate to your project folder and right-click on the "Data" directory to create a new shapefile. With your project directory selected, open the File menu and select the "New/Shapefile" option. In the "Create Feature Class" dialog box, give your polygonal shapefile an appropriate name (e.g., studyarea). Be sure the output coordinate system corresponds with the other shapefiles in your map frame (i.e., UTM Zone 10N, NAD 1983). When finished, add the new shapefile to the map.</span>
+<span id="cb5-253"><a href="#cb5-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-254"><a href="#cb5-254" aria-hidden="true" tabindex="-1"></a>    <span class="al">![](images/paste-D249D986.png)</span>{width="3in"}</span>
+<span id="cb5-255"><a href="#cb5-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-256"><a href="#cb5-256" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>In the "Edit" menu, click "Create" to begin delineating the study area polygon. In the "Create Features" dialog, use the square template to construct the polygon. With the pencil tool activated, create a 10km by 10km square by clicking the map to create the initial vertex. Don't be concerned about the specific location of the initial vertex (and study area) at this time. While still editing, right-click inside the map frame and select the "Direction/Size" option to make visible the associated dialog box. Enter "0" for direction and 10km for both length and width. When finished entering the dimensions click the Enter key on your keyboard to create the new feature.</span>
+<span id="cb5-257"><a href="#cb5-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-258"><a href="#cb5-258" aria-hidden="true" tabindex="-1"></a>    <span class="al">![](images/paste-F8F29155.png)</span>{width="1.5in"}</span>
+<span id="cb5-259"><a href="#cb5-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-260"><a href="#cb5-260" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part Five: Model facility and cumulative impact of criteria air emissions (SO2)</span></span>
+<span id="cb5-261"><a href="#cb5-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-262"><a href="#cb5-262" aria-hidden="true" tabindex="-1"></a>In this part of the exercise you will analyze the concentrations of sulfur dioxide emitted from a specific facility and then compare this with the cumulative sulfur dioxide emissions (from all facilities) within (and/or near) your study area.</span>
+<span id="cb5-263"><a href="#cb5-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-264"><a href="#cb5-264" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>First, identify a single facility in the NEI facilities shapefile that emits considerable amounts of sulfur dioxide (SO2).</span>
+<span id="cb5-265"><a href="#cb5-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-266"><a href="#cb5-266" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Next, center the study area so that the facility you identified is located in the (approximate) center. Do this by clicking on the "Edit" menu and selecting the study area polygon. Use the "Move" tool to position the polygon in the desired location. Under the "Share" menu, click "Capture to Clipboard" and paste the NEI facilities map into the appropriate PowerPoint slide.</span>
+<span id="cb5-267"><a href="#cb5-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-268"><a href="#cb5-268" aria-hidden="true" tabindex="-1"></a>    <span class="al">!["10kmx10km study area with facilities mappeed by annual SO2 emissions (tons)"](images/paste-8B95D98A.png)</span>{width="2in"}</span>
+<span id="cb5-269"><a href="#cb5-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-270"><a href="#cb5-270" aria-hidden="true" tabindex="-1"></a>Now you will use AERMOD to model emissions from the facility you selected. Read through the AERMOD Primer in Appendix C before proceeding.</span>
+<span id="cb5-271"><a href="#cb5-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-272"><a href="#cb5-272" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Using a text editor (such as notepad or my preference is notetab light freeware), edit aermod.inp so that the source (SO LOCATION) pathway location coordinates (X and Y) reflect those of your selected facility and the source (SO SRCPARAM) parameters reflect the SO2 emissions from the selected facility in the proper units (grams per second). Convert the tons per year to grams per second using the <span class="co">[</span><span class="ot">AERMOD_Formatting.xlsx</span><span class="co">](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/AERMODFormatting.xls)</span> spreadsheet which uses the following formula: quantity in g/s = (tons/year<span class="sc">\*</span>2000 pounds/year<span class="sc">\*</span>453.59237 grams/pound)/(365 days/year <span class="sc">\*</span> 24 hrs/day <span class="sc">\*</span> 60 minutes/hour <span class="sc">\*</span> 60 seconds/minute)). Use the default (i.e., existing) settings for the release height, stack gas exit temperature, stack gas exit velocity, and stack diameter (e.g., 76. 353. 5. 3.0) for the facility.</span>
+<span id="cb5-273"><a href="#cb5-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-274"><a href="#cb5-274" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Also edit in aermod.inp the receptor (or RE) pathway so that the bottom, left (southwest vertex in this case) coordinates (the anchor point of the Cartesian grid) reflect those of your study area (you can identify coordinates via the status bar at the bottom right of the ArcGIS Pro map frame or via the Properties/Source/Extent menu by right-clicking on feature layer). Use the existing 200m x 50m parameters for the Cartesian receptor grid (e.g., XYINC 50 <span class="sc">\[</span>bottom left X coordinate of study area<span class="sc">\]</span> and 200 <span class="sc">\[</span>bottom left Y coordinate of study area<span class="sc">\]</span>). You can again use the <span class="co">[</span><span class="ot">AERMODFormatting.xlsx</span><span class="co">](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/aermod/AERMODFormatting.xls)</span> spreadsheet to format this parameter for the aermod.inp file.</span>
+<span id="cb5-275"><a href="#cb5-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-276"><a href="#cb5-276" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Note that we may need to reduce processing time by calculating concentrations for fewer days than what is available in the meteorology files. If it takes too long for your machine to calculate over multiple years it may be necessary to spread the analysis across a select number of days over different months for a single year in order to account for seasonal variations (1/1-1/7; 4/1-4/7; 10/1-10/7; 7/1-7/7). Be sure that the meteorological (ME) pathway refers to the meteorological files for the entire study period/year.</span>
+<span id="cb5-277"><a href="#cb5-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-278"><a href="#cb5-278" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Next set the output (OU) pathway to create four plot files, with each representing key concentrations over given periods of time. The default input file calculates maximum concentrations averaged over one- and three-hour periods. Concentrations will be estimated for each of the 2,500 receptors in your study area. Also rename the output plot files in the OU parameters so they are more informative (e.g., NEI_3HRMAX.PLT, NEI_1HRMAX.PLT).</span>
+<span id="cb5-279"><a href="#cb5-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-280"><a href="#cb5-280" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Now you are ready to run the newly specified model. To run the model, navigate to the directory where aermod.inp, aermod.exe and the associated meteorological files are located. Double-click the aermod.exe executable file (or drag and release aermod.inp over aermod.exe). Allow AERMOD to cycle through the 365 days of each year represented in your meteorological data. If you receive an error, check the sources of the error by reading the ERROR.OUT file in notepad or other text editor.</span>
+<span id="cb5-281"><a href="#cb5-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-282"><a href="#cb5-282" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Once AERMOD has completed the procedure, you will need to re-format the data in the plot file so that it is readable in ArcGIS Pro. First, open the 1-hour maximum concentrations plot file in notepad (under the "Format" menu, be sure the word wrap is off, not checked). Remove much of the header documentation, remove spaces in column names in the plot file so that it appears as follows. Save the edited plot file.</span>
+<span id="cb5-283"><a href="#cb5-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-284"><a href="#cb5-284" aria-hidden="true" tabindex="-1"></a>    <span class="al">![Sample of AERMOD output file](images/paste-B5992985.png)</span></span>
+<span id="cb5-285"><a href="#cb5-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-286"><a href="#cb5-286" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Next, open the plot file in Excel using the default fixed width settings. Remove any spaces and parentheses from the column names (ArcGIS Pro only allows numbers, characters and underscores in field names). Save the text file as a CSV file. Also be sure to close the file in Excel before attempting to open it in ArcGIS Pro.</span>
+<span id="cb5-287"><a href="#cb5-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-288"><a href="#cb5-288" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Return to ArcGIS Pro and open the annual, comma delimited text file. In order to display the model output, click the "Add Data" option in the "Map" menu and select the "XY Point Data" option. ArcGIS Pro will open a "XY Table to Point" dialog. Navigate to the input CSV table you just created. ArcGIS Pro should automatically recognize the X and Y fields in the input file. Specify the output location and feature class as a layer in the project geodatabase (".shp" suffix). Edit the coordinate system information so that it corresponds with the other shapefiles in the map frame (e.g., UTM Zone 11N, NAD 1983). When finished, click "Run" and the new point layer should be added to the map table of contents. Make visible the layer to show the series of receptor points specified in the AERMOD input file. Next, open the plot file in Excel using the default fixed width settings. Remove any spaces and parentheses from the column names (ArcGIS Pro only allows numbers, characters and underscores in field names). Save the text file as a CSV file. Also be sure to close the file in Excel before attempting to open it in ArcGIS Pro.</span>
+<span id="cb5-289"><a href="#cb5-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-290"><a href="#cb5-290" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Return to ArcGIS Pro and open the annual, tab-delimited text file. In order to display the model output, click the "Add Data" option in the "Map" menu and select the "XY Point Data" option. ArcGIS Pro will open a "XY Table to Point" dialog. Navigate to the input CSV table you just created. ArcGIS Pro should automatically recognize the X and Y fields in the input file. Specify the output location and feature class as a layer in the project geodatabase (".shp" suffix). Edit the coordinate system information so that it corresponds with the other shapefiles in the map frame (i.e., UTM Zone 11N, NAD 1983). When finished, click "Run" and the new point layer should be added to the map table of contents. Make visible the layer to show the series of receptor points specified in the AERMOD input file.</span>
+<span id="cb5-291"><a href="#cb5-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-292"><a href="#cb5-292" aria-hidden="true" tabindex="-1"></a>    <span class="al">![](images/paste-24DE3A0C.png)</span>{width="2.5in"}</span>
+<span id="cb5-293"><a href="#cb5-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-294"><a href="#cb5-294" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>In order to better display variations in concentrations within your study area, convert the points to grid cells. Do this by clicking the "Tools" option under the "Analysis" menu. In the "Geoprocessing" dialog, type "Point to Raster" to open the associated conversion tool. Specify the output cell size as 200 (to correspond with the parameters specified in the AERMOD input file) and click Run when finished. Create a histogram to show the distributions of values within the raster layer, including the mean, median and standard deviation. Copy and paste the 1-hour maximum concentration map, legend and histogram into the appropriate slide within the <span class="co">[</span><span class="ot">PowerPoint template</span><span class="co">](https://github.com/justenvirons/pedagogy/raw/main/GEO346_2022_FallQuarter/Exercise_02/Exercise02_AirDispersion_SlidesTemplate.pptx)</span>. Also, view the "metadata" tab on the Properties dialog for the raster layer to view statistics for the concentrations field. Populate the appropriate column in the PowerPoint table template (Slide 5) with corresponding values.</span>
+<span id="cb5-295"><a href="#cb5-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-296"><a href="#cb5-296" aria-hidden="true" tabindex="-1"></a>    <span class="al">![](images/paste-C52CEE31.png)</span>{width="2.5in"}</span>
+<span id="cb5-297"><a href="#cb5-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-298"><a href="#cb5-298" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Repeat the above three procedures to map the 3-hour concentration plot for the single facility. To complete the remaining maps for part two, refer to the above steps to calculate SO2 emissions from multiple facilities within your study area. For the multiple facilities (or cumulative analysis), begin by selecting all facilities inside and within one kilometer of your study area (hint: use the buffer distance option under the "select by location" option under the "Select" menu). Open the attribute table with selected facilities that emit criteria pollutants. Use the export tool to save selected records in dbf format. Open the dBase file in Excel. In Excel sort the facilities to identify the top five emitters of SO2 and use the provided AERMODFormatting.xls spreadsheet to format source location and source parameter specifications for the five AERMOD facilities.</span>
+<span id="cb5-299"><a href="#cb5-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-300"><a href="#cb5-300" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Lastly compare the modeled pollutant concentrations in your study area to the regulatory reference concentrations (<span class="co">[</span><span class="ot">US EPA national air quality standards</span><span class="co">](https://www.epa.gov/criteria-air-pollutants/naaqs-table)</span> are organized by pollutant and average concentration period) and write-up your findings. In your write-up, respond to questions concerning the degree to which the primary facility you selected contributes to the pollution burden within your study area. Also consider any limitations or concerns you may have about the model (e.g., what is excluded from the model).</span>
+<span id="cb5-301"><a href="#cb5-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-302"><a href="#cb5-302" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="false"}</span>
+<span id="cb5-303"><a href="#cb5-303" aria-hidden="true" tabindex="-1"></a><span class="fu">## Comparison concentrations</span></span>
+<span id="cb5-304"><a href="#cb5-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-305"><a href="#cb5-305" aria-hidden="true" tabindex="-1"></a>Note that you will need to <span class="co">[</span><span class="ot">convert the ppb and ppm standards to ug/m\^3</span><span class="co">](https://www.breeze-technologies.de/blog/air-pollution-how-to-convert-between-mgm3-%C2%B5gm3-ppm-ppb/)</span> in order to compare with AERMOD output. The 1-hour average primary standard 75 ppb is equal to 196.5 ug/m\^3 and the 3-hour average 0.5 ppm secondary standard is equal to 1,310 ug/m\^3</span>
+<span id="cb5-306"><a href="#cb5-306" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb5-307"><a href="#cb5-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-308"><a href="#cb5-308" aria-hidden="true" tabindex="-1"></a><span class="fu">## Part Six: Model seasonal variation in toxic air concentrations *(optional)*</span></span>
+<span id="cb5-309"><a href="#cb5-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-310"><a href="#cb5-310" aria-hidden="true" tabindex="-1"></a>Air toxics, unlike "criteria" air pollutants such as ground-level ozone and oxides of nitrogen whose main health impact is their contribution to smog, are more localized in their impact. These substances can contribute to risk of cancer, respiratory illness, and other harms when inhaled. Their unequal distribution across the country and even within communities has often not been remedied successfully even as the Clean Air Act has been relatively successful at cleaning criteria pollutants from the air.</span>
+<span id="cb5-311"><a href="#cb5-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-312"><a href="#cb5-312" aria-hidden="true" tabindex="-1"></a>In this part of the exercise, you will estimate toxic air releases within your study area from large, industrial facilities represented in the latest (2020) EPA's Toxics Release Inventory or TRI report. The TRI reports emissions by facility for each of the 650 toxics and toxic compounds. Given that every chemical has a different dose-response curve or, more simply, a different toxicological profile, you will adjust chemical releases using inhalation toxicity weighted factors (ITW) from EPA's Risk-Screening Environmental Indicators (RSEI) model. The toxicity-weighted concentrations are provided are an appropriate metric for comparing levels of potential impact between geographic areas and for smaller-scale environmental justice analyses. Further, toxicity-weighted allows concentrations to be added across chemicals for the same geographic area.</span>
+<span id="cb5-313"><a href="#cb5-313" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-314"><a href="#cb5-314" aria-hidden="true" tabindex="-1"></a>For Part Six, you will explore only the maximum 3-hour concentration plot files for the inhalation toxicity weighted (ITW) emissions arising from all facilities within the study area (select multiple facilities using the same procedure used above).</span>
+<span id="cb5-315"><a href="#cb5-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-316"><a href="#cb5-316" aria-hidden="true" tabindex="-1"></a>You will alter parameters in the (ME) pathway in order to estimate how the distribution of air concentrations differs seasonally due to changes in wind direction, wind speed and air temperature. This said, you will run four AERMOD models; one for each season. In order to run the season-specific models, change the meteorological pathway (ME) parameters so that it references the appropriate season-specific upper air and surface files (e.g., we will go over the seasonal date ranges in class). As before, for the multiple facilities (or cumulative analysis), select the five facilities within the study area with the highest ITW concentrations. Use the AERMODFormatting.xls spreadsheet to format data for AERMOD input files. Create associated maps and update the corresponding table (Slide 10). Summarize your findings in the write-up for (Slide 11).</span>
+</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+</body></html>

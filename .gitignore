@@ -1,5 +1,7 @@
 # Folders
 GEO346_2023_FallQuarter/Exercise_01/maps/*
+covid19 -testing/*
+rush_chicago_data/*
 
 # Files
 *.R
@@ -7,6 +9,7 @@ GEO346_2023_FallQuarter/Exercise_01/maps/*
 #*.png
 *.pdf
 #*.csv
+*.qmd
 
 
 # History files

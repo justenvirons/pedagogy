@@ -221,7 +221,7 @@ It takes two steps to identify your selected county's CRS code. First identify t
 #| code-fold: false
 
 # replace the "17031" value with the unique geoid for your county
-county_geoid = "17031"
+county_geoid = "36081"
 
 # replace the 26916 EPSG code value with the CRS code associated with your county location
 crs_code = 26916 

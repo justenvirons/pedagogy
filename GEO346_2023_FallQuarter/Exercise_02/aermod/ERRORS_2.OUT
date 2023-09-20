@@ -1,0 +1,22 @@
+  
+    ************ Error Message List *************
+  
+    PW     --- Pathway                           
+    Code   --- Error Type + Error Code           
+    L#     --- The Line Number Where Error Occurs
+    ModNam --- Module Name In Which Error Occurs 
+    Hints  --- Hints For The Possible Solution   
+    *********************************************
+  
+PW CODE    L#      MODNAM                       ERROR MESSAGES                      HINTS
+-- ---- ------- ------------- -------------------------------------------------- ------------
+  
+CO W362       8       COCARD: Multiyear 1h NO2/SO2 processing not applicable for     3-hr Ave
+SO E100      14        SETUP: Invalid Pathway Specified. The Troubled Pathway is           SR
+SO E140      15       SOCARD: Invalid Order of Keyword. The Troubled Keyword is      SRCGROUP
+SO E130      15       SOCARD: Missing Mandatory Keyword.  The Missing Keyword is     SRCGROUP
+SO W316      15        SRCQA: Specified SRCID is not included in any SRCGROUP:          PRM01
+ME W186      29       MEOPEN: THRESH_1MIN 1-min ASOS wind speed threshold used           0.50
+ME W187      29       MEOPEN: ADJ_U* Option for Stable Low Winds used in AERMET              
+OU E203      34       OUPLOT: Invalid Parameter Specified.  Troubled Parameter:         GRPID
+OU E203      35       OUPLOT: Invalid Parameter Specified.  Troubled Parameter:         GRPID
