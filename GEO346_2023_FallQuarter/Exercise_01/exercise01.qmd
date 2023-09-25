@@ -334,8 +334,7 @@ places_measures_list <- c("CANCER","CHD","STROKE","DIABETES")
 places_tracts_county_sub <- places_tracts_county %>%
   select(geoid_tract = TractFIPS,
          total_pop = TotalPopulation,
-         starts_with(places_measures_list)) %>%
-  mutate_at(places_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100))))
+         starts_with(places_measures_list))
 
 ```
 
@@ -401,21 +400,24 @@ svi_measures_list <- c("RPL_THEME1","RPL_THEME2","RPL_THEME3","RPL_THEME4")
 
 # create detailed data table of selected SVI factors 
 svi_tracts_county_sub <- svi_tracts_county %>%
-  select(geoid_tract, contains(svi_measures_list)) %>%
-  mutate_at(svi_measures_list, ~na_if(.,-999)) %>%
-  mutate_at(svi_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100))))
+  select(geoid_tract, contains(svi_measures_list))
 
 # join SVI data to PLACES table with census tract geometries
 places_svi_tracts_county_sub_geom <- tract_boundaries_geom %>%
   left_join(places_tracts_county_sub, by="geoid_tract") %>% 
   left_join(svi_tracts_county_sub, by = "geoid_tract") %>%
+  mutate_at(places_measures_list, ~na_if(.,-999)) %>%
+  mutate_at(places_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100)))) %>%
+  mutate_at(svi_measures_list, ~na_if(.,-999)) %>%
+  mutate_at(svi_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100)))) %>%
   st_as_sf()
 
 # create test plot using "geoid_tract" variable
 plot(places_svi_tracts_county_sub_geom['geoid_tract'])
 
 # save comprehensive census tract and county geographic layers as shapefiles in layers directory
-st_write(places_svi_tracts_county_sub_geom, "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom2.shp", append = FALSE)
+st_write(places_svi_tracts_county_sub_geom %>% select(-ends_with("_rs")), "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
+st_write(places_svi_tracts_county_sub_geom %>% select(-places_measures_list,-svi_measures_list), "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom_rs.shp", append = FALSE)
 st_write(county_boundary_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/county_boundary_geom.shp", append = FALSE)
 ```
 
