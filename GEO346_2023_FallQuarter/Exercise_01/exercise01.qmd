@@ -221,7 +221,7 @@ It takes two steps to identify your selected county's CRS code. First identify t
 #| code-fold: false
 
 # replace the "17031" value with the unique geoid for your county
-county_geoid = "36081"
+county_geoid = "17031"
 
 # replace the 26916 EPSG code value with the CRS code associated with your county location
 crs_code = 26916 
@@ -334,7 +334,8 @@ places_measures_list <- c("CANCER","CHD","STROKE","DIABETES")
 places_tracts_county_sub <- places_tracts_county %>%
   select(geoid_tract = TractFIPS,
          total_pop = TotalPopulation,
-         starts_with(places_measures_list))
+         starts_with(places_measures_list)) %>%
+  mutate_at(places_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100))))
 
 ```
 
@@ -357,8 +358,7 @@ svi_tracts_county <- svi_tracts_all %>%
   mutate(COUNTY_FIPS = substr(FIPS,1,5)) %>%
   filter(COUNTY_FIPS==county_geoid) %>%
   select(geoid_tract = FIPS,
-         starts_with(c("EP_","RPL_"))) %>%
-  na_if(-999)
+         starts_with(c("EP_","RPL_")))
 
 ```
 
@@ -401,9 +401,9 @@ svi_measures_list <- c("RPL_THEME1","RPL_THEME2","RPL_THEME3","RPL_THEME4")
 
 # create detailed data table of selected SVI factors 
 svi_tracts_county_sub <- svi_tracts_county %>%
-  select(geoid_tract, contains(svi_measures_list))  %>%
-  mutate_at(svi_measures_list, function(x) rescale(x,to = c(0,100))) %>% 
-  drop_na()
+  select(geoid_tract, contains(svi_measures_list)) %>%
+  mutate_at(svi_measures_list, ~na_if(.,-999)) %>%
+  mutate_at(svi_measures_list, .funs = list(rs = ~ rescale(., to = c(0,100))))
 
 # join SVI data to PLACES table with census tract geometries
 places_svi_tracts_county_sub_geom <- tract_boundaries_geom %>%
@@ -415,7 +415,7 @@ places_svi_tracts_county_sub_geom <- tract_boundaries_geom %>%
 plot(places_svi_tracts_county_sub_geom['geoid_tract'])
 
 # save comprehensive census tract and county geographic layers as shapefiles in layers directory
-st_write(places_svi_tracts_county_sub_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
+st_write(places_svi_tracts_county_sub_geom, "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom2.shp", append = FALSE)
 st_write(county_boundary_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/county_boundary_geom.shp", append = FALSE)
 ```
 
