@@ -335,7 +335,6 @@ places_tracts_county_sub <- places_tracts_county %>%
   select(geoid_tract = TractFIPS,
          total_pop = TotalPopulation,
          starts_with(places_measures_list))
-
 ```
 
 ## Import and format social vulnerability data
