@@ -151,7 +151,7 @@ us_counties_population_geo <- us_counties_geom %>%
 ```{r}
 #| label: fig-popbycountymap
 #| fig-cap: Total Population by US County, 2021
-#| eval: false
+#| eval: true
 #| echo: true
 
 # Make interactive map of US counties by population using leaflet package
@@ -390,7 +390,7 @@ svi_data_dicionary %>%
   
 ```
 
-Similar to the PLACES data, append the below code to your custom data processing script. Change the MeasureIDs in the "svi_measures_list" with the MeasureIDs of the four indicators you'd like to evaluate. Run the code. The code will perform an attribute join between the census tract cartographic boundaries, the custom PLACES table, and the custom SVI table to create a comprehensive geographic layer with public health and SVI attributes. Lastly, save the layer as a shapefile to your "layers" directory using below code along with the county boundary.
+Similar to the PLACES data, append the below code to your custom data processing script. Change the MeasureIDs in the "svi_measures_list" with the MeasureIDs of the four indicators you'd like to evaluate. Run the code. The code will perform an attribute join between the census tract cartographic boundaries, the custom PLACES table, and the custom SVI table to create a comprehensive geographic layer with public health and SVI attributes. The code also replaces -999 values in the SVI dataset with NAs to avoid calculation problems. Additional, rescaled (0 to 100) versions of the PLACES and SVI variables (appended with "_rs" suffix) are calculated to support bivariate mapping in ArcGIS Pro. Lastly, save dataframes (both the conventional and rescaled versions) as shapefiles to your "layers" directory using below code along with the county boundary.
 
 ```{r}
 #| label: Create custom SVI layer
