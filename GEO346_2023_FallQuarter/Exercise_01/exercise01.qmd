@@ -151,7 +151,7 @@ us_counties_population_geo <- us_counties_geom %>%
 ```{r}
 #| label: fig-popbycountymap
 #| fig-cap: Total Population by US County, 2021
-#| eval: true
+#| eval: false
 #| echo: true
 
 # Make interactive map of US counties by population using leaflet package
@@ -468,7 +468,17 @@ Bivariate Correlation Plots
 
 # Step 5. Create univariate and bivariate maps in R (optional) 
 
-The "ggplot" package can be used not only to create a variety of data plots but also maps. In this section, the package is used to create single variable (i.e., univariate) and two variable (i.e., bivariate) maps.
+The "ggplot" package can be used not only to create a variety of data plots but also maps. In this section, the package is used to create single variable (i.e., univariate) and two variable (i.e., bivariate) maps. Use the following code to set the variables you'd like to map.
+
+```{r}
+#| label: set PLACES and SVI variables for mapping
+#| eval: false
+
+places_variable <- places_svi_tracts_county_sub_geom$CHD
+
+svi_variable <- places_svi_tracts_county_sub_geom$RPL_THEME1
+
+```
 
 ## Create univariate choropleth maps
 
@@ -479,9 +489,9 @@ The following code is used to create and export two univariate maps using select
 #| eval: false
 
 map1.Places <- ggplot() + geom_sf(data=places_svi_tracts_county_sub_geom,
-                                  mapping = aes(fill = ntile(CHD, 5)),
+                                  mapping = aes(fill = ntile(places_variable, 5)),
                                   size = 0.1) + 
-  scale_fill_distiller(name="CHD", 
+  scale_fill_distiller(name="Prevalence", 
                        palette = "Greys", 
                        breaks = pretty_breaks(),
                        direction = 1) + 
@@ -497,9 +507,9 @@ ggsave(map1.Places,
 
 # map1.SVI
 map1.SVI <- ggplot() + geom_sf(data=places_svi_tracts_county_sub_geom,
-                               mapping = aes(fill = ntile(RPL_THEME1, 5)),
+                               mapping = aes(fill = ntile(svi_variable, 5)),
                                size = 0.1) + 
-  scale_fill_distiller(name="Socioeconomic", 
+  scale_fill_distiller(name="Vulnerability", 
                        palette = "Greys", 
                        breaks = pretty_breaks(n=4),
                        direction = 1) + 
@@ -513,12 +523,26 @@ ggsave(map1.SVI,
        height = 5.5,
        units="in")
 
+# Create simple histograms for each map
+
+ggplot(data = places_svi_tracts_county_sub_geom, aes(x = places_variable)) +
+    geom_histogram()
+
+ggplot(data = places_svi_tracts_county_sub_geom, aes(x = svi_variable)) +
+    geom_histogram()
+
 ```
 
 ::: {layout-ncol=2}
 ![Univariate Map, PLACES](images/places_map.png){#fig-univariate-map-01}
 
 ![Univariate Map, SVI](images/svi_map.png){#fig-univariate-map-02}
+:::
+
+::: {layout-ncol=2}
+![Histogram, PLACES](images/places_histogram.png){#fig-histogram-01}
+
+![Histogram, SVI](images/svi_histogram.png){#fig-histogram-02}
 :::
 
 ## Create bivariate choropleth map with same PLACES and SVI variables
