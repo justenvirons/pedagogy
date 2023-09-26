@@ -85,6 +85,9 @@ library(tidyverse) # data wrangling
 library(biscale) # bivariate mapping
 library(corrplot) # correlation plot
 library(scales) # used for rescaling data
+library(ggplot2) # create cartographic plots
+library(patchwork) # combining images
+library(RColorBrewer) # color palettes
 
 options(scipen=999, digits = 2) # format output for data tables
 
@@ -363,7 +366,7 @@ svi_tracts_county <- svi_tracts_all %>%
 ### Review and format SVI data
 
 The 2020 release of the SVI ranks census tracts on 15 social factors, including unemployment, minority status, and disability, and further groups them into four related themes. Thus, each tract receives a ranking for each census variable and for each of the four themes, as well as an overall ranking. Scroll through the table below and identify four SVI indicators you'd like to explore further and map. Note the "MeasureID" for each of the four indicators.
-
+s
 ```{r}
 #| label: fig-svidatadictionary
 #| fig-cap: SVI Data Dictionary
@@ -415,8 +418,14 @@ places_svi_tracts_county_sub_geom <- tract_boundaries_geom %>%
 plot(places_svi_tracts_county_sub_geom['geoid_tract'])
 
 # save comprehensive census tract and county geographic layers as shapefiles in layers directory
-st_write(places_svi_tracts_county_sub_geom %>% select(-ends_with("_rs")), "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
+
+# write census tracts shapefile without re-scaled data
 st_write(places_svi_tracts_county_sub_geom %>% select(-places_measures_list,-svi_measures_list), "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom_rs.shp", append = FALSE)
+
+# write census tracts shapefile with re-scaled (0 to 100) data 
+st_write(places_svi_tracts_county_sub_geom %>% select(-ends_with("_rs")), "C:/Temp/exercise01/layers/places_svi_tracts_county_sub_geom.shp", append = FALSE)
+
+# write county shapefile 
 st_write(county_boundary_geom, "C:/git_repos/pedagogy/GEO346_2023_FallQuarter/Exercise_01/layers/county_boundary_geom.shp", append = FALSE)
 ```
 
@@ -434,6 +443,7 @@ A bivariate correlation plot is a graphical representation used to visualize rel
 #| code-fold: false
 
 places_svi_tracts_sub <- places_svi_tracts_county_sub_geom %>%
+  select(-ends_with("_rs")) %>%
   st_drop_geometry() %>%
   drop_na() %>%
   select(-c(geoid_county,geoid_tract,sqmi,total_pop))
@@ -456,7 +466,113 @@ corrplot(variable_biv_correlations, col=c("black","white"), order="hclust", bg="
 Bivariate Correlation Plots
 :::
 
+# Step 5. Create univariate and bivariate maps in R (optional) 
 
-# Step 5. Create bivariate choropleth maps in ArcGIS Pro
+The "ggplot" package can be used not only to create a variety of data plots but also maps. In this section, the package is used to create single variable (i.e., univariate) and two variable (i.e., bivariate) maps.
+
+## Create univariate choropleth maps
+
+The following code is used to create and export two univariate maps using select PLACES and SVI variables. Modify the code to map variables in your custom dataset and export png image files into the appropriate folder.
+
+```{r}
+#| label: create univariate maps
+#| eval: false
+
+map1.Places <- ggplot() + geom_sf(data=places_svi_tracts_county_sub_geom,
+                                  mapping = aes(fill = ntile(CHD, 5)),
+                                  size = 0.1) + 
+  scale_fill_distiller(name="CHD", 
+                       palette = "Greys", 
+                       breaks = pretty_breaks(),
+                       direction = 1) + 
+  theme_minimal()
+
+ggsave(map1.Places,
+       filename = "maps/map1_PLACES.png",
+       scale = 1,
+       dpi = 300,
+       width = 5.5,
+       height = 5.5,
+       units="in")
+
+# map1.SVI
+map1.SVI <- ggplot() + geom_sf(data=places_svi_tracts_county_sub_geom,
+                               mapping = aes(fill = ntile(RPL_THEME1, 5)),
+                               size = 0.1) + 
+  scale_fill_distiller(name="Socioeconomic", 
+                       palette = "Greys", 
+                       breaks = pretty_breaks(n=4),
+                       direction = 1) + 
+  theme_minimal()
+
+ggsave(map1.SVI,
+       filename = "maps/map1_SVI.png",
+       scale = 1,
+       dpi = 300,
+       width = 5.5,
+       height = 5.5,
+       units="in")
+
+```
+
+::: {layout-ncol=2}
+![Univariate Map, PLACES](images/places_map.png){#fig-univariate-map-01}
+
+![Univariate Map, SVI](images/svi_map.png){#fig-univariate-map-02}
+:::
+
+## Create bivariate choropleth map with same PLACES and SVI variables
+
+The following code is used to create and export a bivariate map using select PLACES and SVI variables. Modify the code to map variables in your custom dataset and export png image file into the appropriate folder.
+
+```{r}
+#| label: create custom bivariate map based on two component variables
+#| eval: false
+
+# bivariate map1 data
+map1.data <- bi_class(places_svi_tracts_county_sub_geom, 
+                      x = CHD, 
+                      y = RPL_THEME1, 
+                      style = "quantile", dim = 3)
+
+# bivariate map 1 plot
+# Available palettes: "Bluegill", "BlueGold", "BlueOr", "BlueYl",
+# "Brown"/"Brown2", "DkBlue"/"DkBlue2", "DkCyan"/"DkCyan2",
+# "DkViolet"/"DkViolet2", "GrPink"/"GrPink2", "PinkGrn", "PurpleGrn", or
+# "PurpleOr"
+
+map1 <- ggplot() +
+  geom_sf(data = map1.data, 
+          mapping = aes(fill = bi_class), 
+          color = "grey", 
+          size = 0.01, 
+          show.legend = FALSE) +
+  bi_scale_fill(pal = "BlueGold", dim = 3) + 
+  theme_minimal()
+
+# bivariate map 1 legend
+map1.legend <- bi_legend(pal = "BlueGold",
+                         dim = 3,
+                         xlab = "Higher Prevalence",
+                         ylab = "Higher SVI",
+                         size = 5,
+                         pad_width = 1) + 
+  theme_minimal()
+
+map1.bivariate <- map1 + map1.legend + plot_layout(widths = c(4,1))
+
+ggsave(map1.bivariate,
+       filename = "maps/map1_bivariate.png",
+       scale = 1,
+       dpi = 300,
+       width = 6.5,
+       height = 5.5,
+       units="in")
+
+```
+
+![Bivariate Map](images/bivariate_map.png){#fig-bivariate-map}
+
+# Step 6. Create bivariate choropleth maps in ArcGIS Pro
 
 Bivariate or multivariate maps are a type of thematic cartographic representation that displays two or more variables on a single map using a common symbology. The technique can reveal relationships between variables more effectively than a side-by-side comparison of multiple corresponding univariate maps, but also has the potential to be confusing if the symbols and patterns are overly complex and difficult to understand. Follow the video (pending) to create custom maps in ArcGIS Pro.
