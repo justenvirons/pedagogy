@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="C. Scott Smith, PhD AICP (Instructor)">
-<meta name="dcterms.date" content="2023-09-20">
+<meta name="dcterms.date" content="2023-09-27">
 
 <title>GEO 3/446 Exercise #2</title>
 <style>
@@ -109,6 +109,7 @@ div.csl-indent {
   <li><a href="#step-2.-download-and-transform-emissions-and-toxicity-data" id="toc-step-2.-download-and-transform-emissions-and-toxicity-data" class="nav-link" data-scroll-target="#step-2.-download-and-transform-emissions-and-toxicity-data">Step 2. Download and transform emissions and toxicity data</a>
   <ul class="collapse">
   <li><a href="#download-nei-data" id="toc-download-nei-data" class="nav-link" data-scroll-target="#download-nei-data">Download NEI data</a></li>
+  <li><a href="#download-tri-data" id="toc-download-tri-data" class="nav-link" data-scroll-target="#download-tri-data">Download TRI data</a></li>
   <li><a href="#download-rsei-data" id="toc-download-rsei-data" class="nav-link" data-scroll-target="#download-rsei-data">Download RSEI data</a></li>
   <li><a href="#create-and-write-shapefiles" id="toc-create-and-write-shapefiles" class="nav-link" data-scroll-target="#create-and-write-shapefiles">Create and write shapefiles</a></li>
   </ul></li>
@@ -146,7 +147,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">September 20, 2023</p>
+      <p class="date">September 27, 2023</p>
     </div>
   </div>
   
@@ -264,7 +265,9 @@ Additional reading on the effects of air pollution on health
 <span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(fac_state <span class="sc">==</span> <span class="st">"CA"</span>,</span>
 <span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>         pollutant_code <span class="sc">==</span> <span class="st">"SO2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>###Download TRI data</p>
+</section>
+<section id="download-tri-data" class="level3">
+<h3 class="anchored" data-anchor-id="download-tri-data">Download TRI data</h3>
 <p>The US EPA’s <a href="https://www.epa.gov/toxics-release-inventory-tri-program/what-toxics-release-inventory">Toxics Release Inventory</a> (TRI) program tracks the management of certain toxic chemicals that pose a threat to human health and the environment. Large US facilities (i.e., those emitting 10 tons or more per year) in different industry sectors must report annually how much of each chemical is released to the environment and/or managed through recycling, energy recovery and treatment. Data containing the 100 most-used data fields from the TRI Reporting Form R and Form A Certification Statement are made available in various formats on the <a href="https://www.epa.gov/toxics-release-inventory-tri-program/tri-basic-data-files-calendar-years-1987-present">TRI Basic Data web page</a> for the 2021 reporting year. The data can be downloaded for the entire US or by state. <a href="https://www.epa.gov/system/files/documents/2022-10/TRI_Basic_Data_File_Documentation_RY2021_102522.pdf">Reference information for this file in PDF format</a> is available on the TRI website. Use the following code to download and subset the latest TRI data to California.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TRI_2021_raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"https://data.epa.gov/efservice/downloads/tri/mv_tri_basic_download/2021_US/csv"</span>)</span>
@@ -399,7 +402,7 @@ Learn more about RSEI results
 </section>
 <section id="download-and-add-air-basin-boundaries-to-arcgis-pro" class="level3">
 <h3 class="anchored" data-anchor-id="download-and-add-air-basin-boundaries-to-arcgis-pro">Download and add air basin boundaries to ArcGIS Pro</h3>
-<p>Use the following code to download the <a href="https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip">California county, air basin and air district boundary file</a> from the <a href="https://ww2.arb.ca.gov/geographical-information-system-gis-library">California Air Resources Board (CARB) GIS Library web page</a> into your “data” directory. Be sure to set <em>exdir</em> variable to the “data” folder relative to your working directory. The air basin boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data near your facility given that AERMOD requires such data to estimate the geographic distribution of releases over time.</p>
+<p>Use the following code to download the <a href="https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip">California county, air basin and air district boundary file</a> from the <a href="https://ww2.arb.ca.gov/geographical-information-system-gis-library">California Air Resources Board (CARB) GIS Library web page</a> into your “data” directory. Be sure to set <em>exdir</em> variable to the “data” folder relative to your working directory (e.g., “data/ca_air_basins.shp”). The air basin boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data near your facility given that AERMOD requires such data to estimate the geographic distribution of releases over time.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>temp <span class="ot">&lt;-</span> <span class="fu">tempfile</span>()</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(<span class="st">"https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip"</span>,</span>
@@ -925,7 +928,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>         pollutant_code <span class="sc">==</span> <span class="st">"SO2"</span>)</span>
 <span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>###Download TRI data</span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a><span class="fu">### Download TRI data</span></span>
 <span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>The US EPA's <span class="co">[</span><span class="ot">Toxics Release Inventory</span><span class="co">](https://www.epa.gov/toxics-release-inventory-tri-program/what-toxics-release-inventory)</span> (TRI) program tracks the management of certain toxic chemicals that pose a threat to human health and the environment. Large US facilities (i.e., those emitting 10 tons or more per year) in different industry sectors must report annually how much of each chemical is released to the environment and/or managed through recycling, energy recovery and treatment. Data containing the 100 most-used data fields from the TRI Reporting Form R and Form A Certification Statement are made available in various formats on the <span class="co">[</span><span class="ot">TRI Basic Data web page</span><span class="co">](https://www.epa.gov/toxics-release-inventory-tri-program/tri-basic-data-files-calendar-years-1987-present)</span> for the 2021 reporting year. The data can be downloaded for the entire US or by state. <span class="co">[</span><span class="ot">Reference information for this file in PDF format</span><span class="co">](https://www.epa.gov/system/files/documents/2022-10/TRI_Basic_Data_File_Documentation_RY2021_102522.pdf)</span> is available on the TRI website. Use the following code to download and subset the latest TRI data to California.</span>
 <span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a></span>
@@ -1070,7 +1073,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb7-284"><a href="#cb7-284" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-285"><a href="#cb7-285" aria-hidden="true" tabindex="-1"></a><span class="fu">### Download and add air basin boundaries to ArcGIS Pro</span></span>
 <span id="cb7-286"><a href="#cb7-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a>Use the following code to download the <span class="co">[</span><span class="ot">California county, air basin and air district boundary file</span><span class="co">](https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip)</span> from the <span class="co">[</span><span class="ot">California Air Resources Board (CARB) GIS Library web page</span><span class="co">](https://ww2.arb.ca.gov/geographical-information-system-gis-library)</span> into your "data" directory. Be sure to set *exdir* variable to the "data" folder relative to your working directory. The air basin boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data near your facility given that AERMOD requires such data to estimate the geographic distribution of releases over time.</span>
+<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a>Use the following code to download the <span class="co">[</span><span class="ot">California county, air basin and air district boundary file</span><span class="co">](https://ww3.arb.ca.gov/ei/gislib/boundaries/ca_co_ab_dis.zip)</span> from the <span class="co">[</span><span class="ot">California Air Resources Board (CARB) GIS Library web page</span><span class="co">](https://ww2.arb.ca.gov/geographical-information-system-gis-library)</span> into your "data" directory. Be sure to set *exdir* variable to the "data" folder relative to your working directory (e.g., "data/ca_air_basins.shp"). The air basin boundaries will be helpful to identify the entity that provides AERMOD-ready meteorological data near your facility given that AERMOD requires such data to estimate the geographic distribution of releases over time.</span>
 <span id="cb7-288"><a href="#cb7-288" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-291"><a href="#cb7-291" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
 <span id="cb7-292"><a href="#cb7-292" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: Air basin shapefile from California ARB webpage</span></span>
