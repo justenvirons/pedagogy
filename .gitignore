@@ -11,6 +11,7 @@ rush_chicago_data/*
 *.pdf
 #*.csv
 *.qmd
+*.docx
 
 # History files
 .Rhistory
