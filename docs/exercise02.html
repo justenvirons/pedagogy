@@ -267,7 +267,7 @@ Additional reading on the effects of air pollution on health
 <span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="st">`</span><span class="at">emissions uom</span><span class="st">`</span>,</span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions =</span> <span class="st">`</span><span class="at">total emissions</span><span class="st">`</span></span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    site_name,</span>
 <span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
@@ -321,7 +321,7 @@ Additional reading on the effects of air pollution on health
 <span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">water =</span> <span class="dv">50</span>,</span>
 <span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">underground =</span> <span class="dv">51</span></span>
 <span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
 <span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    year,</span>
 <span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
 <span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
@@ -362,7 +362,7 @@ Additional reading on the effects of air pollution on health
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>RSEI_v2311_form <span class="ot">&lt;-</span> RSEI_v2311_raw <span class="sc">%&gt;%</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">casno =</span> CASStandard) <span class="sc">%&gt;%</span></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">itw =</span> <span class="fu">as.numeric</span>(ITW)) <span class="sc">%&gt;%</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(casno, </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(casno, </span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>         itw)</span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Join TRI with RSEI inhalation toxicity weights (ITW)</span></span>
@@ -371,7 +371,7 @@ Additional reading on the effects of air pollution on health
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(RSEI_v2311_form, <span class="at">by =</span> <span class="st">"casno"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">stack_air_itw =</span> stack_air <span class="sc">*</span> itw<span class="sc">/</span><span class="dv">1000000</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(stack_air_itw) <span class="sc">%&gt;%</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>itw) <span class="sc">%&gt;%</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>itw) <span class="sc">%&gt;%</span></span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(<span class="fu">c</span>(latitude,longitude))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -617,7 +617,7 @@ OU FINISHED</code></pre>
 <span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>emissions_3hr_df <span class="ot">&lt;-</span> <span class="fu">read.fwf</span>(<span class="at">file =</span> <span class="st">"aermod/3HRMAX1.PLT"</span>,</span>
 <span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>                 <span class="at">skip =</span> <span class="dv">8</span>,</span>
 <span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>                 <span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">28</span>,<span class="dv">4</span>,<span class="dv">32</span>,<span class="dv">8</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">x =</span> V1,</span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="at">x =</span> V1,</span>
 <span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>         <span class="at">y =</span> V2,</span>
 <span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>         <span class="at">value =</span> V3,</span>
 <span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>         <span class="at">period =</span> V5,</span>
@@ -1108,7 +1108,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-126"><a href="#cb15-126" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions_uom =</span> <span class="st">`</span><span class="at">emissions uom</span><span class="st">`</span>,</span>
 <span id="cb15-127"><a href="#cb15-127" aria-hidden="true" tabindex="-1"></a>    <span class="at">emissions =</span> <span class="st">`</span><span class="at">total emissions</span><span class="st">`</span></span>
 <span id="cb15-128"><a href="#cb15-128" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb15-129"><a href="#cb15-129" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb15-129"><a href="#cb15-129" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
 <span id="cb15-130"><a href="#cb15-130" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
 <span id="cb15-131"><a href="#cb15-131" aria-hidden="true" tabindex="-1"></a>    site_name,</span>
 <span id="cb15-132"><a href="#cb15-132" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
@@ -1166,7 +1166,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-186"><a href="#cb15-186" aria-hidden="true" tabindex="-1"></a>    <span class="at">water =</span> <span class="dv">50</span>,</span>
 <span id="cb15-187"><a href="#cb15-187" aria-hidden="true" tabindex="-1"></a>    <span class="at">underground =</span> <span class="dv">51</span></span>
 <span id="cb15-188"><a href="#cb15-188" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb15-189"><a href="#cb15-189" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb15-189"><a href="#cb15-189" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
 <span id="cb15-190"><a href="#cb15-190" aria-hidden="true" tabindex="-1"></a>    year,</span>
 <span id="cb15-191"><a href="#cb15-191" aria-hidden="true" tabindex="-1"></a>    fac_name,</span>
 <span id="cb15-192"><a href="#cb15-192" aria-hidden="true" tabindex="-1"></a>    fac_street,</span>
@@ -1212,7 +1212,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-234"><a href="#cb15-234" aria-hidden="true" tabindex="-1"></a>RSEI_v2311_form <span class="ot">&lt;-</span> RSEI_v2311_raw <span class="sc">%&gt;%</span></span>
 <span id="cb15-235"><a href="#cb15-235" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">casno =</span> CASStandard) <span class="sc">%&gt;%</span></span>
 <span id="cb15-236"><a href="#cb15-236" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">itw =</span> <span class="fu">as.numeric</span>(ITW)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-237"><a href="#cb15-237" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(casno, </span>
+<span id="cb15-237"><a href="#cb15-237" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(casno, </span>
 <span id="cb15-238"><a href="#cb15-238" aria-hidden="true" tabindex="-1"></a>         itw)</span>
 <span id="cb15-239"><a href="#cb15-239" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-240"><a href="#cb15-240" aria-hidden="true" tabindex="-1"></a><span class="co"># Join TRI with RSEI inhalation toxicity weights (ITW)</span></span>
@@ -1221,7 +1221,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-243"><a href="#cb15-243" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(RSEI_v2311_form, <span class="at">by =</span> <span class="st">"casno"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb15-244"><a href="#cb15-244" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">stack_air_itw =</span> stack_air <span class="sc">*</span> itw<span class="sc">/</span><span class="dv">1000000</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb15-245"><a href="#cb15-245" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(stack_air_itw) <span class="sc">%&gt;%</span></span>
-<span id="cb15-246"><a href="#cb15-246" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>itw) <span class="sc">%&gt;%</span></span>
+<span id="cb15-246"><a href="#cb15-246" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>itw) <span class="sc">%&gt;%</span></span>
 <span id="cb15-247"><a href="#cb15-247" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(<span class="fu">c</span>(latitude,longitude))</span>
 <span id="cb15-248"><a href="#cb15-248" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-249"><a href="#cb15-249" aria-hidden="true" tabindex="-1"></a></span>
@@ -1490,7 +1490,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb15-520"><a href="#cb15-520" aria-hidden="true" tabindex="-1"></a>emissions_3hr_df <span class="ot">&lt;-</span> <span class="fu">read.fwf</span>(<span class="at">file =</span> <span class="st">"aermod/3HRMAX1.PLT"</span>,</span>
 <span id="cb15-521"><a href="#cb15-521" aria-hidden="true" tabindex="-1"></a>                 <span class="at">skip =</span> <span class="dv">8</span>,</span>
 <span id="cb15-522"><a href="#cb15-522" aria-hidden="true" tabindex="-1"></a>                 <span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">15</span>,<span class="dv">28</span>,<span class="dv">4</span>,<span class="dv">32</span>,<span class="dv">8</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-523"><a href="#cb15-523" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">x =</span> V1,</span>
+<span id="cb15-523"><a href="#cb15-523" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="at">x =</span> V1,</span>
 <span id="cb15-524"><a href="#cb15-524" aria-hidden="true" tabindex="-1"></a>         <span class="at">y =</span> V2,</span>
 <span id="cb15-525"><a href="#cb15-525" aria-hidden="true" tabindex="-1"></a>         <span class="at">value =</span> V3,</span>
 <span id="cb15-526"><a href="#cb15-526" aria-hidden="true" tabindex="-1"></a>         <span class="at">period =</span> V5,</span>
