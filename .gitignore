@@ -1,4 +1,5 @@
 # Folders
+GEO330_2022_WinterQuarter/*
 GEO346_2023_FallQuarter/Exercise_01/maps/*
 GEO346_2023_FallQuarter/Exercise_02/aermod*
 GEO346_2023_FallQuarter/submissions*
@@ -8,6 +9,7 @@ rush_chicago_data/*
 # Files
 *.R
 *.RData
+*.csv
 #*.png
 *.pdf
 #*.csv
