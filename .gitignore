@@ -5,6 +5,7 @@ GEO346_2023_FallQuarter/Exercise_02/aermod*
 GEO346_2023_FallQuarter/submissions*
 covid19 -testing/*
 rush_chicago_data/*
+docs/videos/*
 
 # Files
 *.R
