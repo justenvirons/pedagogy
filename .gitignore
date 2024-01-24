@@ -2,6 +2,7 @@
 GEO330_2022_WinterQuarter/*
 GEO330_2023_WinterQuarter/*
 GEO330_2024_WinterQuarter/slides/*
+GEO330_2024_WinterQuarter/exercises/Exercise_01/data/*
 GEO330_2024_WinterQuarter/exercises/Exercise_02/*
 GEO346_2023_FallQuarter/Exercise_01/maps/*
 GEO346_2023_FallQuarter/Exercise_02/aermod*
@@ -12,7 +13,7 @@ docs/videos/*
 
 # Files
 *.R
-*.RData
+#*.RData
 # *.csv
 #*.png
 *.pdf
