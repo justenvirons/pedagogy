@@ -12,6 +12,7 @@ covid19 -testing/*
 rush_chicago_data/*
 docs/videos/
 GEO330_2024_WinterQuarter/exercises/Exercise_04/videos/*
+GEO330_2024_WinterQuarter/exercises/Exercise_05/videos/*
 
 # Files
 *.R
