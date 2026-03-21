@@ -4,9 +4,9 @@
 ## UI + Server; shared data objects loaded from global.R
 
 # ── UI ────────────────────────────────────────────────────────────────────────
-ui <- page_navbar(
+ui <- bslib::page_navbar(
   title  = "Mode Share Transportation Dashboard",
-  theme  = bs_theme(bootswatch = "flatly"),
+  theme  = bslib::bs_theme(bootswatch = "flatly"),
   header = tags$head(tags$link(rel = "stylesheet", href = "styles.css")),
 
   # ── Tab 1: Mode Share Trends ──────────────────────────────────────────────
