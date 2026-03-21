@@ -1,18 +1,19 @@
 # Folders
-GEO330_2022_WinterQuarter/*
-GEO330_2023_WinterQuarter/*
-GEO330_2024_WinterQuarter/slides/*
-GEO330_2024_WinterQuarter/submissions/*
-GEO330_2024_WinterQuarter/exercises/Exercise_01/data/*
-GEO330_2024_WinterQuarter/exercises/Exercise_02/*
-GEO346_2023_FallQuarter/Exercise_01/maps/*
-GEO346_2023_FallQuarter/Exercise_02/aermod*
-GEO346_2023_FallQuarter/submissions*
-covid19 -testing/*
-rush_chicago_data/*
-docs/videos/
-GEO330_2024_WinterQuarter/exercises/Exercise_04/videos/*
-GEO330_2024_WinterQuarter/exercises/Exercise_05/videos/*
+projects/*
+2020/*
+2021/*
+2022/*
+2023/*
+2024/*
+2025/*
+2026/GEO346_2026_WinterQuarter/*
+2026/GEO330_2026_WinterQuarter/*
+2026/GEO330_2026_SpringQuarter/slides/*
+2026/GEO330_2026_SpringQuarter/quizzes/*
+2026/GEO330_2026_SpringQuarter/literature/*
+2026/GEO330_2026_SpringQuarter/exercises/Exercise_02/data/archive/*
+.claude/*
+_extensions/*
 
 # Files
 *.R

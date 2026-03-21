@@ -1,0 +1,40 @@
+/* Leaflet legend: left-justify text and float color swatches correctly */
+.info.legend.leaflet-control i {
+  float: left;
+}
+
+.leaflet-control .legend {
+  text-align: left !important;
+}
+
+.leaflet-control .legend i {
+  float: left;
+  margin-right: 6px;
+}
+
+.leaflet-control .legend span {
+  display: block;
+}
+
+/* Medium grey background for table paginators */
+#table_geo .dataTables_paginate,
+#table_ind .dataTables_paginate {
+  background-color: #d0d0d0;
+  padding: 6px 10px;
+  border-radius: 0 0 4px 4px;
+}
+
+/* Override Bootstrap Flatly green on active page button */
+#table_geo .dataTables_paginate .page-item.active .page-link,
+#table_ind .dataTables_paginate .page-item.active .page-link {
+  background-color: #888888 !important;
+  border-color: #888888 !important;
+  color: #ffffff !important;
+}
+
+/* Mute non-active page link color to match grey theme */
+#table_geo .dataTables_paginate .page-link,
+#table_ind .dataTables_paginate .page-link {
+  color: #444444;
+  border-color: #bbbbbb;
+}

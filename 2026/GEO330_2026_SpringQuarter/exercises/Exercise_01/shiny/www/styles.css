@@ -1,0 +1,17 @@
+/* Leaflet legend: left-justify text and float color swatches correctly */
+.info.legend.leaflet-control i {
+  float: left;
+}
+
+.leaflet-control .legend {
+  text-align: left !important;
+}
+
+.leaflet-control .legend i {
+  float: left;
+  margin-right: 6px;
+}
+
+.leaflet-control .legend span {
+  display: block;
+}
