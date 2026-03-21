@@ -31,13 +31,14 @@ options(scipen = 999, digits = 2)
 #   )
 # )
 
-data_dir <- file.path("data")
 
 # ── Load RData ────────────────────────────────────────────────────────────────
 # Objects: modeshare_county_period, modeshare_county_period_formatted,
 #          modeshare_county_period_pivoted, us_counties_geom,
 #          us_divisions_geom, us_states_geom
-load(file.path(data_dir, "Exercise_01.RData"))
+
+load(file = "Exercise_01.RData")
+
 
 # # Ensure plain data frame (rbindlist produces data.table)
 # modeshare_county_period_formatted <- as.data.frame(modeshare_county_period_formatted)
