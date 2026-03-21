@@ -12,8 +12,8 @@ ui <- bslib::page_navbar(
   # ── Tab 1: Mode Share Trends ──────────────────────────────────────────────
   bslib::nav_panel(
     "Mode Share Trends",
-    layout_sidebar(
-      sidebar = sidebar(
+    bslib::layout_sidebar(
+      sidebar = bslib::sidebar(
         width = 280,
 
         strong("Geography"),
@@ -39,39 +39,39 @@ ui <- bslib::page_navbar(
         )
       ),
 
-      layout_columns(
+      bslib::layout_columns(
         col_widths = c(3, 3, 3, 3),
-        value_box(
+        bslib::value_box(
           title    = textOutput("vbox_walk_title",     inline = TRUE),
           value    = textOutput("vbox_walk",           inline = TRUE),
           showcase = bs_icon("person-walking"),
           theme    = "danger"
         ),
-        value_box(
+        bslib::value_box(
           title    = textOutput("vbox_bicycle_title",  inline = TRUE),
           value    = textOutput("vbox_bicycle",        inline = TRUE),
           showcase = bs_icon("bicycle"),
           theme    = "primary"
         ),
-        value_box(
+        bslib::value_box(
           title    = textOutput("vbox_transit_title",  inline = TRUE),
           value    = textOutput("vbox_transit",        inline = TRUE),
           showcase = bs_icon("bus-front"),
           theme    = "info"
         ),
-        value_box(
+        bslib::value_box(
           title    = textOutput("vbox_fromhome_title", inline = TRUE),
           value    = textOutput("vbox_fromhome",       inline = TRUE),
           showcase = bs_icon("house"),
           theme    = "success"
         )
       ),
-      card(
-        card_header(textOutput("trend_chart_title", inline = TRUE)),
+      bslib::card(
+        bslib::card_header(textOutput("trend_chart_title", inline = TRUE)),
         plotlyOutput("plot_trend", height = "320px")
       ),
-      card(
-        card_header(textOutput("boxplot_title", inline = TRUE)),
+      bslib::card(
+        bslib::card_header(textOutput("boxplot_title", inline = TRUE)),
         plotlyOutput("plot_boxplot", height = "320px")
       )
     )
@@ -80,8 +80,8 @@ ui <- bslib::page_navbar(
   # ── Tab 2: County Explorer ────────────────────────────────────────────────
   bslib::nav_panel(
     "County Explorer",
-    layout_sidebar(
-      sidebar = sidebar(
+    bslib::layout_sidebar(
+      sidebar = bslib::sidebar(
         width = 280,
 
         strong("Filter Counties"),
@@ -119,29 +119,29 @@ ui <- bslib::page_navbar(
         )
       ),
 
-      layout_columns(
+      bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        value_box(
+        bslib::value_box(
           title    = "Counties Shown",
           value    = textOutput("tbl_n_counties", inline = TRUE),
           showcase = bs_icon("map"),
           theme    = "primary"
         ),
-        value_box(
+        bslib::value_box(
           title    = "Top County",
           value    = textOutput("tbl_top_county", inline = TRUE),
           showcase = bs_icon("trophy"),
           theme    = "success"
         ),
-        value_box(
+        bslib::value_box(
           title    = textOutput("tbl_avg_label", inline = TRUE),
           value    = textOutput("tbl_avg_value", inline = TRUE),
           showcase = bs_icon("bar-chart"),
           theme    = "info"
         )
       ),
-      card(
-        card_header(textOutput("tbl_title", inline = TRUE)),
+      bslib::card(
+        bslib::card_header(textOutput("tbl_title", inline = TRUE)),
         DTOutput("table_counties")
       )
     )
@@ -150,8 +150,8 @@ ui <- bslib::page_navbar(
   # ── Tab 3: County Maps ────────────────────────────────────────────────────
   bslib::nav_panel(
     "County Maps",
-    layout_sidebar(
-      sidebar = sidebar(
+    bslib::layout_sidebar(
+      sidebar = bslib::sidebar(
         width = 280,
 
         strong("Map Settings"),
@@ -171,9 +171,9 @@ ui <- bslib::page_navbar(
           "Toggle division boundaries and basemap using the layers control. ",
           "Click the expand icon to view the map full screen.")
       ),
-      card(
+      bslib::card(
         full_screen = TRUE,
-        card_header(textOutput("map_title", inline = TRUE)),
+        bslib::card_header(textOutput("map_title", inline = TRUE)),
         leafletOutput("map_modes", height = "620px")
       )
     )
