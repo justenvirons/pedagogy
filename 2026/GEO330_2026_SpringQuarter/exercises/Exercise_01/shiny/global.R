@@ -19,7 +19,9 @@ library(scales)
 
 options(scipen = 999, digits = 2)
 
-data_dir <- file.path(getwd(), "2026/GEO330_2026_SpringQuarter/exercises/Exercise_01/shiny", "data")
+# setwd(dir = file.path(getwd(), "2026/GEO330_2026_SpringQuarter/exercises/Exercise_01/shiny"))
+
+data_dir <- file.path(getwd(), "data")
 
 # ── Load RData ────────────────────────────────────────────────────────────────
 # Objects: modeshare_county_period, modeshare_county_period_formatted,
