@@ -16,7 +16,7 @@ projects/*
 _extensions/*
 
 # Files
-*.R
+# *.R
 #*.RData
 # *.csv
 #*.png
