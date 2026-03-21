@@ -10,7 +10,7 @@ ui <- bslib::page_navbar(
   header = tags$head(tags$link(rel = "stylesheet", href = "styles.css")),
 
   # ── Tab 1: Mode Share Trends ──────────────────────────────────────────────
-  nav_panel(
+  bslib::nav_panel(
     "Mode Share Trends",
     layout_sidebar(
       sidebar = sidebar(
@@ -78,7 +78,7 @@ ui <- bslib::page_navbar(
   ),
 
   # ── Tab 2: County Explorer ────────────────────────────────────────────────
-  nav_panel(
+  bslib::nav_panel(
     "County Explorer",
     layout_sidebar(
       sidebar = sidebar(
@@ -148,7 +148,7 @@ ui <- bslib::page_navbar(
   ),
 
   # ── Tab 3: County Maps ────────────────────────────────────────────────────
-  nav_panel(
+  bslib::nav_panel(
     "County Maps",
     layout_sidebar(
       sidebar = sidebar(
