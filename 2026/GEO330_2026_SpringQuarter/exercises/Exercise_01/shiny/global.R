@@ -31,7 +31,7 @@ options(scipen = 999, digits = 2)
 #   )
 # )
 
-data_dir <- file.path(getwd(), "data")
+data_dir <- file.path("data")
 
 # ── Load RData ────────────────────────────────────────────────────────────────
 # Objects: modeshare_county_period, modeshare_county_period_formatted,
