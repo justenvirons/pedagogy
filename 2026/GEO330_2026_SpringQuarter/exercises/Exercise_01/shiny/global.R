@@ -26,8 +26,8 @@ options(scipen = 999, digits = 2)
 #   appFiles = c(
 #     "app.R",
 #     "global.R",
-#     list.files("data", full.names = TRUE),
-#     list.files("www",  full.names = TRUE)
+#     "Exercise_01.RData",   # now at root, not data/
+#     "styles.css"
 #   )
 # )
 
