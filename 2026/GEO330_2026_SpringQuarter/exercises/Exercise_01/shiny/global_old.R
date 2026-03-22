@@ -31,18 +31,14 @@ options(scipen = 999, digits = 2)
 #   )
 # )
 
+
 # ── Load RData ────────────────────────────────────────────────────────────────
-# Objects: contains
-# "latest_year"                       "data_dir"                          "us_counties_geom"                 
-# "us_divisions_geom"                 "natl_avgs"                         "mode_colors"                      
-# "all_divisions"                     "us_states_geom"                    "county_geom"                      
-# "modeshare_latest_raw"              "us_divisions_sub_geom"             ".Random.seed"                     
-# "map_palettes"                      "mode_cols"                         "all_states"                       
-# "modeshare_county_period_pivoted"   "modeshare_county_period"           "state_division_lookup"            
-# "all_years"                         "fx_create_bins"                    "modeshare_latest_geom"            
-# "modeshare_county_period_formatted"
+# Objects: modeshare_county_period, modeshare_county_period_formatted,
+#          modeshare_county_period_pivoted, us_counties_geom,
+#          us_divisions_geom, us_states_geom
 
 load(file = "Exercise_01.RData")
+
 
 # Ensure plain data frame (rbindlist produces data.table)
 modeshare_county_period_formatted <- as.data.frame(modeshare_county_period_formatted)
@@ -119,6 +115,7 @@ map_palettes <- c(
 fx_create_bins <- function(df, col) {
   vals   <- df[[col]][!is.na(df[[col]])]
   breaks <- unique(quantile(vals, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  # Nudge upper bound so the maximum value is included in the last bin
   breaks[length(breaks)] <- breaks[length(breaks)] + .Machine$double.eps * 1e6
   breaks
 }
@@ -126,3 +123,4 @@ fx_create_bins <- function(df, col) {
 # ── National average mode share for latest year (value boxes) ────────────────
 natl_avgs <- modeshare_latest_raw %>%
   summarise(across(all_of(unname(mode_cols)), \(x) mean(x, na.rm = TRUE)))
+
