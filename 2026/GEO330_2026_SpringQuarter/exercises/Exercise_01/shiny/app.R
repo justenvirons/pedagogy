@@ -21,14 +21,14 @@ options(scipen = 999, digits = 2)
 
 # setwd(dir = file.path(getwd(), "2026/GEO330_2026_SpringQuarter/exercises/Exercise_01/shiny"))
 
-rsconnect::writeManifest(
-  appDir = ".",
-  appFiles = c(
-    "app.R",
-    "Exercise_01.RData",   # now at root, not data/
-    "styles.css"
-  )
-)
+# rsconnect::writeManifest(
+#   appDir = ".",
+#   appFiles = c(
+#     "app.R",
+#     "Exercise_01.RData",   # now at root, not data/
+#     "styles.css"
+#   )
+# )
 
 # ── Load RData ────────────────────────────────────────────────────────────────
 # Objects: contains
