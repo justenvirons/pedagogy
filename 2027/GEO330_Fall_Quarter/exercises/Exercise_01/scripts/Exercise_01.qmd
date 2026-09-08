@@ -107,25 +107,21 @@ This exercise uses two nationwide datasets, commuting (or "journey to work") mod
 
 Understanding who walks, bikes and takes transit, and where people face the greatest safety risk while doing so, sits at the center of sustainable urban transportation planning. The figures and maps you create in this exercise are the same types of evidence that planners, engineers and advocates use to justify investments in safer streets, better transit service and more walkable, bikeable neighborhoods.
 
-::: {.callout-note collapse="false"}
-## Optional readings
-
-:::
-
 # Step 1. Open Exercise #1 in Posit Cloud course workspace
 Log into the course Posit Cloud "Sustainable Urban Transportation" workspace using the invitation link on the week #1 announcement. Open the Exercise #1 workspace by clicking the corresponding link. A cloud R session will launch in your web browser.
 
-Working in a shared, cloud based environment like Posit Cloud is itself a small lesson in sustainable practice. It lets every student in the course analyze the same large, nationwide datasets without installing software locally, which keeps the exercise accessible regardless of the computer you use.
-
 ::: {.callout-note collapse="false"}
+## Note concerning coding
+This class does not have a coding prerequisite, and no prior programming experience is required. Students will not be asked to write or prepare code from scratch at any point in the course. Instead, coding tools are used simply as a means to create flexible, interactive, and customizable learning activities. This approach allows students to explore different topics and areas of interest, and to integrate and work with a wide variety of datasets in ways that would otherwise be difficult to achieve. The goal is to enhance the learning experience, not to teach programming itself.
+
 ## What is R?
 R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS, and is also available through a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It provides a set of tools built to help R users be more productive with R (and other languages, including Python). It includes a console and a syntax highlighting editor that supports direct code execution, along with tools for plotting, viewing history, debugging and managing your workspace.
 :::
 
 ## Open R script, activate R packages and load project data
-In your default Exercise #1 project you will find an R script named *Exercise_01.R*. You will use this script to enter, manage and run all code for this exercise. The code below activates the custom packages needed to complete Exercise #1. Run it by selecting all lines that begin with "library" and clicking the Run button located above the top left source or script editor panel. You will use several R packages to complete the exercise, including "dplyr" and "tidyverse" for data formatting and wrangling, "sf" (simple features) for importing and transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.
+In your default Exercise #1 project you will find an R script named *Exercise_01.R*. You will use this script to enter, manage and run all code for this exercise. The code below, which has already been copied into the Exercise_01.R script, activates the custom packages needed to complete Exercise #1. Run it by selecting all lines that begin with "library" and clicking the Run button located above the top left source or script editor panel. 
 
-*Purpose of the code below: activate the R packages required for the exercise and load the project's prepared dataset into your R session.*
+*Purpose of the code below: activate the R packages required for the exercise and load the project's prepared dataset into your R session. You will use several R packages to complete the exercise, including "dplyr" and "tidyverse" for data formatting and wrangling, "sf" (simple features) for importing and transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.*
 
 ```{r}
 #| echo: true
@@ -550,9 +546,11 @@ Before running a formal hotspot analysis, it helps to simply look at where pedes
 #| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
 #| echo: true
 
-library(leaflet)
-library(leafsync)
-library(dplyr)
+
+us_county_boundary <- us_counties_population_geo %>% 
+  select(NAME,
+         GEOID) %>% 
+  filter(GEOID == custom_geoid)
 
 ## Step A: define rolling 4 year periods across 2010 to 2024
 period_breaks <- c(2010, 2014, 2018, 2022, 2025)
