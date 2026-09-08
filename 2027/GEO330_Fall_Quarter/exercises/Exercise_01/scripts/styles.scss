@@ -1,7 +1,19 @@
 /*-- scss:defaults --*/
 
-// Map legends
+// Map legends: force left justified rows instead of the centered text
+// that leaflet's default legend styling can inherit from the page theme
+.info.legend.leaflet-control {
+  text-align: left;
+}
+
 .info.legend.leaflet-control i {
   float: left;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  opacity: 0.9;
+}
 
+.info.legend.leaflet-control br {
+  clear: left;
 }

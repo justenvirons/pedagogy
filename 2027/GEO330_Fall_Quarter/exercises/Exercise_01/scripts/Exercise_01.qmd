@@ -5,6 +5,7 @@ author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
 format:
   html:
+    css: styles.scss
     warning: false
     code-tools: false
     code-fold: false
