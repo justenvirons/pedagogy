@@ -9,6 +9,7 @@ format:
     code-tools: false
     code-fold: false
     echo: false
+    eval: true
     theme: flatly
     toc: true
     toc-depth: 3
@@ -28,7 +29,7 @@ editor_options:
 #| echo: false
 
 # set working directory
-setwd("2027/GEO330_Fall_Quarter/exercises/Exercise_01")
+# setwd("2027/GEO330_Fall_Quarter/exercises/Exercise_01")
 
 # API Keys
 CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
@@ -122,6 +123,7 @@ In your default Exercise #1 project you will find an R script named *Exercise_01
 
 ```{r}
 #| echo: true
+#| eval: true
 
 # Activate R packages
 library(dplyr) # data wrangling with pipe syntax
@@ -141,7 +143,7 @@ library(classInt)
 options(scipen=999, digits = 2)
 
 # Load project data
-load("data/Exercise_01.RData")
+load("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_01/Exercise_01.RData")
 
 ```
 
