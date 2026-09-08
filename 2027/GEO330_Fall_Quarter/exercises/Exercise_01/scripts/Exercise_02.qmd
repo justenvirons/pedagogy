@@ -1,0 +1,497 @@
+---
+title: "GEO 330 Exercise #2"
+subtitle: "Evaluate Trends in Divvy Bikesharing Trips, 2013-2025"
+author: C. Scott Smith, PhD AICP (Instructor)
+email: c.scott.smith@depaul.edu
+format: 
+  html:
+    css: styles.scss
+    warning: false
+    code-tools: true
+    code-fold: false
+    theme: flatly
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    reference-location: document
+    fontsize: 0.9em
+    interlinespace: -0.75em
+    embed-resources: false
+date: "2026-01-22"
+editor_options:
+    chunk_output_type: console
+---
+
+```{r}
+#| label: activate packages for prep
+#| echo: false
+
+library(dplyr) # data wrangling with pipe syntax
+library(tidyverse) # data wrangling
+library(sf) # simple features geometry data
+library(plotly) # interactive plots
+library(leaflet) # interactive maps
+library(data.table) # interactive tables
+library(DT) # data table format
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2026/GEO330_2026_WinterQuarter/exercises/Exercise_02")
+
+load(file="data/divvy_trips_summary_tables_latest.RData")
+
+```
+
+# Purpose
+This project examines trends in Divvy bike sharing ridership over time (i.e., between 2013 and 2025) and by community area within the city of Chicago. Students will develop custom R scripts to explore how ridership varies across communities with respect to demographic and socioeconomic characteristics. The exercise uses custom summary tables produced from a comprehensive dataset of over 52 million Divvy bike trips logged between the official launch of the program on June 27, 2013 through December 31, 2025.
+
+::: {.callout-note collapse="false"}
+## Optional readings
+National Association of City Transportation Officials (NACTO) [Half a Billion Trips on Shared Micromobility Since 2010](https://nacto.org/publication/shared-micromobility-report-2020-2021/) report which summarizes changes in municipal bikeshare systems over the past decade along with emerging trends in micromobility programs.
+
+Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesharing in Chicago in a period of growth and expansion](https://las.depaul.edu/centers-and-institutes/chaddick-institute-for-metropolitan-development/research-and-publications/Documents/ChaddickInstitute_DivvyReport_Feb2018.pdf). This study, published in 2018, characterizes the three initial phases of Chicago’s Divvy system beginning with its initial rollout in 2013 through its first and second expansions, in 2015 and 2016, respectively, paying special attention to service and performance gaps.
+:::
+
+# Step 1. Open Exercise #2 in Posit Cloud course workspace
+Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #3 announcement. Open the Exercise #2 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
+
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Create a new R project -->
+<!-- {{< video videos/exercise_03_new_R_project.mp4 >}} -->
+<!-- ::: -->
+
+::: {.callout-note collapse="false"}
+
+
+## What is R?
+R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS and is available via a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It has a set of tools built to help R users be more productive with R (and other languages including Python)). It includes a console, syntax-highlighting editor that supports direct code execution. It also features tools for plotting, viewing history, debugging and managing your workspace.
+:::
+
+## Open R script and activate R packages
+In your default exercise #2 project you will find an R script named *exercise02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Students will use several R packages to complete the exercise, including "dplyr" and  "tidyverse" for data formatting and wrangling, "sf" (simple feature) for importing, transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.
+
+```{r}
+# Activate R packages
+library(dplyr) # data wrangling with pipe syntax
+library(tidyverse) # data wrangling
+library(sf) # simple features geometry data
+library(plotly) # interactive plots
+library(leaflet) # interactive maps
+library(openxlsx) # write tables as Excel spreadsheets
+
+# Set default options for numerical display
+options(scipen=999, digits = 2)
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #1
+{{< video videos/exercise_02_01.mp4 >}}
+:::
+
+# Step 2. Download presentation template and process data
+*As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx) on the course GitHub.*
+
+This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2024 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
+
+::: {.callout-note collapse="false"}
+## Chicago Health Atlas
+The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hundreds of sociodemographic and public health indicators for communities throughout the city. The website  allows for searching and exploring various metrics via maps, charts and tables. Indicator data can also be downloaded by community area, census tract and zip code. Refer to the Atlas' [how to use](https://chicagohealthatlas.org/how-to) page for more information.  
+:::
+
+```{r}
+#| label: import data from course data web page and the city of Chicago data portal
+#| output: false
+
+# import Divvy summary trip data frames from web page
+load(url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/divvy_trips_summary_tables_latest.RData"))
+
+# import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform to geographic projection for mapping (epsg:4326)
+community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>% 
+  st_transform(4326) %>%
+  mutate(`comarea_id` = as.numeric(area_numbe),
+         comarea_name = str_to_title(community)) %>%
+  select(comarea_id, comarea_name)
+
+# import socioeconomic characteristics by community area (adapted from the Chicago Health Atlas) from the course GitHub
+ses_attributes <- read_csv("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/chicago_health_atlas_indicators.csv")
+
+# join community areas with socioeconomic status (SES) attributes to create custom dataset
+# add one to rank values to adjust range from 0-76 to 1-77
+# create and label quintile (ntile) categories for each SES measure 
+fx_ntile <- function(x, na.rm=TRUE)(ntile(x,5))
+fx_ntile_label <- function(x, na.rm=TRUE)(case_when(x==1 ~ "Lowest",
+                                         x==2 ~ "Low",
+                                         x==3 ~ "Moderate",
+                                         x==4 ~ "High",
+                                         x==5 ~ "Highest"))
+
+community_areas_ses <- community_areas %>%
+  left_join(ses_attributes %>% select(-Name), by="comarea_id") %>%
+  mutate_at(vars(svi_2020:poverty_2021), list(ntile = fx_ntile)) %>%
+  mutate_at(vars(svi_2020_ntile:poverty_2021_ntile), list(label = fx_ntile_label)) %>%
+  select(-ends_with("ntile"))
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #2
+{{< video videos/exercise_02_02.mp4 >}}
+:::
+
+# Step 3. Explore systemwide trends in Divvy trips over time
+Over the past decade the Divvy system has logged over 45 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2024. 
+
+*In slide 1 of your presentation, describe the cumulative growth of Divvy's systemwide ridership over the past decade. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take before Divvy logged the next 10 million trips?*
+
+```{r}
+#| label: fig-cumulativetrips
+#| echo: false
+#| fig-cap: Cumulative Divvy Trips, June 2013 through December 2025
+ 
+plot_ly(data = trips_by_date, 
+        x = ~date, 
+        y = ~trips_cumul,
+        name = 'Trips',
+        type = 'scatter', 
+        mode = 'lines', 
+        line = list(color = 'lightblue'),
+        stackgroup = 'one', 
+        hovertemplate = 'Cumulative trips: %{y:,}<extra></extra>') %>%
+        layout(
+      xaxis = list(title = "Date"), 
+      yaxis = list(title = "Cumulative Divvy Trips"),
+      legend=list(
+        font = list(
+          size = 10
+        ),
+        orientation = "h", 
+        xanchor="center", 
+        x = 0.5, y=-0.1),
+      hovermode = "x unified")
+
+```
+
+Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
+
+```{r}
+#| label: fig-tripsbyyearmonth
+#| echo: false
+#| fig-cap: Divvy Trips by Year and Month, June 2013 through December 2025
+
+plot_ly(data = trips_by_yearmonth,
+        x = ~yearmonth,
+        y = ~trips,
+        type = 'bar',
+        name = 'trips',
+        marker = list(color = 'lightblue'),
+        hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
+      layout(
+      xaxis = list(title = ""), 
+      yaxis = list(title = "Monthly Divvy Trips"),
+      legend=list(
+        font = list(
+          size = 10
+        ),
+        orientation = "h", 
+        xanchor="center", 
+        x = 0.5, y=-0.1),
+      hovermode = "x unified")
+
+```
+
+Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
+
+```{r}
+#| label: fig-tripsbydate
+#| echo: false
+#| fig-cap: Divvy Trips by Day, June 2013 through December 2025
+
+plot_ly(data = trips_by_date,
+        x = ~date,
+        y = ~trips,
+        type = 'scatter', 
+        mode = 'lines',
+        line = list(color = "lightblue",
+                    width = 0.5),
+        name = 'trips',
+        hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
+      layout(
+      xaxis = list(title = ""), 
+      yaxis = list(title = "Daily Divvy Trips"),
+      legend=list(
+        font = list(
+          size = 10
+        ),
+        orientation = "h", 
+        xanchor="center", 
+        x = 0.5, y=-0.1),
+      hovermode = "x unified")
+
+```
+
+# Step 4. Explore total and average trips by community area
+In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2024 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated.
+
+*In slide 4 of your presentation, note any patterns and/or variations you see in total ridership by community area. What factors do you feel explain differences in total and daily ridership? Support your findings by referencing statistics from the figure.*
+
+```{r}
+#| label: fig-frtripsbycommunityarea
+#| fig-cap: Total Divvy Trips by Community Area (Quintile Categorization)
+#| echo: false
+
+# create total trips (over study period) by community area dataset
+trips_by_communityarea <- trips_by_yearmonth_ca %>%
+  drop_na(yearmonth) %>%
+  filter(yearmonth == max(yearmonth))
+
+# join trips to community areas
+trips_by_communityarea_ses <- community_areas_ses %>%
+  left_join(trips_by_communityarea, by="comarea_id") %>%
+  select(-starts_with("yearmonth"))
+
+# total days in dataset
+total_days <- as.integer(count(trips_by_date))
+
+# create interactive map using leaflet
+# color palette
+map_pal <- colorQuantile(palette =  "RdYlBu", # EDIT HERE 
+                   domain = trips_by_communityarea_ses$fr_trips_cumul,
+                   n=5,
+                   reverse=TRUE)
+
+# hover labels
+communityarea_labels <- sprintf(
+  "<strong>%s</strong><br/>
+  <i>Trips (from):</i> %s<br/>
+  <i>Trips (to):</i> %s<br/>
+  <i>Avg daily trips (from):</i> %0.1f<br/>
+  <i>Avg daily trips (to):</i> %0.1f<br/>
+  <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
+  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>",
+  trips_by_communityarea_ses$comarea_name,
+  prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
+  prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
+  trips_by_communityarea_ses$fr_trips_cumul/total_days,
+  trips_by_communityarea_ses$to_trips_cumul/total_days,
+  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000) %>%
+lapply(htmltools::HTML)
+
+# interactive map
+leaflet(data = trips_by_communityarea_ses) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    fillColor = ~map_pal(fr_trips_cumul),
+    label = communityarea_labels,
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7) %>%
+  addLegend("bottomleft", 
+            pal = map_pal, 
+            values = ~fr_trips_cumul,
+            title = "Divvy Trips (Quintiles)",
+            opacity = 1)
+```
+
+# Step 5. Explore trends by socioeconomic status
+In this step we examine trends in Divvy usage across communities with different socioeconomic characteristics. For this step you will need to modify the below R code to create a custom map, plot and table to inform your analysis. An example analysis is summarized here. 
+
+## Identify and map a socioeconomic indicator
+First, identify one of the five socioeconomic measures that was downloaded from the Chicago Health Atlas. that you would like to use to explore the equity dimensions of Divvy ridership, namely: (1) [social vulnerability index](https://chicagohealthatlas.org/indicators/SVI?topic=social-vulnerability-index) (svi_2020); (2) [neighborhood safety](https://chicagohealthatlas.org/indicators/HCSNS?topic=neighborhood-safety) (safety_2018); (3) [median household income](https://chicagohealthatlas.org/indicators/INC?topic=median-household-income) (hhinc_2021); (4) [hardship index](https://chicagohealthatlas.org/indicators/HDX?topic=hardship-index) (hardship_2021); or (5) [household poverty](https://chicagohealthatlas.org/indicators/POV?topic=poverty-rate) (poverty_2021). (Follow the indicator links above for a more thorough description of each indicator via the health atlas.)
+
+*After selecting one of the indicators, copy and paste the following code into your R script and follow the instructions in the video to create a custom map. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership and the socioeconomic indicator you selected.* 
+
+```{r}
+#| label: fig-mapsesquintile
+#| fig-cap: Socioeconomic Indicator by Community Area (Quintile Categorization)
+
+# create total trips (over study period) by community area dataset
+trips_by_communityarea <- trips_by_yearmonth_ca %>%
+  drop_na(yearmonth) %>%
+  filter(yearmonth == max(yearmonth))
+
+# join trips to community areas with ses attributes
+trips_by_communityarea_ses <- community_areas_ses %>%
+  left_join(trips_by_communityarea, by="comarea_id") %>%
+  select(-starts_with("yearmonth"))
+
+# return total days included in dataset
+total_days <- as.integer(count(trips_by_date))
+
+# Edit the following four lines with selected indicator name/title, value and ntile variables
+ses_name <- "Poverty Rate" # EDIT HERE
+trips_by_communityarea_ses$ses_value <- trips_by_communityarea_ses$poverty_2021 # EDIT HERE
+trips_by_communityarea_ses$ses_ntile <- trips_by_communityarea_ses$poverty_2021_ntile_label # EDIT HERE
+community_areas_ses$ses_ntile <- community_areas_ses$poverty_2021_ntile_label # EDIT HERE
+
+# create interactive map using leaflet
+# color palette
+map_pal <- colorQuantile(palette =  "RdYlBu", 
+                   domain = trips_by_communityarea_ses$ses_value,
+                   n=5,
+                   reverse=TRUE)
+
+# hover labels
+communityarea_labels <- sprintf(
+  paste0("<strong>%s</strong><br/>
+  <i>Trips (from):</i> %s<br/>
+  <i>Trips (to):</i> %s<br/>
+  <i>Avg daily trips (from):</i> %0.1f<br/>
+  <i>Avg daily trips (to):</i> %0.1f<br/>
+  <i>Avg daily trips (from) per 10K pop:</i> %0.1f<br/>
+  <i>Avg daily trips (to) per 10K pop:</i> %0.1f<br/><i>",
+  ses_name,":</i> %0.1f<br/>"),
+  trips_by_communityarea_ses$comarea_name,
+  prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
+  prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
+  trips_by_communityarea_ses$fr_trips_cumul/total_days,
+  trips_by_communityarea_ses$to_trips_cumul/total_days,
+  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$ses_value) %>%
+lapply(htmltools::HTML)
+
+# interactive map
+leaflet(data = trips_by_communityarea_ses) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    fillColor = ~map_pal(ses_value),
+    label = communityarea_labels,
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7) %>%
+  addLegend("bottomleft", 
+            pal = map_pal, 
+            values = ~ses_value, # EDIT HERE
+            title = paste0(ses_name," Quintiles"),
+            opacity = 1)
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Create custom map
+{{< video videos/exercise_02_create_custom_map.mp4 >}}
+:::
+
+## Examine Divvy ridership trends by socioeconomic indicator over time
+Now you will evaluate Divvy ridership over the past decade for communities with different socioeconomic characteristics. 
+
+*Using the same indicator you selected above, copy and paste the following two code chunks into your R script and follow the instructions in the video to create a custom table and plot. Copy both the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the socioeconomic indicator you selected over the past ten years. Have variations in ridership changed differently over time with respect to community socioeconomic condition?*
+
+```{r}
+#| label: fig-tripsbyses
+#| fig-cap: Divvy Trips by Community Socioeconomic Status
+
+trips_by_yearmonth_by_ses <- trips_by_yearmonth_ca %>%
+  left_join(community_areas_ses %>% st_drop_geometry(), by="comarea_id") %>%
+  group_by(yearmonth, ses_ntile) %>% #
+  summarise(tot_pop = sum(pop_2021),
+            fr_trips = sum(fr_trips),
+            to_trips = sum(to_trips),
+            fr_trips_cumul = sum(fr_trips_cumul),
+            to_trips_cumul = sum(to_trips_cumul),
+            fr_dailytrips = fr_trips/total_days,
+            to_dailytrips = to_trips/total_days,
+            fr_trips_per1k = fr_trips/tot_pop*1000,
+            to_trips_per1k = to_trips/tot_pop*1000) %>%
+  drop_na(tot_pop) %>%
+  mutate(order = case_when(ses_ntile == "Lowest" ~ 1,
+                           ses_ntile == "Low" ~ 2,
+                           ses_ntile == "Moderate" ~ 3,
+                           ses_ntile == "High" ~ 4,
+                           ses_ntile == "Highest" ~ 5),
+         ses_label = factor(ses_ntile, levels = c("Highest", 
+                                                  "High", 
+                                                  "Moderate",
+                                                  "Low",
+                                                  "Lowest"))) %>%
+  arrange(yearmonth, order)
+
+# create a color palette
+pal_quintile_colors <- c("darkred", "orange", "yellow", "lightblue","darkblue")
+pal_quintile <- colorFactor(palette = pal_quintile_colors, domain = levels(trips_by_yearmonth_by_ses$ses_label), ordered = T)
+
+plot_ly(data = trips_by_yearmonth_by_ses,
+        x = ~yearmonth,
+        y = ~fr_trips_per1k,
+        type = 'scatter',
+        mode = 'marker+line',
+        color = ~ses_label,
+        colors = pal_quintile_colors,
+        text = ~ses_label,
+        hovertemplate = '%{text}: %{y:0.1f}<extra></extra>') %>%
+    config(displaylogo = FALSE) %>%
+    layout(
+      xaxis = list(title = ""), # EDIT HERE
+      yaxis = list(title = "Divvy Trips per 1,000 Residents"),
+      legend=list(
+        font = list(size = 10),
+        xanchor="center",
+        orientation = "h", 
+        x = 0.5, y=-0.1),
+      hovermode = "x unified")
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Create custom plot
+{{< video videos/exercise_02_create_custom_plot.mp4 >}}
+:::
+
+## Summary of ridership by socioeconomic indicator 
+Here you create a final custom table with your summary information by socioeconomic category. The code saves the output table to your project data directory for further analysis. *Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
+
+```{r}
+#| label: fig-tripsbysestable
+#| fig-cap: Summary Table of Divvy Trips (6/27/2013-12/31/2025) by Community Socioeconomic Status
+#| eval: true 
+#| echo: false
+
+trips_by_yearmonth_by_ses %>%
+  group_by(ses_ntile) %>%
+  summarise(order = max(order),
+            tot_pop = max(tot_pop),
+            fr_trips = sum(fr_trips),
+            to_trips = sum(to_trips)) %>%
+  mutate(tot_pop_pct = tot_pop/sum(tot_pop),
+         fr_trips_pct = fr_trips/sum(fr_trips),
+         to_trips_pct = to_trips/sum(to_trips)) %>%
+  arrange(-order) %>%
+  select(-order) %>%
+  datatable(class = 'cell-border stripe',
+            rownames = FALSE,
+            colnames = c("SES Quintile","Total Population","Trips (from)", "Trips (to)", "Percent of Population","Percent of Trips (from)","Percent of Trips (to)"),
+            options = list(pageLength = 5)) %>%
+  formatPercentage(c("tot_pop_pct","fr_trips_pct","to_trips_pct"),digits = 1) %>%
+  formatRound(c("tot_pop","fr_trips","to_trips"), mark = ",", digits = 0)
+
+```
+
+```{r}
+#| label: Create table summarizing trips by socioeconomic category
+#| eval: false
+
+trips_by_ses_quintile <- trips_by_yearmonth_by_ses %>%
+  group_by(ses_ntile) %>%
+  summarise(order = max(order),
+            tot_pop = max(tot_pop),
+            fr_trips = sum(fr_trips),
+            to_trips = sum(to_trips)) %>%
+  mutate(tot_pop_pct = tot_pop/sum(tot_pop),
+         fr_trips_pct = fr_trips/sum(fr_trips),
+         to_trips_pct = to_trips/sum(to_trips)) %>% 
+  arrange(desc(ses_ntile))
+
+write.xlsx(trips_by_ses_quintile,
+           file = "data/trips_by_ses_quintile.xlsx",
+           asTable = TRUE,
+           overwrite = TRUE)
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Create custom table
+{{< video videos/exercise_02_create_custom_table.mp4 >}}
+:::

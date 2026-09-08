@@ -1,0 +1,59 @@
+﻿//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 1,
+QuestionText,"According to the introduction, the major technological transformation of transportation in the United States is primarily being driven by which sector?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"Large public infrastructure projects, similar to the historical Interstate Highway System"
+Option,100,"The private sector, investing in new communication networks and digital technologies"
+Option,0,State Departments of Transportation forging new public-private partnerships
+Option,0,Federal mandates requiring the implementation of new information technologies
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 2,
+QuestionText,"In the Atlanta ""Growth"" scenario (Atlanta, 2028), the reduction in the ""opportunity cost of driving"" due to the high-speed G-Road™ system—which allowed commuters to sleep or work—created powerful incentives leading to which long-term urban planning outcome?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"The successful consolidation of MARTA’s transit operations, leading to decreased sprawl"
+Option,100,Renewed exurban sprawl and a rapid growth in Vehicle Miles Traveled (VMT)
+Option,0,"The elimination of all parking structures in ""edge cities"" to create pedestrian-only zones"
+Option,0,The system primarily served low-income areas dependent on decaying transit networks
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 3,
+QuestionText,"What was identified as the key cause for the widespread, constant gridlock (""Automation Run Amok"") experienced in the Los Angeles ""Collapse"" scenario (Los Angeles, 2030)?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,The lack of self-driving vehicle imports after Chinese manufacturers (like Baidu) ceased production
+Option,0,"The rapid expansion of fully autonomous trucking, which took over freeway lanes"
+Option,100,"A lack of regulation and standards which resulted in a heterogeneous fleet of vehicles that could not inter-operate well, leading to highly defensive driving."
+Option,0,A successful effort by planners to implement mandated V2V communication retrofits too quickly.
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 4,
+QuestionText,"In the context of rapid technological transformation driven by the private sector, compare and contrast the resulting long-term role and status of public planning institutions in the Atlanta ""Growth"" scenario (2028) versus the Los Angeles ""Collapse"" scenario (2030).",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"In both regions, planners successfully used new digital data (like Waze and Uber data) to implement dynamic congestion pricing schemes and fund massive public transit expansions."
+Option,0,"In Atlanta, planners were empowered by Google's monolithic control over infrastructure to accelerate development, while in Los Angeles, planners were unable to adapt and remained largely ineffective against traffic chaos."
+Option,100,"In Atlanta, planners became ""completely marginalized"" as corporate lobbying and Google's superior data analytical capacity bypassed planning institutions; conversely, in Los Angeles, the widespread chaos and gridlock caused by loosely regulated, heterogeneous autonomous vehicles forced planning institutions to ""re-emerge to implement retrofits"" and large-scale urban simulations"
+Option,0,"Both regions experienced a return to public control, with planners in Atlanta reclaiming HOV lanes from the G-Road system, and planners in Los Angeles taking over the functions of failing private DIY transit networks."
+Hint,,
+Feedback,,

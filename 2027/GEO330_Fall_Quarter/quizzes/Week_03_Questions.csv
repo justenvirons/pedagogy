@@ -1,0 +1,59 @@
+﻿//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 1,
+QuestionText,"What are the four types of cyclists proposed in Roger Geller's widely referenced typology, which was intended to apply to all adults, regardless of their current bicycling behavior?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"The advanced, the basic, and children"
+Option,100,"The strong and the fearless, the enthused and confident, the interested but concerned, and no way, no how"
+Option,0,"Responsible, lifestyle, commuter, and hippy-go lucky"
+Option,0,"Utilitarian, recreational, and noncyclists"
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 2,
+QuestionText,"According to the study examining Geller's typology, what is the primary factor used to determine which of the four categories an adult belongs to?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"Their current cycling frequency (e.g., utilitarian, recreational, noncyclist status)"
+Option,0,"Their physical ability to ride a bicycle (a factor mainly for the ""no way, no how"" group)"
+Option,100,Their stated comfort level with cycling on different types of facilities
+Option,0,Their education or income levels (no significant differences were found)
+Hint,Cholera,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 3,
+QuestionText,"Which category was identified as the key target market necessary to achieve ambitious transportation mode shift targets in Portland, and what percentage of the regional adult population did the study find fit into this category?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,The strong and the fearless (4%)
+Option,0,The enthused and confident (9%)
+Option,100,The interested but concerned (56%)
+Option,0,"No way, no how (31%)"
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 4,
+QuestionText,"To attract the largest target group, the ""interested but concerned,"" which type of infrastructure was found to significantly increase their reported level of comfort by increasing their physical separation from motor vehicles, with comfort levels approaching that of a separate path?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Unmarked two-lane neighborhood commercial streets
+Option,0,Striped bike lanes on major streets without physical separation
+Option,100,Cycle tracks (wide bike lanes separated by a raised curb or parked cars)
+Option,0,Quiet residential streets with traffic calming features
+Hint,,
+Feedback,,

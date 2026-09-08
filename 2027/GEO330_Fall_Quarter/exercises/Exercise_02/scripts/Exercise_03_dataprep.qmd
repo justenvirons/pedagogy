@@ -1,0 +1,406 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(data.table)
+library(sf)
+library(lubridate)
+library(hms)
+```
+
+# Purpose
+It was an exciting day in 2013 when the first Divvy bikes were launched in Chicago. A decade worth of data. Between July 2013 through December 2022, the system has hosted 35 million trips. Changed in terms of vehicles, policies (e.g., public private partnerships) and potentially ridership and travel behavior. This exercise seeks to better understand trends and identify any changes in Divvy ridership over the past decade. 
+
+Key events in 2013
+
+Divvy trips data for this exercise were initially downloaded from the Chicago Data Portal and the Divvy system data website. The earlier data, prior to the Lyft agreement, were in some ways more comprehensive in that it collected age, gender for member trips, whereas the latter data, beginning 2019, does not.
+
+```{r}
+#| label: import divvy data
+#| 
+
+# import original dataset downloaded in csv format from chicago data portal (6/27/2013-12/31/2019)
+# https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg
+divvy_trips_orig <- read.csv("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/trips_processing/Divvy_Trips.csv")
+
+# Divvy_Trips_2020_Q1 <- read_csv(paste0("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/trips_processing/Divvy_Trips_2020_Q1.csv"))
+
+# create list of divvy trip data from individual files on system data website
+adivvy_trips_list <- c("202005-divvy-tripdata","202006-divvy-tripdata","202007-divvy-tripdata","202008-divvy-tripdata","202009-divvy-tripdata","202010-divvy-tripdata","202011-divvy-tripdata","202012-divvy-tripdata","202101-divvy-tripdata","202102-divvy-tripdata","202103-divvy-tripdata","202104-divvy-tripdata","202105-divvy-tripdata","202106-divvy-tripdata","202107-divvy-tripdata","202108-divvy-tripdata","202109-divvy-tripdata","202110-divvy-tripdata","202111-divvy-tripdata","202112-divvy-tripdata","202201-divvy-tripdata","202202-divvy-tripdata","202203-divvy-tripdata","202204-divvy-tripdata","202205-divvy-tripdata","202206-divvy-tripdata","202207-divvy-tripdata","202208-divvy-tripdata","202209-divvy-tripdata","202210-divvy-tripdata","202211-divvy-tripdata","202212-divvy-tripdata","202301-divvy-tripdata","202302-divvy-tripdata", "202303-divvy-tripdata", "Divvy_Trips_2020_Q1")
+
+# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2022
+# https://divvy-tripdata.s3.amazonaws.com/index.html
+for (afile in adivvy_trips_list){
+  afilename <- paste0("E:/Downloads/divvy/",afile,".zip")
+  unzip(zipfile = afilename, exdir = paste0("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/"))
+}
+
+# import monthly and quarterly divvy trip data files from csv format
+for (afile in adivvy_trips_list){
+  aimportfile <- read_csv(paste0("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/trips_processing/",afile,".csv"))
+  assign(afile, aimportfile)
+  rm(aimportfile)
+}
+
+# reformat unconventional files
+`202106-divvy-tripdata` <- `202106-divvy-tripdata` %>%
+  mutate(length_start = nchar(started_at),
+         length_end = nchar(ended_at)) %>%
+  filter(length_start == 19 & length_end == 19) %>%
+  mutate(started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
+         ended_at = as.POSIXct(ended_at, format = "%Y-%m-%d %H:%M:%S")) %>%
+  select(-c(starts_with("length")))
+
+`202303-divvy-tripdata` <- `202303-divvy-tripdata` %>%
+  mutate(started_at = as.POSIXct(started_at, format = "%Y-%m-%d %H:%M:%S"),
+         ended_at = as.POSIXct(ended_at, format = "%Y-%m-%d %H:%M:%S"))
+
+# bind monthly and quarterly divvy trip data
+apattern <- "-divvy-tripdata"
+alist_dfs <- mget(ls(pattern = apattern))
+divvy_tripdata <- rbindlist(alist_dfs)
+
+divvy_tripdata <- divvy_tripdata %>%
+  mutate_at(vars(start_station_id,end_station_id:end_lng), function(x)(as.numeric(x)))
+
+divvy_tripdata <- divvy_tripdata %>%
+  bind_rows(Divvy_Trips_2020_Q1)
+
+alist_df <- mget(ls(pattern = "-divvy-tripdata"))
+rm(alist_df)
+
+divvy_trips_2020_2023 <- divvy_tripdata %>%
+  mutate(rideable_type,
+         hour_start = hour(started_at),
+         hour_end = hour(ended_at),
+         year = year(started_at),
+         date = format(started_at, "%m/%d/%Y"),
+         yearmonth = format(started_at, "%Y-%m"),
+         weekday = weekdays(started_at),
+         trip_duration = ended_at - started_at) %>%
+  select(rideable_type,
+         hour_start,
+         hour_end,
+         year,
+         date,
+         yearmonth,
+         weekday,
+         trip_duration,
+         start_lat,
+         start_lng,
+         end_lat,
+         end_lng,
+         member_casual)  
+
+divvy_trips_2013_2019 <- divvy_trips_orig %>% 
+  mutate(rideable_type = "classic_bike",
+         started_at = as.POSIXct(START.TIME, format = "%m/%d/%Y %H:%M:%S"),
+         ended_at = as.POSIXct(STOP.TIME, format = "%m/%d/%Y %H:%M:%S"),
+         hour_start = hour(started_at),
+         hour_end = hour(ended_at),
+         year = year(started_at),
+         date = format(started_at, "%m/%d/%Y"),
+         yearmonth = format(started_at, "%Y-%m"),
+         weekday = weekdays(started_at),
+         trip_duration = ended_at - started_at,
+         rider_age = 2023-BIRTH.YEAR) %>%
+  rename(start_lat = FROM.LATITUDE,
+         start_lng = FROM.LONGITUDE,
+         end_lat = TO.LATITUDE,
+         end_lng = TO.LONGITUDE,
+         member_casual = USER.TYPE,
+         rider_gender = GENDER) %>%
+  select(rideable_type,
+         hour_start,
+         hour_end,
+         date,
+         year,
+         yearmonth,
+         weekday,
+         trip_duration,
+         start_lat,
+         start_lng,
+         end_lat,
+         end_lng,
+         member_casual,
+         rider_gender,
+         rider_age)
+
+divvy_trips_2013_2023 <- divvy_trips_2013_2019 %>%
+  bind_rows(divvy_trips_2020_2023)
+
+rm(divvy_trips_2013_2019,divvy_trips_2020_2023, divvy_trips_orig, divvy_tripdata)
+rm(divvy_trips_orig, divvy_tripdata)
+
+rm(mget(ls(pattern = apattern)))
+
+# save joined reformatted files
+save(divvy_trips_2013_2023, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_trips_2013_2023_20230409.RData")
+
+divvy_trips_2013_2023_start <- divvy_trips_2013_2023 %>%
+  drop_na(start_lat,start_lng,end_lat,end_lng) %>%
+  st_as_sf(coords = c("start_lng", "start_lat")) %>%
+  st_set_crs(4326) %>%
+  st_transform(3435)
+
+divvy_trips_2013_2023_end <- divvy_trips_2013_2023 %>%
+  drop_na(start_lat,start_lng,end_lat,end_lng) %>%
+  st_as_sf(coords = c("end_lng", "end_lat")) %>%
+  st_set_crs(4326) %>%
+  st_transform(3435)
+
+         
+```
+
+
+```{r}
+#| label: save divvy data
+
+save(divvy_trips_2013_2023_start, divvy_trips_2013_2023_end, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_start_end_20230410.RData")
+```
+
+```{r}
+#| label: Download geographies from the city of Chicago's data portal
+#| output: false
+
+# import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform into standard geographic projection (epsg:3435)
+community_areas <- st_read("https://data.cityofchicago.org/api/geospatial/cauq-8yn6?method=export&format=GeoJSON") %>% 
+  st_transform(3435) %>%
+  mutate(`comarea_id` = as.numeric(area_numbe),
+         comarea_name = str_to_title(community)) %>%
+  select(comarea_id, comarea_name)
+
+divvy_trips_2013_2023_start_ca <- divvy_trips_2013_2023_start %>% 
+  st_join(community_areas)
+
+divvy_trips_2013_2023_end_ca <- divvy_trips_2013_2023_end %>% 
+  select(start_lat,
+         start_lng,
+         comarea_name,
+         comarea_id) %>%
+  st_join(community_areas)
+
+divvy_trips_2013_2022_ca_all <- divvy_trips_2013_2022_start_ca %>% 
+  st_drop_geometry %>%
+  rename(start_comarea_name = comarea_name,
+         start_comarea_id = comarea_id) %>%
+  bind_cols(divvy_trips_2013_2022_end_ca %>%
+              st_drop_geometry %>%
+              select(start_lat,
+                     start_lng,
+                     end_comarea_name = comarea_name,
+                     end_comarea_id = comarea_id))
+
+head(divvy_trips_2013_2022_end_ca)
+
+test = divvy_trips_2013_2022_ca_all %>% group_by(fr_comarea_name) %>%
+  summarise(trips = n())
+
+save(divvy_trips_2013_2022_ca_all, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_all.RData")
+
+```
+
+```{r}
+#| label: create summary tables
+
+# total trips by year and month
+
+load("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_all.RData")
+
+# trips by yearmonth tables
+# total trips by year and month
+trips_yearmonth <- divvy_trips_2013_2022_ca_all %>%
+  group_by(yearmonth) %>%
+  summarize(trips = n(),
+            trip_duration = sum(trip_duration))
+
+# total trips by year, month and community area
+trips_year_month_fr_ca <- divvy_trips_2013_2022_ca_all %>%
+  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(fr_comarea_id))) %>%
+  group_by(yearmonth_ca) %>%
+  summarize(fr_trips = n(),
+            fr_trip_duration = sum(trip_duration))
+
+trips_year_month_to_ca <- divvy_trips_2013_2022_ca_all %>%
+  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(to_comarea_id))) %>%
+  group_by(yearmonth_ca) %>%
+  summarize(to_trips = n(),
+            to_trip_duration = sum(trip_duration))
+
+trips_yearmonth_ca_all <- expand_grid(yearmonth = trips_year_month$yearmonth,comarea_id = community_areas$comarea_id) %>%
+  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(comarea_id))) %>%
+  left_join(trips_year_month_fr_ca, by="yearmonth_ca") %>%
+  left_join(trips_year_month_to_ca, by="yearmonth_ca") %>%
+  mutate_at(c(4,6), ~replace_na(.,0))
+
+trips_yearmonth_ca_all_noduration <- trips_yearmonth_ca_all %>%
+  select(-c(ends_with("duration")))
+
+# total trips by date
+trips_date <- divvy_trips_2013_2022_ca_all %>%
+  group_by(date) %>%
+  summarize(trips = n(),
+            trip_duration = sum(trip_duration))
+
+#total trips by date and community area
+trips_date_fr_ca <- divvy_trips_2013_2022_ca_all %>%
+  mutate(date_ca = paste0(as.character(date),":",as.character(fr_comarea_id))) %>%
+  group_by(date_ca) %>%
+  summarize(fr_trips = n(),
+            fr_trip_duration = sum(trip_duration))
+
+trips_date_to_ca <- divvy_trips_2013_2022_ca_all %>%
+  mutate(date_ca = paste0(as.character(date),":",as.character(to_comarea_id))) %>%
+  group_by(date_ca) %>%
+  summarize(to_trips = n(),
+            to_trip_duration = sum(trip_duration))
+
+trips_date_ca_all <- expand_grid(date = trips_date$date,comarea_id = community_areas$comarea_id) %>%
+  mutate(date_ca = paste0(as.character(date),":",as.character(comarea_id))) %>%
+  left_join(trips_date_fr_ca, by="date_ca") %>%
+  left_join(trips_date_to_ca, by="date_ca") %>%
+  mutate_at(c(4,6), ~replace_na(.,0))
+
+trips_date_ca_all_noduration <- trips_date_ca_all %>%
+  select(-c(ends_with("duration")))
+
+save(trips_date_ca_all_noduration, trips_yearmonth_ca_all_noduration, divvy_trips_2013_2022_ca_all, file="GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_sum.RData")
+```
+
+## Create CCVI by Chicago Community Area dataset
+We will be evaluating L ridership based on a variety of community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted and modified from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., both community areas and zip codes) in Chicago that have been disproportionately impacted by COVID-19. Vulnerability is defined as a combination of:  sociodemographic factors; epidemiological factors; occupational factors and other factors related to cumulative COVID burden. These factors were then combined to create a single composite weighted CCVI score. The higher the score, the more vulnerable the geographic area or, in this case, community area. Copy and paste the following code into your exercise R script to import the datasets.
+
+## Exercise #3 Final Datasets
+```{r}
+#| label: prep for final datasets
+
+trips_by_yearmonth <- trips_year_month %>%
+  select(-trip_duration) %>%
+  arrange(yearmonth) %>%
+  drop_na(yearmonth) %>%
+  mutate(yearmonth = ym(yearmonth),
+         trips_cumul = cumsum(trips))
+
+trips_by_date <- trips_date %>%
+  select(-trip_duration) %>%
+  drop_na(date) %>%
+  mutate(date = as.Date(date,format = "%m/%d/%Y")) %>%
+  arrange(date) %>%
+  mutate(trips_cumul = cumsum(trips))
+
+trips_by_yearmonth_ca <- trips_yearmonth_ca_all_noduration %>%
+  arrange(yearmonth,comarea_id) %>%
+  group_by(comarea_id) %>%
+  mutate(yearmonth = ym(yearmonth),
+         fr_trips_cumul = cumsum(fr_trips),
+         to_trips_cumul = cumsum(to_trips))
+
+```
+
+
+```{r}
+#| label: import CCVI and community area data from the Chicago
+#| output: false 
+
+# Chicago COVID-19 Community Vulnerability Index (CCVI) from Chicago data portal by community area
+ccvi_attributes <- read_csv("https://data.cityofchicago.org/api/views/rqqg-u7zt/rows.csv?accessType=DOWNLOAD") %>%
+  select(-c(`Geography Type`,`Location`)) %>%
+  rename(comarea_id = 1)
+
+# join community areas with CCVI attributes to create custom dataset
+# add one to rank values to adjust range from 0-76 to 1-77
+# sort/arrange table by CCVI Score
+community_areas_ccvi <- community_areas %>%
+  left_join(ccvi_attributes, by="comarea_id") %>%
+  mutate_at(vars(`Rank - Socioeconomic Status`:`Rank - COVID-19 Crude Mortality Rate`), list(ntile = function(x, na.rm=TRUE)(ntile(x,5)))) %>%
+  arrange(`CCVI Score`)
+
+```
+
+## Create map showing CCVI distribution by community area 
+R has several packages devoted to map making. The *leaflet* package can be used to create custom, interactive maps (@fig-ccvibycommunityarea). Modify the color palette ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) in the interactive map below to create a custom figure showing variations by CCVI category. Insert the map into slide 1 of your presentation.
+
+```{r}
+#| label: fig-ccvibycommunityarea
+#| fig-cap: CCVI Scores by Community Area
+#| warning: false
+
+# create interactive map using leaflet
+# color palette
+
+map_pal <- colorFactor(palette =  "YlOrRd", # EDIT HERE 
+                   domain = community_areas_ccvi$`CCVI Category`,
+                   ordered = TRUE)
+
+# hover labels
+communityarea_labels <- sprintf(
+  "<strong>%s</strong><br/>
+  <i>CCVI Score:</i> %0.1f<br/>
+  <i>CCVI Category:</i> %s<br/><br/>
+  <em>Ranked scores from least (1) to most (77) vulnerable:</em><br/>
+  <ul style=\"list-style-type:square;\">
+  <li>Socioeconomic Status: %1.0f</li>
+  <li>Essential Workers: %1.0f</li>
+  <li>Mobility Ratio: %1.0f</li>
+  <li>COVID-19 Incidence Rate: %1.0f</li>
+  <li>COVID-19 Hospitalization Rate: %1.0f</li>
+  <li>COVID-19 Crude Mortality Rate: %1.0f</li>",
+  community_areas_ccvi$comarea_name,
+  community_areas_ccvi$`CCVI Score`,
+  community_areas_ccvi$`CCVI Category`,
+  community_areas_ccvi$`Rank - Socioeconomic Status`,
+  community_areas_ccvi$`Rank - Frontline Essential Workers`,
+  community_areas_ccvi$`Rank - Cumulative Mobility Ratio`,
+  community_areas_ccvi$`Rank - COVID-19 Incidence Rate`,
+  community_areas_ccvi$`Rank - COVID-19 Hospital Admission Rate`,
+  community_areas_ccvi$`Rank - COVID-19 Crude Mortality Rate`) %>%
+lapply(htmltools::HTML)
+
+# interactive map
+leaflet(data = community_areas_ccvi %>% st_transform(crs=4326)) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    fillColor = ~map_pal(`CCVI Category`),
+    label = communityarea_labels,
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7) %>%
+  addLegend("bottomleft", 
+            pal = map_pal, 
+            values = ~`CCVI Category`,
+            title = "CCVI Category",
+            opacity = 1)
+
+```
+
+::: {.callout-note collapse="true" icon="false"}
+# Data Table for @fig-ccvibycommunityarea
+
+```{r}
+#| label: tbl-ccvibycommunityarea
+#| tbl-cap: CCVI by Community Area
+#| echo: false
+
+# draw data table
+
+community_areas_ccvi %>%
+  select(-c(ends_with("_ntile"))) %>%
+  rename(ID = comarea_id,
+         `Community Area` = comarea_name) %>%
+  st_drop_geometry() %>%
+  arrange(ID) %>%
+  datatable(class = 'cell-border stripe',
+            rownames = FALSE,
+            options = list(pageLength = 5))
+
+```
+:::
+
+# Evaluate Divvy Ridership by CCVI Component Factor

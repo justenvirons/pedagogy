@@ -1,0 +1,59 @@
+﻿//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 1,
+QuestionText,"According to the Theory of Routine Mode Choice Decisions, what is the initial step that determines which transportation modes an individual views as possible choices for routine travel?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Convenience and Cost
+Option,0,Basic Safety and Security
+Option,100,Awareness and Availability
+Option,0,Enjoyment
+Hint,,
+Feedback,,"This is the **initial step** because individuals must first be aware of a mode and have it available for it to be considered a possible choice for routine travel. For instance, if someone automatically chooses to drive for errands, walking or bicycling might not even be considered. Lack of awareness or the unavailability of modes, like not owning a bicycle, can prevent them from being chosen. The other options (Convenience and Cost, Basic Safety and Security, Enjoyment) are subsequent steps in the decision process ."
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 2,
+QuestionText,"The theory outlines five steps, with the middle three (Basic Safety and Security, Convenience and Cost, and Enjoyment) potentially considered in various sequences. However, interview responses suggested an initial order. Which factor is generally considered *before* convenience and enjoyment, as people may avoid modes due to perceived risk, even if those modes could be more convenient?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Habit
+Option,100,Basic Safety and Security
+Option,0,Awareness and Availability
+Option,0,Socioeconomic Characteristics
+Hint,Cholera,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 3,
+QuestionText,What two primary factors were frequently mentioned by interviewees as influencing the relative convenience and cost of walking and bicycling versus driving for routine travel?,
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Traffic congestion and weather conditions
+Option,100,Accessibility of activity locations and availability/price of automobile parking
+Option,0,Personal health benefits and environmental concerns
+Option,0,Social status and personal preferences
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 4,
+QuestionText,"While ""Enjoyment"" is a step in the mode choice decision process, the article notes a common observation regarding walking and bicycling, especially in suburban areas. What is this observation?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Enjoyment alone guarantees the use of walking and bicycling for routine travel.
+Option,100,"People often enjoy walking and bicycling for pleasure (e.g., in parks or on trails) but still drive for routine activity destinations due to other barriers."
+Option,0,Enjoyment is the least important factor in determining mode choice.
+Option,0,Only urban residents experience enjoyment from walking and bicycling for routine travel.
+Hint,,
+Feedback,,

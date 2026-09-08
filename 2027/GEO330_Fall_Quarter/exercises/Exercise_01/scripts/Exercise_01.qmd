@@ -1,0 +1,678 @@
+---
+title: "GEO/SUD 3/430 Exercise #1"
+subtitle: "Mode Share, Pedestrian Fatalities and Urban Street Design"
+author: C. Scott Smith, PhD AICP (Instructor)
+email: c.scott.smith@depaul.edu
+format: 
+  html:
+    warning: false
+    code-tools: false
+    code-fold: false
+    echo: false
+    theme: flatly
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    reference-location: document
+    fontsize: 0.9em
+    interlinespace: -0.75em
+    embed-resources: true
+date: 2026-9-9
+bibliography: ../references.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+# eval: true
+# echo: false
+
+# set working directory
+setwd("2027/GEO330_Fall_Quarter/exercises/Exercise_01")
+
+# API Keys
+CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
+CENSUS_API_KEY <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
+
+# option set
+modeBarButtonsList <- list("toImage")
+
+# function for creating modeshare plot
+fx_plot_modeshare <- function(geoid = "all") {
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`from home` = mean(pct_fromhome),
+              `bicycle`   = mean(pct_bicycle),
+              `walk`      = mean(pct_walk),
+              `transit`   = mean(pct_transit))
+  
+  plot_ly(data = plot_data,
+          x = ~year,
+          y = ~`from home`,
+          type = 'scatter',
+          mode = 'lines+markers',
+          marker = list(color = "#E0A100"),
+          line = list(color = "#E0A100"),
+          name = 'from home',
+          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`walk`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#9F1928"),
+              line = list(color = "#9F1928"),
+              name = 'walk',
+              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`transit`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#009BA6"),
+              line = list(color = "#009BA6"),
+              name = 'transit',
+              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`bicycle`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#080967"),
+              line = list(color = "#080967"),
+              name = 'bicycle',
+              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Commute Mode Share (%)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+```
+
+# Purpose
+This exercise uses means of transportation (or journey) to work and pedestrian fatality data to evaluate trends and patterns within a student-selected US county between 2010 and 2025. Students will use data to create maps, tables and figures to better understand and propose potential solutions to improve active transportation and related injury.
+
+::: {.callout-note collapse="false"}
+## Optional readings
+
+:::
+
+# Step 1. Open Exercise #1 in Posit Cloud course workspace
+Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #1 announcement. Open the Exercise #1 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
+
+::: {.callout-note collapse="false"}
+## What is R?
+R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS and is available via a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It has a set of tools built to help R users be more productive with R (and other languages including Python)). It includes a console, syntax-highlighting editor that supports direct code execution. It also features tools for plotting, viewing history, debugging and managing your workspace.
+:::
+
+## Open R script, activate R packages and load project data
+In your default exercise #1 project you will find an R script named *Exercise_01.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #1. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Students will use several R packages to complete the exercise, including "dplyr" and  "tidyverse" for data formatting and wrangling, "sf" (simple feature) for importing, transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.
+
+```{r}
+# Activate R packages
+library(dplyr) # data wrangling with pipe syntax
+library(tidyverse) # data wrangling
+library(sf) # simple features geometry data
+library(plotly) # interactive plots
+library(leaflet) # interactive maps
+library(leaflet.extras)
+library(leafsync)
+library(crsuggest)
+library(spatstat.geom)
+library(spatstat.explore)
+library(terra)
+library(classInt)
+
+# Set default options for numerical display
+options(scipen=999, digits = 2)
+
+# Load project data
+load("data/Exercise_01.RData")
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #1
+{{< video videos/exercise_01_01.mp4 >}}
+:::
+
+# Step 2. Download exercise template and select US county
+Download the [exercise PowerPoint template](https://justenvirons.org/pedagogy/GEO330/Exercise_01/slides/Exercise01_Template.pptx) and [journey to work data](https://justenvirons.org/pedagogy/GEO330/Exercise_01/data/Exercise_01.xlsx) (as Excel spreadsheet) using the provided links. You will use the Excel table to explore data and format tables and figures that will be shared and summarized in your PowerPoint presentation. You will also draw from resources on this page (e.g., maps) to complete your presentation. For now, just download the template and spreadsheet.
+
+For this exercise, you will select a custom, large (i.e., having over 500,000 population), urban county located in the contiguous United States to be your study area. Browse the interactive map of US counties below to identify a study area that interests you. Make note of the county's name and unique "geoid". The "geoid" combines the unique two-digit state code with a three-digit county code (e.g., 17031, for example, is the geoid for Cook County, Illinois). 
+
+
+```{r}
+#| label: fig-popbycountymap
+#| fig-cap: Total Population by US County
+#| eval: true
+#| echo: false
+#| code-fold: false
+
+# Make interactive map of US counties by population using leaflet package
+
+# assign bins for population thematic map loosely based on quintile breaks
+counties_bins <- c(0, 25000, 100000, 500000, 999999, Inf) 
+
+# create palette using colorblind/accessible colors 
+counties_pal <- colorBin(
+  palette="viridis", 
+  domain=us_counties_population_geo$total_population, 
+  na.color="transparent",
+  bins = counties_bins,
+  reverse = TRUE
+  )
+
+# format/generate popup labels for map
+labels = sprintf(
+  "<strong>%s, %s</strong><br/>
+  Population (2024): %s<br/>
+  GEOID: %s <br/>
+  Quintile group: %s",
+  us_counties_population_geo$NAME, 
+  us_counties_population_geo$STATE_NAME,
+  format(us_counties_population_geo$total_population, big.mark = ","),
+  us_counties_population_geo$GEOID,
+  us_counties_population_geo$total_population_q) %>% 
+  lapply(htmltools::HTML)
+
+# create thematic map using leaflet
+leaflet() %>%
+  # addProviderTiles(providers$CartoDB.Positron) %>%
+    addTiles(
+    urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      CARTO_API_KEY
+    )) %>% 
+  addPolygons(group = "US counties",
+              data=us_counties_population_geo %>% st_transform(crs=4326),
+              # fillColor = "orange",
+              fillColor = ~counties_pal(total_population),
+              weight = 0.5,
+              opacity = 0.5,
+              color = "white",
+              dashArray = "3",
+              fillOpacity = 0.7,
+              highlight = highlightOptions(
+                weight = 5,
+                color = "#666",
+                dashArray = "",
+                fillOpacity = 1,
+                bringToFront = FALSE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  addLegend("topright", pal = counties_pal, values = us_counties_population_geo$total_pop,
+            title = paste0("Population (2024)"),
+            opacity = 1) %>%
+  addScaleBar(position = "bottomleft") %>%
+    addFullscreenControl() %>% 
+  addResetMapButton()
+
+```
+
+# Step 3. Transportation mode share analysis
+For this exercise, students will examine trends in commute mode share across US divisions, states and counties over the past decade using a curated dataset. The data were downloaded using the [Census application programming interface API](https://www.census.gov/data/developers/data-sets.html) in RStudio. The Census API supports custom queries and downloads of American Community Survey (ACS) and other census data. 
+
+The commute mode share data by US county were obtained from table [B08301](https://censusreporter.org/tables/B08301/) of the [American Community Survey](https://www.census.gov/programs-surveys/acs) 5-year estimates. These estimates represent data collected over a 5-year period of time (which increases the statistical reliability of the data).
+
+The ACS is an ongoing survey that covers a broad range of topics including the social, economic, demographic, and housing characteristics of the US population. The US census also collects "journey to work" information that can be used for a variety of planning and policy purposes including those related to sustainable transportation. 
+
+The journey to work data represent responses to a specific question administered in the survey: “How did this person usually get to work last week?" If this person used more than one mode of transportation, they were [asked to select the transportation mode](https://www2.census.gov/programs-surveys/acs/about/qbyqfact/2016/JourneytoWork.pdf) used for *most* of the distance. For example, respondents would select “bicycle” or "walk" only if that mode represented most of the commute distance. In this way, the ACS only captures the primary commuting mode for the week before the survey, which may not represent the annual commuting mode share. Such limitations notwithstanding, the ACS represents the most reliable source of temporal changes in commute share data across the US.
+
+## Trends in mode share
+
+Examine the plot below of trends for selected modes across the US between 2010-2024 @fig-modesharetrends. Copy and paste the image into your PowerPoint presentation slide #1 and summarize trends.
+
+```{r}
+#| label: fig-modesharetrends
+#| fig-cap: Average Commute Mode Share among US Counties by Select Modes, 2010-2024
+#| eval: true
+#| echo: false
+
+fx_plot_modeshare("all")     # all counties combined
+
+```
+
+The following plot @fig-modesharetrendscook shows Use the code below to create a similar plot for your county. Copy and paste the image into your PowerPoint presentation slide #2 and summarize trends. Also, compare the trends in your selected county with the nationwide patterns below.
+
+```{r}
+#| label: fig-modesharetrendscook
+#| fig-cap: Average Commute Mode Share for Cook County, Illinois, 2010-2024
+
+custom_geoid <- "17031" # replace with your county GEOID
+
+# run the following function to create a custom transportation mode share plot
+fx_plot_modeshare(custom_geoid)   
+```
+
+## Mode share by county
+
+### Plot
+The figures below show (a) the interquartile range (IQR) of each transportation mode across all counties (@fig-modeshareboxplot); and (b) trends in commute mode share over time for select modes (@fig-modesharetrends). The central box represents the middle 50% of the data, where the IQR is captured. The IQR is calculated as the difference between the third quartile (Q3) and the first quartile (Q1), which are the 75th and 25th percentiles, respectively. The lines extending from the box, called whiskers, typically represent the range of the data within 1.5 times the IQR from Q1 and Q3. Data points beyond these whiskers are considered outliers. If the median is in the middle of the box and the whiskers are of similar length, the distribution is symmetric. If the median is closer to Q1 or Q3, and one whisker is noticeably longer than the other, the data are (either positively or negatively) skewed.
+
+```{r}
+#| label: fig-modeshareboxplot
+#| fig-cap: Interquartile Box Plots of Commute Mode Share among US Counties, 2024
+#| eval: true
+#| echo: false
+
+plot_ly(modeshare_county_period_pivoted %>% 
+          filter(year == 2024,
+                 !mode %in% c("motorcycle", "taxi", "other")) %>%
+          mutate(percent = round(percent, digits = 1)), 
+        y = ~percent, 
+        color = ~reorder(mode,order), 
+        type = "box",
+        jitter = 0.5,
+        boxpoints = 'suspectedoutliers',
+        quartilemethod="inclusive",
+        marker = list(size = 0.75)) %>%
+  config(displaylogo = FALSE,
+         modeBarButtons = list(modeBarButtonsList)) %>%
+  layout(yaxis = list(title = 'Commute Mode Share (%)'),
+         xaxis = list(title = 'Travel Mode'),
+         showlegend = FALSE)
+
+```
+
+### Maps 
+The US Census makes both attribute and geographic data available for multiple [geographic levels](https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html). Census geographies follow a [standard hierarchy](https://www.census.gov/programs-surveys/geography/guidance/hierarchy.html). For this exercise, we evaluate counties by state and division which can be downloaded in R using the *tigris* package. Once downloaded, the geographies can be joined with attribute data to make meaningful maps.
+
+```{r}
+#| label: Join mode share data with contiguous US census geographies for mapping
+#| eval: true
+#| echo: false
+
+modeshare_county_latest <- modeshare_county_latest_formatted %>% 
+  filter(year==2024,
+         state_name != "Alaska",
+         state_name != "Hawaii") 
+
+modeshare_county_latest_geom <- us_counties_population_geo %>%
+  select(GEOID_county = GEOID) %>%
+  left_join(modeshare_county_latest, 
+            by="GEOID_county") %>%
+  st_as_sf() %>%
+  st_transform(4326) %>%
+  drop_na()
+
+us_divisions_sub_geom <- modeshare_county_latest_geom %>%
+  group_by(division_name) %>% 
+  summarize(geometry = st_union(geometry)) 
+```
+
+
+```{r}
+#| label: fig-modesharerates
+#| fig-cap: Percent of Workers Age 16 and Older by Means of Transportation to Work by County, 2024
+#| fig-subcap: 
+#| eval: true
+#| echo: false
+
+modeBarButtonsList <- list("toImage")
+
+# plot state and county maps with leaflet
+countylabels <- sprintf(
+  "<strong>%s Division</strong><br/>
+  <strong>%s County</strong><br/>
+  Total workers: %s<br/>
+  Walk: %0.1f%%<br/>
+  Bicycle: %0.1f%%<br/>
+  Transit: %0.1f%%<br/>
+  Drove Alone: %0.1f%%<br/>
+  Home: %0.1f%%",
+  modeshare_county_latest_geom$division_name,
+  modeshare_county_latest_geom$county_name,
+  format(modeshare_county_latest_geom$workers16pl, big.mark=","),
+  modeshare_county_latest_geom$pct_walk,
+  modeshare_county_latest_geom$pct_bicycle,
+  modeshare_county_latest_geom$pct_transit,
+  modeshare_county_latest_geom$pct_drovealone,
+  modeshare_county_latest_geom$pct_fromhome) %>%
+lapply(htmltools::HTML)
+
+# function for creating quintile bins for requested transportation mode
+
+fx_create_bins <- function(pct_mode){
+  bins_mode <- modeshare_county_latest %>% 
+  mutate(bins = ntile(get(pct_mode), 5)) %>% 
+  group_by(bins) %>% 
+  summarise(max = round(max(get(pct_mode)),2)) %>%
+  select(max) %>% 
+  unlist()
+
+  bins_mode[1] <- 0 # set initial bin to 0
+  bins_mode[5] <- bins_mode[5]+0.01 # round up quintile to include all values
+  
+  return(bins_mode)
+}
+
+# function for creating mode-specific map
+
+fx_create_map <- function(pct_mode, bincolors, legend_title) {
+  # create mode-specific color palette
+  pal_mode <- colorBin(bincolors, domain = modeshare_county_latest_geom[[pct_mode]], bins = fx_create_bins(pct_mode))
+  
+  # create mode-specific leaflet map
+  mode_map <- leaflet(modeshare_county_latest_geom) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      CARTO_API_KEY
+    )) %>% 
+    addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery (satellite)") %>%
+    addPolygons(
+      fillColor = ~ pal_mode(get(pct_mode)),
+      weight = 0.5,
+      opacity = 0.75,
+      color = "white",
+      #dashArray = "3",
+      fillOpacity = 0.75,
+      label = countylabels,
+      group = "Counties"
+    ) %>%
+    addPolylines(
+      data = us_divisions_sub_geom,
+      stroke = TRUE,
+      weight = 2,
+      opacity = 1,
+      fillOpacity = 0,
+      color = "black",
+      group = "Divisions"
+    ) %>%
+    addLegend(
+      "bottomleft",
+      pal = pal_mode,
+      values = ~ pct_mode,
+      title = legend_title,
+      labFormat = labelFormat(suffix = "%"),
+      opacity = 1
+    ) %>%
+    addResetMapButton() %>%
+    addFullscreenControl() %>% 
+    addLayersControl(
+      baseGroups = c(# "Basemap (default)",
+        "Positron (minimal)", "World Imagery (satellite)"),
+      overlayGroups = c("Counties", "Divisions"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+  
+  return(mode_map)
+}
+
+walk_map <- fx_create_map("pct_walk","Blues", "Walk Mode Share")
+bicycle_map <- fx_create_map("pct_bicycle","Reds", "Bike Mode Share")
+transit_map <- fx_create_map("pct_transit","Greens", "Transit Mode Share")
+drove_map <- fx_create_map("pct_drovealone","Greys", "Drive Alone Mode Share")
+
+# display maps
+walk_map
+bicycle_map
+transit_map
+drove_map
+
+```
+
+# Step 4. Pedestrian fatalities
+
+## Download pedestrian fatalities and examine table
+Copy, paste and revise the code below to download pedestrian fatality data using the FARS API. 
+
+```{r}
+
+custom_geoid <- "17031" # replace with your county GEOID
+state_fips   <- as.integer(substr(custom_geoid, 1, 2))
+county_fips  <- as.integer(substr(custom_geoid, 3, 5))
+
+crashes_fars <- read_csv(paste0(
+  "https://crashviewer.nhtsa.dot.gov/crashviewer/CrashAPI/FARSData/GetFARSData?",
+  "dataset=Accident&FromYear=2010&ToYear=2024&State=", state_fips,
+  "&county=", county_fips, "&format=csv"
+)) %>%
+  filter(state == state_fips, county == county_fips)
+
+ped_fatalities <- crashes_fars %>%
+  filter(harm_evname == "Pedestrian") %>%
+  filter(
+    latitude  > -90,  latitude  < 90,
+    longitud  > -180, longitud  < 180,
+    !latitude  %in% c(77.7777, 88.8888, 99.9999),
+    !longitud  %in% c(-77.7777, -88.8888, -99.9999)
+  ) %>%
+  st_as_sf(coords = c("longitudname", "latitudename"), crs = 4326)
+
+```
+
+## Plot of pedestrian fatalities trend
+
+```{r}
+# Identify pedestrian-involved fatal crashes
+# harm_ev == 8 (Pedestrian) captures the crash's first harmful event as a pedestrian strike;
+# peds > 0 also works as a check that at least one pedestrian was involved
+pedestrian_fatalities <- crashes_fars %>%
+  filter(harm_ev == 8 | peds > 0) %>%
+  group_by(year) %>%
+  summarise(total_fatalities = sum(fatals, na.rm = TRUE),
+            total_crashes = n(),
+            .groups = "drop") %>%
+  arrange(year)
+
+# Plot with plotly
+plot_ly(
+  pedestrian_fatalities,
+  x = ~year,
+  y = ~total_fatalities,
+  type = "scatter",
+  mode = "lines+markers",
+  line = list(color = "firebrick", width = 3),
+  marker = list(color = "firebrick", size = 8)
+) %>%
+  layout(
+    title = "Pedestrian Fatalities by Year (2010–2024)",
+    xaxis = list(title = "Year", dtick = 1),
+    yaxis = list(title = "Number of Pedestrian Fatalities"),
+    hovermode = "x unified"
+  )
+```
+
+## Maps of pedestrian fatalities over time
+
+Copy/paste, run the following code in your custom R script. Identify any hotspots in your county. Are there areas where pedestrian fatalities seem to be clustered? Copy map and paste as slide #4 of your presentation. 
+
+```{r}
+library(leaflet)
+library(leafsync)
+library(dplyr)
+## ---- 1. Define rolling 4-year periods across 2010-2024 ----
+period_breaks <- c(2010, 2014, 2018, 2022, 2025)
+period_labels <- c("2010-2013", "2014-2017", "2018-2021", "2022-2024")
+
+ped_fatalities <- ped_fatalities %>%
+  mutate(period = cut(year, breaks = period_breaks, right = FALSE, labels = period_labels))
+
+print(table(ped_fatalities$period))  # confirm every period actually has rows
+
+## ---- 2. Common map extent (unname to avoid named-vector JSON warnings) ----
+county_bbox <- st_bbox(us_county_boundary)
+bbox_vals <- unname(county_bbox)
+names(bbox_vals) <- c("xmin", "ymin", "xmax", "ymax")
+
+## ---- 3. Build one map per period ----
+period_maps <- lapply(period_labels, function(p) {
+
+  ped_period <- ped_fatalities %>% filter(period == p)
+
+  m <- leaflet() %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      CARTO_API_KEY
+    )) %>%
+    addPolygons(
+      data = us_county_boundary,
+      fill = FALSE, color = "black", weight = 1.5, opacity = 1
+    ) %>%
+    fitBounds(
+      lng1 = as.numeric(bbox_vals["xmin"]), lat1 = as.numeric(bbox_vals["ymin"]),
+      lng2 = as.numeric(bbox_vals["xmax"]), lat2 = as.numeric(bbox_vals["ymax"])
+    ) %>%
+    addResetMapButton() %>%
+    addControl(
+      html = paste0("<strong>", p, "</strong> (n = ", nrow(ped_period), ")"),
+      position = "topright"
+    ) 
+
+  if (nrow(ped_period) > 0) {
+    m <- m %>%
+      addCircleMarkers(
+        data = ped_period, radius = 4, color = "firebrick",
+        stroke = FALSE, fillOpacity = 0.7
+      )
+  }
+
+  m
+})
+
+## ---- 4. Arrange as a synced 2x2 grid (pan/zoom linked across all panels) ----
+latticeView(
+  period_maps[[1]], period_maps[[2]], period_maps[[3]], period_maps[[4]],
+  ncol = 2,
+  sync = "all"
+)
+
+```
+
+## Hotspot map of pedestrian fatalities
+
+Copy/paste, run the following code in your custom R script. Identify any hotspots in your county. Are there areas where pedestrian fatalities seem to be clustered? Copy map and paste as slide #4 of your presentation.  
+
+```{r}
+## ---- Local UTM CRS from county centroid (as before) ----
+us_county_boundary <- us_counties_population_geo %>%
+  filter(GEOID == custom_geoid) %>%
+  select(NAME, STATE_NAME, GEOID) %>%
+  st_set_crs(4326)
+
+county_centroid <- st_centroid(us_county_boundary)
+
+county_centroid_zoned <- county_centroid %>%
+  st_join(utm_zones %>% select(ZONE), join = st_within) %>%
+  st_drop_geometry()
+
+local_crs <- county_centroid_zoned$ZONE + 32600
+
+## ---- KDE surface ----
+ped_ft  <- st_transform(ped_fatalities, crs = local_crs)
+ped_win <- as.owin(st_convex_hull(st_union(ped_ft)))
+ped_ppp <- as.ppp(st_coordinates(ped_ft), W = ped_win)
+
+ped_density <- density.ppp(ped_ppp, sigma = bw.diggle(ped_ppp), edge = TRUE)
+
+# Rescale from events/m^2 to events/km^2 (x 1e6) so values aren't
+# vanishingly small -- purely for readable legend labels, doesn't
+# change the pattern of the surface
+dens_r <- as.data.frame(ped_density) %>%
+  rename(value = 3) %>%
+  mutate(value = value * 1e6) %>%
+  terra::rast(type = "xyz", crs = paste0("EPSG:", local_crs))
+
+dens_r_ll <- terra::project(dens_r, "EPSG:4326", method = "bilinear")
+
+## ---- Clip raster to the county boundary ----
+county_vect <- vect(us_county_boundary)
+dens_r_ll <- terra::crop(dens_r_ll, county_vect)
+dens_r_ll <- terra::mask(dens_r_ll, county_vect)
+
+## ---- Bin density into readable classes (natural breaks on log scale) ----
+dens_vals <- terra::values(dens_r_ll, na.rm = TRUE)
+
+# log1p handles the near-zero values gracefully (log1p(0) = 0)
+log_vals <- log1p(dens_vals)
+
+breaks_log <- classIntervals(log_vals, n = 5, style = "jenks")$brks %>%
+  unique()
+
+# Convert breakpoints back to the original density scale for the legend/palette
+breaks <- expm1(breaks_log)
+
+dens_pal <- colorBin(
+  palette  = "YlOrRd",
+  domain   = dens_vals,
+  bins     = breaks,
+  na.color = "transparent"
+)
+
+## ---- Map with toggleable layers ----
+leaflet() %>%
+  addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      CARTO_API_KEY
+    )) %>%
+  addRasterImage(
+    dens_r_ll, colors = dens_pal, opacity = 0.65,
+    group = "Density Surface"
+  ) %>%
+  addCircleMarkers(
+    data = ped_fatalities, radius = 3, color = "black", weight = 1,
+    fillOpacity = 0, stroke = TRUE,
+    group = "Pedestrian Fatalities"
+  ) %>%
+  addLegend(
+    pal = dens_pal, values = dens_vals,
+    title = "Pedestrian fatality<br>density (per km²)",
+    position = "bottomright",
+    labFormat = labelFormat(digits = 1)
+  ) %>%
+  addLayersControl(
+    overlayGroups = c("Density Surface", "Pedestrian Fatalities"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+leaflet() %>%
+  addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      CARTO_API_KEY
+    )) %>%
+  addRasterImage(
+    dens_r_ll, colors = dens_pal, opacity = 0.65,
+    group = "Density Surface"
+  ) %>%
+  addPolygons(
+    data = us_county_boundary,
+    fill = FALSE, color = "darkgrey", weight = 2, opacity = 1,
+    group = "County Boundary"
+  ) %>%
+  addCircleMarkers(
+    data = ped_fatalities, radius = 3, color = "#555555", weight = 1,
+    fillOpacity = 0, stroke = TRUE,
+    group = "Pedestrian Fatalities"
+  ) %>%
+  addLegend(
+    pal = dens_pal, values = dens_vals,
+    title = "Pedestrian fatality<br>density (per km²)",
+    position = "bottomright",
+    labFormat = labelFormat(digits = 1)
+  ) %>%
+    addResetMapButton() %>%
+    addFullscreenControl() %>% 
+  addLayersControl(
+    overlayGroups = c("Density Surface", "County Boundary", "Pedestrian Fatalities"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+```
+
+
+# Step 5. Urban street redesign recommendations
+
+Use Google Streetview to examine one of the hotspot corridors. What do you see in these areas in terms of street design? What challenges exist toward improving pedestrian safety? interventions would you recommend in these areas. Use Slide #5 to summarize, express your ideas.
+
+
+# Step 6. Submit your completed presentation
+Navigate to the course D2L page. Submit/upload your exercise presentation to the appropriate submission folder.

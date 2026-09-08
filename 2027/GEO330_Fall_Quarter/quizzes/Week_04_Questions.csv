@@ -1,0 +1,59 @@
+﻿//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 1,
+QuestionText,"According to Jarrett Walker, which characteristic is essential to the definition of public transit, distinguishing it from services like carpools, school buses, or taxis hired for exclusive use?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,It must be subsidized and operated by a government agency
+Option,100,"The vehicle trips must be designed to carry multiple passengers whose trips may have different origins, destinations, and purposes"
+Option,0,It must utilize fixed-rail technology (like light rail or subway) to maximize speed and reliability
+Option,0,"It must primarily serve the peak-period or ""rush hour"" commute pattern"
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 2,
+QuestionText,Jarrett Walker defines the core product of transit as personal mobility—the freedom to move beyond one's walking range. How does this concept primarily differ from access?,
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"Mobility measures how many useful or valuable things you can do (transactions), while access is the physical ability to travel to a destination"
+Option,0,"Access is the direct product of public transit, while mobility is achieved only through urban redevelopment"
+Option,100,"Mobility is the degree of freedom (where you can go) and is transit’s direct product; access is the ability to complete a desired transaction (what you can do) and can be achieved through travel, telecommunications, or relocation"
+Option,0,"Mobility is the total distance traveled (passenger-miles), and access is the total duration of the trip (travel time)"
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 3,
+QuestionText,"When debating transit planning, debates often focus on speed, especially among decision makers who are regular motorists. However, frequency is often argued to matter more in determining total trip time. What is the relationship between frequency and headway?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,"Headway is the total span of service (scheduled time of the first and last trip), and frequency is the route distance"
+Option,100,"Frequency is defined by the number of minutes between consecutive trips (the headway); therefore, achieving a high frequency requires a low headway (e.g., service every 10 minutes or less)"
+Option,0,"Frequency is only relevant for peak-period services, while headway governs all-day service reliability"
+Option,0,"Headway is an element of ""civility"" relating to the quality of the waiting environment, whereas frequency is part of reliability"
+Hint,,
+Feedback,,
+,,
+//MULTIPLE CHOICE QUESTION TYPE,,
+NewQuestion,MC,
+ID,,
+Title,Question 4,
+QuestionText,"While journalists often focus on construction costs, operating cost is the eternal reality governing most transit budgets. Which service change generally leads to a reduction in operating costs?",
+Points,0.5,
+Difficulty,1,
+Image,,
+Option,0,Doubling the total length of the transit lines operated
+Option,0,Expanding the duration (span) of service from 8 hours a day to 16 hours a day
+Option,0,"Doubling the frequency of service, such as cutting the headway from 30 minutes to 15 minutes"
+Option,100,Significantly increasing the average speed of the vehicles
+Hint,,
+Feedback,"Operating cost varies mostly with time rather than distance because labor (driver time) dominates the cost; thus, running faster saves money by using labor more efficiently. Conversely, changes that increase the total time vehicles are running—such as increasing frequency, extending the route, or extending the hours (span)—will generally increase operating costs",
