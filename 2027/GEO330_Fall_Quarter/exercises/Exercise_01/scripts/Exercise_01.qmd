@@ -25,6 +25,7 @@ editor_options:
 ---
 
 ```{r}
+#| label: set up environment, api keys, and mode share plotting function
 #| eval: true
 #| echo: false
 
@@ -124,6 +125,7 @@ In your default Exercise #1 project you will find an R script named *Exercise_01
 *Purpose of the code below: activate the R packages required for the exercise and load the project's prepared dataset into your R session. You will use several R packages to complete the exercise, including "dplyr" and "tidyverse" for data formatting and wrangling, "sf" (simple features) for importing and transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.*
 
 ```{r}
+#| label: activate r packages and load project data
 #| echo: true
 #| eval: true
 
@@ -133,13 +135,13 @@ library(tidyverse) # data wrangling
 library(sf) # simple features geometry data
 library(plotly) # interactive plots
 library(leaflet) # interactive maps
-library(leaflet.extras)
-library(leafsync)
-library(crsuggest)
-library(spatstat.geom)
-library(spatstat.explore)
-library(terra)
-library(classInt)
+library(leaflet.extras) # additional leaflet controls, such as fullscreen and reset view buttons
+library(leafsync) # synchronizes panning and zooming across multiple leaflet maps shown side by side
+library(crsuggest) # suggests an appropriate projected coordinate system for a given area
+library(spatstat.geom) # defines the spatial point pattern objects used in spatial analysis
+library(spatstat.explore) # calculates kernel density estimates and other exploratory spatial statistics
+library(terra) # processes raster data, such as the pedestrian fatality density surface
+library(classInt) # calculates class intervals (e.g., natural breaks) for shading maps
 
 # Set default options for numerical display
 options(scipen=999, digits = 2)
@@ -472,6 +474,7 @@ Copy, paste and revise the code below to download pedestrian fatality data for y
 *Purpose of the code below: connect to the NHTSA FARS API, download all fatal crash records for your selected county between 2010 and 2024, and filter those records to the crashes that involved a pedestrian.*
 
 ```{r}
+#| label: download and filter FARS pedestrian fatality records
 #| echo: true
 
 custom_geoid <- "17031" # replace with your county GEOID
@@ -619,6 +622,7 @@ Now run a formal hotspot analysis. The code below estimates a kernel density sur
 
 ```{r}
 #| label: fig-pedfatalityhotspot
+#| fig-cap: Pedestrian Fatality Hotspot Maps
 #| fig-subcap:
 #|   - "Pedestrian Fatality Density Surface"
 #|   - "Pedestrian Fatality Density Surface with County Boundary"
