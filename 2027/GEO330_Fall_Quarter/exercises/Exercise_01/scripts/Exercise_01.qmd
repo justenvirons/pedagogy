@@ -28,8 +28,14 @@ editor_options:
 #| eval: true
 #| echo: false
 
-# set working directory
-# setwd("2027/GEO330_Fall_Quarter/exercises/Exercise_01")
+# Set the chunk working directory to this exercise's own folder (the
+# parent of the "scripts" folder this document lives in), computed from
+# the document's own location rather than hardcoded. This makes the
+# render work the same way on any machine or Posit Cloud project,
+# regardless of what folder the render was started from. Students do not
+# need this in their own Exercise_01.R script: in the Posit Cloud
+# project, the working directory is already the exercise folder.
+knitr::opts_knit$set(root.dir = dirname(dirname(knitr::current_input(dir = TRUE))))
 
 # API Keys
 CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
@@ -143,7 +149,7 @@ library(classInt)
 options(scipen=999, digits = 2)
 
 # Load project data
-load("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_01/Exercise_01.RData")
+load("data/Exercise_01.RData")
 
 ```
 
