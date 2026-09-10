@@ -112,6 +112,7 @@ Population counts shown on the map come from the American Community Survey (ACS)
 #| eval: true
 #| echo: true
 #| code-fold: true
+#| code-summary: "Show the county population map code"
 
 # Make interactive map of US counties by population using leaflet package
 
@@ -222,6 +223,7 @@ Examine @fig-modesharetrends below, which shows trends for selected commute mode
 #| eval: false
 #| echo: true
 #| code-fold: true
+#| code-summary: "Show the mode share and pedestrian commuter plotting functions"
 
 # function for creating mode share plot
 fx_plot_modeshare <- function(geoid = "all") {
@@ -384,6 +386,7 @@ fx_plot_activetrans(custom_geoid)
 #| eval: true
 #| echo: true
 #| code-fold: true
+#| code-summary: "Show the box plot code"
 
 modeBarButtonsList <- list("toImage")
 
@@ -422,6 +425,7 @@ Compare the four maps. Which modes show high values clustered in just a few regi
 #| eval: true
 #| echo: true
 #| code-fold: true
+#| code-summary: "Show the county mode share maps code"
 
 modeBarButtonsList <- list("toImage")
 
@@ -573,12 +577,13 @@ ped_fatalities <- crashes_fars %>%
 
 ```
 
-The three R functions below carry out the plotting and mapping steps behind the remaining figures in this section (@fig-pedfatalitytrend, @fig-pedfatalityperiods and @fig-pedfatalityhotspot). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how each figure is built. Click "Show the function code" below to expand it.
+## Plot of pedestrian fatalities trend
+The R function below carries out the plotting steps behind @fig-pedfatalitytrend. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the figure is built. Click "Show the function code" below to expand it.
 
 ```{r}
-#| label: define pedestrian fatality plotting functions
+#| label: define pedestrian fatality trend plotting function
 #| code-fold: true
-#| code-summary: "Show the function code"
+#| code-summary: "Show the crash fatality trend plotting function"
 #| echo: true
 
 # function for plotting fatalities by mode and the yearly pedestrian fatality trend
@@ -713,6 +718,33 @@ fx_plot_pedfatalitytrend <- function(crashes_fars) {
 
   list(plot_by_mode, plot_pedestrian)
 }
+```
+
+@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in Cook County for each year between 2010 and 2024. *Copy, paste and run the code below in your Exercise_01.R to create a similar figure for your selected county. When finished, copy and paste the custom figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.*
+
+```{r}
+#| label: fig-pedfatalitytrend
+#| fig-cap: Crash Fatalities by Year, 2010 to 2024
+#| fig-subcap:
+#|   - "Crash Fatalities by Mode"
+#|   - "Pedestrian Fatalities"
+#| layout-ncol: 2
+#| echo: true
+
+# run the following function to plot crash fatalities by mode and the pedestrian fatality trend
+pedfatality_trend_plots <- fx_plot_pedfatalitytrend(crashes_fars)
+pedfatality_trend_plots[[1]]
+pedfatality_trend_plots[[2]]
+```
+
+## Maps of pedestrian fatalities over time
+Before running a formal hot spot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. The R function below carries out the mapping steps behind @fig-pedfatalityperiods. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the figure is built. Click "Show the function code" below to expand it.
+
+```{r}
+#| label: define pedestrian fatality periods mapping function
+#| code-fold: true
+#| code-summary: "Show the four-period fatality mapping function"
+#| echo: true
 
 # function for mapping pedestrian fatalities across four multi-year periods
 fx_map_pedfatalityperiods <- function(ped_fatalities, county_geoid) {
@@ -775,6 +807,30 @@ fx_map_pedfatalityperiods <- function(ped_fatalities, county_geoid) {
     sync = "all"
   )
 }
+```
+
+@fig-pedfatalityperiods below locates pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels.
+
+*Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hot spot analysis that follows.*
+
+```{r}
+#| label: fig-pedfatalityperiods
+#| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
+#| echo: true
+
+# run the following function to map pedestrian fatalities across four multi-year periods
+fx_map_pedfatalityperiods(ped_fatalities, custom_geoid)
+
+```
+
+## Hot spot map of pedestrian fatalities
+Now run a formal hot spot analysis. The R function below carries out the density estimation and mapping steps behind @fig-pedfatalityhotspot. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the figure is built. Click "Show the function code" below to expand it.
+
+```{r}
+#| label: define pedestrian fatality hotspot mapping function
+#| code-fold: true
+#| code-summary: "Show the fatality hotspot density mapping function"
+#| echo: true
 
 # function for mapping the pedestrian fatality hotspot density surface
 fx_map_pedfatalityhotspot <- function(ped_fatalities, county_geoid) {
@@ -869,41 +925,7 @@ fx_map_pedfatalityhotspot <- function(ped_fatalities, county_geoid) {
 }
 ```
 
-## Plot of pedestrian fatalities trend
-@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in Cook County for each year between 2010 and 2024. *Copy, paste and run the code below in your Exercise_01.R to create a similar figure for your selected county. When finished, copy and paste the custom figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.*
-
-```{r}
-#| label: fig-pedfatalitytrend
-#| fig-cap: Crash Fatalities by Year, 2010 to 2024
-#| fig-subcap:
-#|   - "Crash Fatalities by Mode"
-#|   - "Pedestrian Fatalities"
-#| layout-ncol: 2
-#| echo: true
-
-# run the following function to plot crash fatalities by mode and the pedestrian fatality trend
-pedfatality_trend_plots <- fx_plot_pedfatalitytrend(crashes_fars)
-pedfatality_trend_plots[[1]]
-pedfatality_trend_plots[[2]]
-```
-
-## Maps of pedestrian fatalities over time
-Before running a formal hot spot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. @fig-pedfatalityperiods below locates pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels. 
-
-*Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hot spot analysis that follows.*
-
-```{r}
-#| label: fig-pedfatalityperiods
-#| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
-#| echo: true
-
-# run the following function to map pedestrian fatalities across four multi-year periods
-fx_map_pedfatalityperiods(ped_fatalities, custom_geoid)
-
-```
-
-## Hot spot map of pedestrian fatalities
-Now run a formal hot spot analysis. The code below estimates a kernel density surface from the pedestrian fatality locations in your county, which highlights corridors and intersections with a concentration of pedestrian crashes more rigorously than eyeballing the period maps above. @fig-pedfatalityhotspot shows the relative intensity/concentration of fatalities, not raw counts such that warmer colors (orange/red) represent a larger number of spatially clustered fatalities, while lighter areas mean fewer nearby fatalities. And since the color breaks are based on natural gaps in this particular dataset, they're useful for visual comparison but shouldn't be treated as fixed, universal risk thresholds.
+@fig-pedfatalityhotspot shows the relative intensity/concentration of fatalities, not raw counts such that warmer colors (orange/red) represent a larger number of spatially clustered fatalities, while lighter areas mean fewer nearby fatalities. And since the color breaks are based on natural gaps in this particular dataset, they're useful for visual comparison but shouldn't be treated as fixed, universal risk thresholds.
 
 *Copy, paste and run the code into your Exercise #1 script. Identify any hot spots in your county. Are there areas where pedestrian fatalities appear to cluster? Copy the map into slide #4 of your presentation and describe what you find.*
 
