@@ -480,19 +480,6 @@ pedestrian_fatalities <- crashes_fars %>%
   arrange(year)
 
 all_fatalities <- crashes_fars %>%
-  select(harm_ev, persons, year) %>% 
-    mutate(collision_type = case_when(
-    harm_ev == 9         ~ "Pedalcyclist",
-    harm_ev == 8          ~ "Pedestrian",
-    is.na(harm_ev)        ~ "Other",   # missing/unknown -- can't confirm type
-    TRUE                  ~ "Motor Vehicle"
-  )) %>% 
-  group_by(year, collision_type) %>% 
-  summarise(sum(persons)) %>% 
-  arrange(year) %>% 
-  ungroup()
-
-all_fatalities <- crashes_fars %>%
   select(harm_ev, persons, year) %>%
   mutate(collision_type = case_when(
     harm_ev == 9         ~ "Pedalcyclist",
