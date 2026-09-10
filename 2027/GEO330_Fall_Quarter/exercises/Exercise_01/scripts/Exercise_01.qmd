@@ -106,7 +106,7 @@ Download the [exercise PowerPoint template](https://justenvirons.org/pedagogy/GE
 
 For this exercise, choose a large (population over 500,000), urban county located in the contiguous United States as your study area. Browse the interactive map of US counties below (@fig-popbycountymap) to identify a study area that interests you. Note the county's name and its unique "GEOID". The GEOID combines a two digit state code with a three digit county code. For example, 17031 is the GEOID for Cook County, Illinois. Selecting a county with a large population gives you enough commuters and enough recorded crashes to see meaningful patterns rather than noise from a small sample, which matters whenever you are trying to draw conclusions that could inform real transportation policy.
 
-Population counts shown on the map come from the American Community Survey (ACS) 5 year estimates [@census_acs], the same nationwide survey described in more detail in Step 3.
+Population counts shown on the map come from the American Community Survey (ACS) 5 year estimates [@census_acs], the same nationwide survey described in more detail in Step 3. This map, and every other interactive map in this exercise, is drawn on CARTO's Positron basemap tiles [@carto_basemaps], with Esri's World Imagery satellite tiles [@esri_worldimagery] available as an alternate layer.
 
 ```{r}
 #| label: fig-popbycountymap
@@ -656,7 +656,7 @@ leaflet() %>%
 
 ::: {.callout-note collapse="false"}
 ## More about the hot spot map
-This script computes a kernel density estimate (KDE) on the pedestrian fatality points using spatstat's density.ppp() — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hotspots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hotspot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
+This script computes a kernel density estimate (KDE) on the pedestrian fatality points using the *spatstat* package's [@baddeley_spatstat] density.ppp() function — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hotspots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using the *classInt* package [@bivand_classint] to calculate Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hotspot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
 :::
 
 <!-- ::: {.callout-tip collapse="true"} -->
@@ -690,6 +690,10 @@ This exercise draws on several nationwide datasets maintained by federal agencie
 **Fatality Analysis Reporting System (FARS).** FARS [@nhtsa_fars] is a nationwide census of every crash on a US public road that results in a death within 30 days of the crash. It has been maintained by the National Highway Traffic Safety Administration (NHTSA), part of the US Department of Transportation, since 1975, and it is accessible through the NHTSA CrashViewer API [@nhtsa_crashviewer]. Because FARS records every fatal crash rather than a sample, it allows practitioners to identify high injury streets and intersections with confidence. Safety engineers, planners and researchers use FARS to evaluate how street design relates to crash outcomes and to prioritize projects intended to reduce traffic deaths, including under Vision Zero and Safe System initiatives.
 
 **Census geographies.** The county, state and division boundaries used to map both datasets come from the Census Bureau's TIGER/Line shapefiles [@census_tiger], organized according to the Census Bureau's standard geographic hierarchy [@census_geohierarchy]. These boundaries were downloaded using the *tigris* R package [@walker_tigris], which provides direct access to Census TIGER/Line geographies from within R.
+
+**Basemap tiles.** Every interactive map in this exercise is built on CARTO's Positron basemap tiles [@carto_basemaps], a minimal, light-colored basemap designed to keep thematic data (such as the county polygons and fatality points shown here) legible in the foreground. Each map also offers Esri's World Imagery satellite basemap [@esri_worldimagery] as an alternate layer, which is useful for examining the physical street design of the corridors and intersections identified in Step 5.
+
+**Hotspot analysis.** The pedestrian fatality density surface in Step 4 is estimated with the *spatstat* package [@baddeley_spatstat], which implements kernel density estimation (KDE) for spatial point patterns. The resulting density values are grouped into map classes using Jenks natural breaks, calculated with the *classInt* package [@bivand_classint].
 
 ::: {#refs}
 :::
