@@ -69,7 +69,27 @@ us_counties_geom <- st_read(county_filename_shp) %>%
   mutate(STATEFP_NO = as.numeric(STATEFP)) %>%
   filter(STATEFP_NO <= 56, STATEFP_NO != 15, STATEFP_NO != 2)
 
+# Create custom geographies for mapping
+modeshare_county_latest <- modeshare_county_latest_formatted %>%
+  filter(year==2024,
+         state_name != "Alaska",
+         state_name != "Hawaii")
 
+modeshare_county_latest_geom <- us_counties_population_geo %>%
+  select(GEOID_county = GEOID) %>%
+  left_join(modeshare_county_latest,
+            by="GEOID_county") %>%
+  st_as_sf() %>%
+  st_transform(4326) %>%
+  drop_na()
+
+us_states_sub_geom <- modeshare_county_latest_geom %>%
+  group_by(state_name) %>%
+  summarize(geometry = st_union(geometry))
+
+us_divisions_sub_geom <- modeshare_county_latest_geom %>%
+  group_by(division_name) %>%
+  summarize(geometry = st_union(geometry))
 
 # Download UTM zones
 utm_zones <- st_read("data/utm_zones.geojson") %>%
@@ -240,16 +260,24 @@ fx_plot_modeshare <- function(geoid = "all") {
         orientation = "h",
         xanchor = "center",
         x = 0.5, y = -0.1),
-      hovermode = "x unified")
+      hovermode = "x unified") %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(modeBarButtonsList),
+           toImageButtonOptions = list(
+             format = "png",
+             filename = "mode_share_chart"
+           ))
 }
 
 # Save in RData file format -----------------------------------------------
 
-save(modeshare_county_latest_formatted,
+save(modeshare_county_latest,
+     modeshare_county_latest_geom,
+     modeshare_county_latest_formatted,
      modeshare_county_period_pivoted,
      us_counties_population_geo,
-     us_states_geom,
-     us_divisions_geom,
+     us_states_sub_geom,
+     us_divisions_sub_geom,
      utm_zones,
      CARTO_API_KEY,
      fx_plot_modeshare,

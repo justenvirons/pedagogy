@@ -112,8 +112,7 @@ Population counts shown on the map come from the American Community Survey (ACS)
 #| label: fig-popbycountymap
 #| fig-cap: Total Population by US County
 #| eval: true
-#| echo: false
-#| code-fold: false
+#| code-fold: true
 
 # Make interactive map of US counties by population using leaflet package
 
@@ -131,26 +130,24 @@ counties_pal <- colorBin(
 
 # format/generate popup labels for map
 labels = sprintf(
-  "<strong>%s, %s</strong><br/>
+  "<strong>%s County, %s</strong><br/>
   Population (2024): %s<br/>
-  GEOID: %s <br/>
-  Quintile group: %s",
+  GEOID: %s",
   us_counties_population_geo$NAME,
   us_counties_population_geo$STATE_NAME,
   format(us_counties_population_geo$total_population, big.mark = ","),
-  us_counties_population_geo$GEOID,
-  us_counties_population_geo$total_population_q) %>%
+  us_counties_population_geo$GEOID) %>%
   lapply(htmltools::HTML)
 
 # create thematic map using leaflet
 leaflet() %>%
   # addProviderTiles(providers$CartoDB.Positron) %>%
-    addTiles(
-    urlTemplate = paste0(
+    addTiles(urlTemplate = paste0(
       "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
       CARTO_API_KEY
     )) %>%
-  addPolygons(group = "US counties",
+    addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery (satellite)") %>%
+  addPolygons(group = "Counties",
               data=us_counties_population_geo %>% st_transform(crs=4326),
               # fillColor = "orange",
               fillColor = ~counties_pal(total_population),
@@ -170,12 +167,36 @@ leaflet() %>%
                 style = list("font-weight" = "normal", padding = "3px 8px"),
                 textsize = "15px",
                 direction = "auto")) %>%
-  addLegend("topright", pal = counties_pal, values = us_counties_population_geo$total_pop,
+  addPolylines(
+      data = us_states_sub_geom,
+      stroke = TRUE,
+      weight = 2,
+      opacity = 1,
+      fillOpacity = 0,
+      color = "#FFF",
+      group = "States"
+    ) %>%
+    addPolylines(
+      data = us_divisions_sub_geom,
+      stroke = TRUE,
+      weight = 2,
+      opacity = 1,
+      fillOpacity = 0,
+      color = "black",
+      group = "Divisions"
+    ) %>%
+  addLegend("bottomleft", pal = counties_pal, values = us_counties_population_geo$total_pop,
             title = paste0("Population (2024)"),
             opacity = 1) %>%
-  addScaleBar(position = "bottomleft") %>%
+  addScaleBar(position = "bottomright") %>%
     addFullscreenControl() %>%
-  addResetMapButton()
+  addResetMapButton() %>% 
+    addLayersControl(
+      baseGroups = c(# "Basemap (default)",
+        "Positron (minimal)", "World Imagery (satellite)"),
+      overlayGroups = c("Counties", "States", "Divisions"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
 
 ```
 
@@ -195,7 +216,7 @@ Commute mode share is one of the clearest signals of how sustainable a region's 
 
 ## Trends in mode share
 
-Examine @fig-modesharetrends below, which shows trends for selected commute modes across the United States between 2010 and 2024. Copy and paste this figure and @fig-modeshareboxplot into slide #1 of your presentation and summarize the trends you observe.
+Examine @fig-modesharetrends below, which shows trends for selected commute modes (from home, walk, transit and bicycle) across the United States between 2010 and 2024. (Note that drive alone is not included in the plot, since its disproportionate share tends to obscure any movement among modes with less representation.) Copy and paste this figure and @fig-modeshareboxplot into slide #1 of your presentation and summarize the trends you observe.
 
 ```{r}
 #| label: fig-modesharetrends
@@ -207,11 +228,11 @@ fx_plot_modeshare("all")     # all counties combined
 
 ```
 
-Now copy, paste and edit the following code *at the end* of your own Exercise_01.R script to build the same kind of plot for your own county. @fig-modesharetrendscook shows such a plot for Cook County, Illinois, as a worked example. Essentially replace the GEOID value with the code for your selected county to generate your own version of the figure. Copy and paste your county's version of the figure into slide #2 of your presentation, summarize the trends you see, and compare them with the nationwide pattern shown in @fig-modesharetrends and the other figures below.
+*Now copy and paste the following code at the end of your own Exercise_01.R script. Execute the script to build the same kind of plot for the county you selected county. @fig-modesharetrendscook shows such a plot for Cook County, Illinois, as a worked example. Essentially replace the GEOID value with the code for your selected county to generate your own version of the figure. Copy and paste your county's version of the figure into slide #2 of your presentation, summarize the trends you see, and compare them with the nationwide pattern shown in @fig-modesharetrends and the other figures below.*
 
 ::: {.callout-note collapse="false"}
 ## Copying and pasting code
-Each time you work through your script, be sure to copy and paste new code at the end of the file. This step is important for ensuring your progress is saved and executed correctly. Even though you are not writing code from scratch, copying and pasting each successive code chunk at the end of your Exercise #1 script is important as skipping this step may result in errors, incomplete or missing work.
+Each time you work through your script, be sure to copy and paste new code *at the end of the file*. This step is important for ensuring your progress is saved and executed correctly. Even though you are not writing code from scratch, copying and pasting each successive code chunk at the end of your Exercise #1 script is critical as skipping this step may result in errors, incomplete or missing work.
 :::
 
 ```{r}
@@ -219,7 +240,7 @@ Each time you work through your script, be sure to copy and paste new code at th
 #| fig-cap: Average Commute Mode Share for Cook County, Illinois, 2010 to 2024
 #| echo: true
 
-custom_geoid <- "17031" # EDIT HERE! Replace with your county GEOID
+custom_geoid <- "17031" # EDIT HERE! Replace with the GEOID for the county you selected
 
 # run the following function to create a custom transportation mode share plot
 fx_plot_modeshare(custom_geoid)
@@ -235,6 +256,8 @@ fx_plot_modeshare(custom_geoid)
 #| fig-cap: Interquartile Box Plots of Commute Mode Share among US Counties, 2024
 #| eval: true
 #| echo: false
+
+modeBarButtonsList <- list("toImage")
 
 plot_ly(modeshare_county_period_pivoted %>%
           filter(year == 2024,
@@ -260,29 +283,6 @@ The US Census Bureau makes both attribute and geographic data available at multi
 
 TIGER/Line shapefiles are the Census Bureau's authoritative digital boundary files for states, counties, tracts and other geographies. They are used throughout the geographic information systems (GIS) field, including by transportation agencies, to map demographic, economic and infrastructure data at a consistent, nationwide scale.
 
-```{r}
-#| label: join mode share data with contiguous US census geographies for mapping
-#| eval: true
-#| echo: false
-
-modeshare_county_latest <- modeshare_county_latest_formatted %>%
-  filter(year==2024,
-         state_name != "Alaska",
-         state_name != "Hawaii")
-
-modeshare_county_latest_geom <- us_counties_population_geo %>%
-  select(GEOID_county = GEOID) %>%
-  left_join(modeshare_county_latest,
-            by="GEOID_county") %>%
-  st_as_sf() %>%
-  st_transform(4326) %>%
-  drop_na()
-
-us_divisions_sub_geom <- modeshare_county_latest_geom %>%
-  group_by(division_name) %>%
-  summarize(geometry = st_union(geometry))
-```
-
 @fig-modesharerates shows, county by county, the percent of workers age 16 and older who walk (a), bicycle (b), use transit (c), or drive alone (d) to work. Use the layer control in the upper right of each map to switch between the default basemap and satellite imagery, and toggle the county and division layers on or off.
 
 ```{r}
@@ -294,15 +294,16 @@ us_divisions_sub_geom <- modeshare_county_latest_geom %>%
 #|   - "Transit Mode Share"
 #|   - "Drove Alone Mode Share"
 #| eval: true
-#| echo: false
+#| echo: true
+#| code-fold: true
 
 modeBarButtonsList <- list("toImage")
 
 # plot state and county maps with leaflet
 countylabels <- sprintf(
   "<strong>%s Division</strong><br/>
-  <strong>%s County</strong><br/>
-  Total workers: %s<br/>
+  <strong>%s</strong><br/>
+  Total workers (16+): %s<br/>
   Walk: %0.1f%%<br/>
   Bicycle: %0.1f%%<br/>
   Transit: %0.1f%%<br/>
@@ -358,6 +359,15 @@ fx_create_map <- function(pct_mode, bincolors, legend_title) {
       group = "Counties"
     ) %>%
     addPolylines(
+      data = us_states_sub_geom,
+      stroke = TRUE,
+      weight = 2,
+      opacity = 1,
+      fillOpacity = 0,
+      color = "#FFF",
+      group = "States"
+    ) %>%
+    addPolylines(
       data = us_divisions_sub_geom,
       stroke = TRUE,
       weight = 2,
@@ -379,7 +389,7 @@ fx_create_map <- function(pct_mode, bincolors, legend_title) {
     addLayersControl(
       baseGroups = c(# "Basemap (default)",
         "Positron (minimal)", "World Imagery (satellite)"),
-      overlayGroups = c("Counties", "Divisions"),
+      overlayGroups = c("Counties", "States", "Divisions"),
       options = layersControlOptions(collapsed = FALSE)
     )
 
@@ -409,7 +419,7 @@ drove_map
 ## Download pedestrian fatalities and examine table
 Next, you will download pedestrian fatality records for your county from the Fatality Analysis Reporting System (FARS) [@nhtsa_fars], using the NHTSA CrashViewer API [@nhtsa_crashviewer]. FARS is a nationwide census, not a sample, of every crash on a US public road that results in a death within 30 days of the crash. It has been maintained by the National Highway Traffic Safety Administration (NHTSA) since 1975 and records detailed information about each crash, the vehicles involved, and the people involved, including whether a pedestrian or bicyclist was struck. Because FARS is a complete accounting of fatal crashes rather than a sample survey like the ACS, transportation planners, safety engineers and researchers rely on it to identify high injury streets and intersections, evaluate how street design relates to safety outcomes, and prioritize projects intended to reduce traffic deaths under Vision Zero and Safe System initiatives.
 
-Copy, paste and revise the code below in your Exercise_01.R script to download pedestrian fatality data for your county using the FARS API. The code will download all fatal crash records for your selected county between 2010 and 2024, and filter those records to the crashes that involved a pedestrian.
+*Copy, paste and run the code below in your Exercise_01.R script to download pedestrian fatality data for your county using the FARS API. The code will download all fatal crash records for your selected county between 2010 and 2024, and filter those records to the crashes that involved a pedestrian.*
 
 ```{r}
 #| label: download and filter FARS pedestrian fatality records
@@ -438,7 +448,7 @@ ped_fatalities <- crashes_fars %>%
 ```
 
 ## Plot of pedestrian fatalities trend
-@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in Cook County for each year between 2010 and 2024. Copy, paste and run the code below in your Exercise_01.R to create a similar figure for your selected county. When finished, copy and paste the custom figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.
+@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in Cook County for each year between 2010 and 2024. *Copy, paste and run the code below in your Exercise_01.R to create a similar figure for your selected county. When finished, copy and paste the custom figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.*
 
 ```{r}
 #| label: fig-pedfatalitytrend
@@ -544,11 +554,9 @@ latticeView(
 ```
 
 ## Hotspot map of pedestrian fatalities
-Now run a formal hotspot analysis. The code below estimates a kernel density surface from the pedestrian fatality locations in your county, which highlights corridors and intersections with a concentration of pedestrian crashes more rigorously than eyeballing the period maps above. Copy, paste and run the following code in your custom R script.
+Now run a formal hotspot analysis. The code below estimates a kernel density surface from the pedestrian fatality locations in your county, which highlights corridors and intersections with a concentration of pedestrian crashes more rigorously than eyeballing the period maps above. @fig-pedfatalityhotspot shows the relative intensity/concentration of fatalities, not raw counts such that warmer colors (orange/red) represent a larger number of spatially clustered fatalities, while lighter areas mean fewer nearby fatalities. And since the color breaks are based on natural gaps in this particular dataset, they're useful for visual comparison but shouldn't be treated as fixed, universal risk thresholds.
 
-@fig-pedfatalityhotspot shows this density surface twice: first on its own (a), and again with the county boundary added for reference (b). Identify any hotspots in your county. Are there areas where pedestrian fatalities appear to cluster? Copy the map into slide #4 of your presentation and describe what you find.
-
-*Purpose of the code below: determine a projected coordinate system for your county, estimate a kernel density surface from the pedestrian fatality points, and map that density surface with and without the county boundary for reference.*
+*Copy, paste and run the code into your Exercise #1 script. Identify any hotspots in your county. Are there areas where pedestrian fatalities appear to cluster? Copy the map into slide #4 of your presentation and describe what you find.*
 
 ```{r}
 #| label: fig-pedfatalityhotspot
@@ -646,13 +654,24 @@ leaflet() %>%
   )
 ```
 
+::: {.callout-note collapse="false"}
+## More about the hot spot map
+This script computes a kernel density estimate (KDE) on the pedestrian fatality points using spatstat's density.ppp() — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hotspots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hotspot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
+:::
+
 <!-- ::: {.callout-tip collapse="true"} -->
 <!-- ## VIDEO: Step #4 -->
 <!-- {{< video videos/exercise_01_04.mp4 >}} -->
 <!-- ::: -->
 
 # Step 5. Urban street redesign recommendations
-Use Google Street View to examine one of the hotspot corridors or intersections identified in @fig-pedfatalityhotspot. What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.
+Use the satellite view on you hot spot map and/or Google Street View to examine one of the corridors or intersections identified in @fig-pedfatalityhotspot. What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What infrastructure-related interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.
+
+::: {.callout-note collapse="false"}
+## Urban Street Design Resources
+- [The Urban Street Design Guide](https://nacto.org/publication/urban-street-design-guide/), published by NACTO (National Association of City Transportation Officials), is a practitioner-focused resource that outlines design principles and tactics cities use to make streets safer, more livable, and more economically vibrant. To identify safety interventions, users can match their specific context—such as a street type (e.g., Neighborhood Street, Downtown Thoroughfare) or intersection type—to the corresponding guide section, then review targeted design elements like curb extensions, vertical speed control (speed humps/tables), crosswalk treatments, corner radii, and signal timing that address common safety issues like speeding, poor sightlines, or pedestrian conflicts. It also provides guidance on design controls (design speed, design vehicle) to calibrate interventions to context, and offers lower-cost interim strategies (temporary closures, pilot-to-permanent conversions) for testing treatments before full capital investment. Overall, the guide functions as a diagnostic-to-solution reference, letting users move from identifying a street safety problem to selecting a specific, field-tested design countermeasure.
+- [The Pedestrian Program](https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/pedestrian-program.html) is published by the Chicago Department of Transportation (CDOT) as part of its Complete Streets Chicago initiative, aiming to build a safer, more walkable, and accessible city by prioritizing the most vulnerable street users. To identify appropriate safety interventions, users can review CDOT's data-driven approach, which targets roughly 400 intersections annually by identifying crash hot spots and developing new treatments for the most serious issues, with resources concentrated around schools, parks, and other high-traffic destinations. The page also points to supporting documents—like the Vision Zero Chicago Action Plan, the Chicago Pedestrian Plan, and a Left Turn Traffic Calming flier—that offer more specific guidance on tools, policies, and infrastructure treatments (e.g., school zone crossing improvements, traffic signal upgrades) tied to particular safety problems. Overall, the resource functions less as a technical design manual and more as a program overview, directing practitioners toward CDOT's priority areas, funding mechanisms (Capital Plan, Aldermanic menu funds), and linked plans where specific interventions and their rationale are detailed further.
+:::
 
 <!-- ::: {.callout-tip collapse="true"} -->
 <!-- ## VIDEO: Step #5 -->
