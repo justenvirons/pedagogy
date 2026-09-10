@@ -465,6 +465,7 @@ ped_fatalities <- crashes_fars %>%
 ```{r}
 #| label: fig-pedfatalitytrend
 #| fig-cap: Pedestrian Fatalities by Year, 2010 to 2024
+#| layout-ncol: 2
 #| echo: true
 
 # Identify pedestrian-involved fatal crashes
@@ -506,8 +507,8 @@ all_fatalities <- crashes_fars %>%
 
 colors <- c(
   "Motor Vehicle" = "#4C72B0",
-  "Pedestrian"    = "#DD8452",
-  "Pedalcyclist"  = "#55A868",
+  "Pedestrian"    = "#9F1928", # matches "walk" color in mode share plots above
+  "Pedalcyclist"  = "#080967", # matches "bicycle" color in mode share plots above
   "Other"         = "#C44E52"
 )
 
@@ -527,7 +528,7 @@ plot_ly(
   hovertemplate = "%{x}<br>%{fullData.name}: %{y}<extra></extra>"
 ) %>%
   layout(
-    title = "FARS Fatalities by Year and Collision Type",
+    title = "Fatalities by Mode and Year, 2010 to 2024",
     xaxis = list(title = "Year", dtick = 1),
     yaxis = list(title = "Number of Fatalities"),
     legend = list(title = list(text = "Collision Type")),
