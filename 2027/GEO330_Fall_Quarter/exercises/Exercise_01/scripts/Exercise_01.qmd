@@ -478,8 +478,64 @@ pedestrian_fatalities <- crashes_fars %>%
             .groups = "drop") %>%
   arrange(year)
 
-# Plot with plotly
+all_fatalities <- crashes_fars %>%
+  select(harm_ev, persons, year) %>% 
+    mutate(collision_type = case_when(
+    harm_ev == 9         ~ "Pedalcyclist",
+    harm_ev == 8          ~ "Pedestrian",
+    is.na(harm_ev)        ~ "Other",   # missing/unknown -- can't confirm type
+    TRUE                  ~ "Motor Vehicle"
+  )) %>% 
+  group_by(year, collision_type) %>% 
+  summarise(sum(persons)) %>% 
+  arrange(year) %>% 
+  ungroup()
 
+all_fatalities <- crashes_fars %>%
+  select(harm_ev, persons, year) %>%
+  mutate(collision_type = case_when(
+    harm_ev == 9         ~ "Pedalcyclist",
+    harm_ev == 8          ~ "Pedestrian",
+    is.na(harm_ev)        ~ "Other",   # missing/unknown -- can't confirm type
+    TRUE                  ~ "Motor Vehicle"
+  )) %>% 
+  group_by(year, collision_type) %>%
+  summarise(n = sum(persons, na.rm = TRUE), .groups = "drop") %>% 
+  complete(year, collision_type, fill = list(n = 0)) %>%  
+  arrange(year)  
+
+colors <- c(
+  "Motor Vehicle" = "#4C72B0",
+  "Pedestrian"    = "#DD8452",
+  "Pedalcyclist"  = "#55A868",
+  "Other"         = "#C44E52"
+)
+
+# Set a consistent stacking order (bottom to top)
+category_order <- c("Motor Vehicle", "Pedestrian", "Pedalcyclist", "Other")
+all_fatalities$collision_type <- factor(all_fatalities$collision_type, levels = category_order)
+
+plot_ly(
+  data = all_fatalities,
+  x = ~year,
+  y = ~n,
+  color = ~collision_type,
+  colors = colors,
+  type = "scatter",
+  mode = "none",
+  stackgroup = "one",
+  hovertemplate = "%{x}<br>%{fullData.name}: %{y}<extra></extra>"
+) %>%
+  layout(
+    title = "FARS Fatalities by Year and Collision Type",
+    xaxis = list(title = "Year", dtick = 1),
+    yaxis = list(title = "Number of Fatalities"),
+    legend = list(title = list(text = "Collision Type")),
+    hovermode = "x unified"
+  )
+
+
+# second plot
 modeBarButtonsList <- list("toImage")
 
 plot_ly(
