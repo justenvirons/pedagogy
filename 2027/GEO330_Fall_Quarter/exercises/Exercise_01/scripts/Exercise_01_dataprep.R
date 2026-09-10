@@ -202,12 +202,10 @@ us_counties_population_geo <- us_counties_geom %>%
 CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
 CENSUS_API_KEY <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
 
-# Create plot function
-# option set
-modeBarButtonsList <- list("toImage")
-
 # function for creating modeshare plot
 fx_plot_modeshare <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
   
   plot_data <- modeshare_county_latest_formatted %>%
     { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
@@ -267,6 +265,48 @@ fx_plot_modeshare <- function(geoid = "all") {
              format = "png",
              filename = "mode_share_chart"
            ))
+}
+
+# function for creating modeshare plot
+fx_plot_activetrans <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`walk`      = sum(walk))
+  
+  plot_ly(data = plot_data) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `walk`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#9F1928"),
+      line = list(color = "#9F1928"),
+      name = 'walk',
+      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+    )  %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Walk Commuters"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5,
+        y = -0.1
+      ),
+      hovermode = "x unified"
+    ) %>%
+    config(
+      displaylogo = FALSE,
+      modeBarButtons = list(modeBarButtonsList),
+      toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
+    )
 }
 
 # Save in RData file format -----------------------------------------------

@@ -224,7 +224,9 @@ Examine @fig-modesharetrends below, which shows trends for selected commute mode
 #| eval: true
 #| echo: false
 
-fx_plot_modeshare("all")     # all counties combined
+fx_plot_modeshare("all") # all counties combined
+
+fx_plot_activetrans("all") # all counties combined
 
 ```
 
@@ -244,6 +246,8 @@ custom_geoid <- "17031" # EDIT HERE! Replace with the GEOID for the county you s
 
 # run the following function to create a custom transportation mode share plot
 fx_plot_modeshare(custom_geoid)
+
+fx_plot_activetrans(custom_geoid)
 ```
 
 ## Mode share by county
@@ -670,7 +674,7 @@ This script computes a kernel density estimate (KDE) on the pedestrian fatality 
 <!-- ::: -->
 
 # Step 5. Urban street redesign recommendations
-Use the satellite view on you hot spot map and/or Google Street View to examine one of the corridors or intersections identified in @fig-pedfatalityhotspot. What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What infrastructure-related interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.
+Use the satellite view on you hot spot map and/or Google Street View to examine one of the corridors or intersections identified in @fig-pedfatalityhotspot. *What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What infrastructure-related interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.*
 
 ::: {.callout-note collapse="false"}
 ## Urban Street Design Resources
