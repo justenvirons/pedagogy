@@ -680,7 +680,7 @@ fx_plot_pedfatalitytrend <- function(crashes_fars) {
     ) %>%
     layout(
       title = "Fatalities by Mode and Year, 2010 to 2024",
-      xaxis = list(title = "", dtick = 1),
+      xaxis = list(title = "", dtick = 2),
       yaxis = list(title = "Number of Fatalities"),
       legend = list(
           text = "Collision Type",
@@ -704,7 +704,7 @@ fx_plot_pedfatalitytrend <- function(crashes_fars) {
   ) %>%
     layout(
       title = "Pedestrian Fatalities by Year, 2010 to 2024",
-      xaxis = list(title = "", dtick = 1),
+      xaxis = list(title = "", dtick = 2),
       yaxis = list(title = "Number of Pedestrian Fatalities"),
       hovermode = "x unified"
     ) %>%
