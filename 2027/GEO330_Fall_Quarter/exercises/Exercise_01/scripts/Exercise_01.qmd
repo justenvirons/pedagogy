@@ -221,12 +221,16 @@ Examine @fig-modesharetrends below, which shows trends for selected commute mode
 ```{r}
 #| label: fig-modesharetrends
 #| fig-cap: Average Commute Mode Share among US Counties by Select Modes, 2010 to 2024
+#| fig-subcap:
+#|   - "Mode Share by Select Modes"
+#|   - "Total Walk Commuters by Year"
+#| layout-ncol: 2
 #| eval: true
 #| echo: false
 
 fx_plot_modeshare("all") # all counties combined
 
-fx_plot_activetrans("all") # all counties combined
+fx_plot_activetrans("all") # total walk commuters by year, all counties combined
 
 ```
 
@@ -240,6 +244,10 @@ Each time you work through your script, be sure to copy and paste new code *at t
 ```{r}
 #| label: fig-modesharetrendscook
 #| fig-cap: Average Commute Mode Share for Cook County, Illinois, 2010 to 2024
+#| fig-subcap:
+#|   - "Mode Share by Select Modes"
+#|   - "Total Walk Commuters by Year"
+#| layout-ncol: 2
 #| echo: true
 
 custom_geoid <- "17031" # EDIT HERE! Replace with the GEOID for the county you selected
@@ -247,7 +255,7 @@ custom_geoid <- "17031" # EDIT HERE! Replace with the GEOID for the county you s
 # run the following function to create a custom transportation mode share plot
 fx_plot_modeshare(custom_geoid)
 
-fx_plot_activetrans(custom_geoid)
+fx_plot_activetrans(custom_geoid) # total walk commuters by year
 ```
 
 ## Mode share by county
