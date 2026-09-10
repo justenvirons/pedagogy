@@ -1,5 +1,5 @@
 ---
-title: "Sustainable Urban Transportation (GEO 3/430) Exercise #1"
+title: "Sustainable Urban Transportation: Exercise #1"
 subtitle: "Transportation Mode Share, Pedestrian Fatalities and Urban Street Design"
 author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
@@ -19,7 +19,7 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: true
-date: 2026-9-9
+date: 2026-9-15
 bibliography: ../references.bib
 editor_options:
   chunk_output_type: console
@@ -41,7 +41,7 @@ editor_options:
 knitr::opts_knit$set(root.dir = dirname(dirname(knitr::current_input(dir = TRUE))))
 ```
 
-# Purpose
+# Purpose of Exercise #1
 This exercise uses two nationwide datasets, commuting (or "journey to work") mode share and pedestrian fatality records, to explore transportation mode share trends and safety patterns within a US county that you select. Working between 2010 and 2024, you will build maps, tables and figures that describe how people get to work, where pedestrian fatalities occur, and how these patterns have changed over time. You will then propose practical ideas for improving active transportation (walking, bicycling and transit) and reducing pedestrian injury in your chosen county.
 
 Understanding who walks, bikes and takes transit, and where people face the greatest safety risk while doing so, sits at the center of sustainable urban transportation planning. The figures and maps you create in this exercise are the same types of evidence that planners, engineers and advocates use to justify investments in safer streets, better transit service and more walkable, bikeable neighborhoods.
@@ -60,9 +60,7 @@ This class does not have a coding prerequisite, and no prior programming experie
 :::
 
 ## Open R script, activate R packages and load project data
-In your default Exercise #1 project you will find an R script named *Exercise_01.R*. You will use this script to enter, manage and run all code for this exercise. The code below, which has already been copied into the Exercise_01.R script, activates the custom packages needed to complete Exercise #1. Run it by selecting all lines that begin with "library" and clicking the Run button located above the top left source or script editor panel. 
-
-*Purpose of the code below: activate the R packages required for the exercise and load the project's prepared dataset into your R session. You will use several R packages to complete the exercise, including "dplyr" and "tidyverse" for data formatting and wrangling, "sf" (simple features) for importing and transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.*
+In your default Exercise #1 project you will find an R script named *Exercise_01.R* in the "Files" panel in the lower right of the RStudio IDE on Posit Cloud. Click the Exercise_01.R file to open it in the editor window. You will use this script to enter, manage and run all code for this exercise. The script initially contains the same code as below, which will be used to activate the custom packages needed to complete Exercise #1. *Run the code in Posit Cloud by selecting all lines in RStudio Source panel and clicking the Run button located on the top right of the tool panel. It may take a while for RStudio to activate the packages. You may also receive several warning messages displayed in the Console panel but it should work.* 
 
 ```{r}
 #| label: activate r packages and load project data
@@ -112,6 +110,7 @@ Population counts shown on the map come from the American Community Survey (ACS)
 #| label: fig-popbycountymap
 #| fig-cap: Total Population by US County
 #| eval: true
+#| echo: true
 #| code-fold: true
 
 # Make interactive map of US counties by population using leaflet package
@@ -130,13 +129,14 @@ counties_pal <- colorBin(
 
 # format/generate popup labels for map
 labels = sprintf(
-  "<strong>%s County, %s</strong><br/>
+  "<strong>%s</strong><br/>
   Population (2024): %s<br/>
+  Pop density (per sqmi): %s<br/>
   GEOID: %s",
-  modeshare_county_latest_geom$NAME,
-  modeshare_county_latest_geom$STATE_NAME,
+  modeshare_county_latest_geom$county_name,
   format(modeshare_county_latest_geom$total_population, big.mark = ","),
-  modeshare_county_latest_geom$GEOID) %>%
+  formatC(modeshare_county_latest_geom$pop_density, format = "f", digits = 1, big.mark = ","),
+  modeshare_county_latest_geom$GEOID_county) %>%
   lapply(htmltools::HTML)
 
 # create thematic map using leaflet
@@ -219,18 +219,132 @@ Commute mode share is one of the clearest signals of how sustainable a region's 
 Examine @fig-modesharetrends below, which shows trends for selected commute modes (from home, walk, transit and bicycle) across the United States between 2010 and 2024. (Note that drive alone is not included in the plot, since its disproportionate share tends to obscure any movement among modes with less representation.) Copy and paste this figure and @fig-modeshareboxplot into slide #1 of your presentation and summarize the trends you observe.
 
 ```{r}
+#| eval: false
+#| echo: true
+#| code-fold: true
+
+# function for creating mode share plot
+fx_plot_modeshare <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`from home` = mean(pct_fromhome),
+              `bicycle`   = mean(pct_bicycle),
+              `walk`      = mean(pct_walk),
+              `transit`   = mean(pct_transit))
+  
+  plot_ly(data = plot_data,
+          x = ~year,
+          y = ~`from home`,
+          type = 'scatter',
+          mode = 'lines+markers',
+          marker = list(color = "#E0A100"),
+          line = list(color = "#E0A100"),
+          name = 'from home',
+          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`walk`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#9F1928"),
+              line = list(color = "#9F1928"),
+              name = 'walk',
+              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`transit`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#009BA6"),
+              line = list(color = "#009BA6"),
+              name = 'transit',
+              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`bicycle`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#080967"),
+              line = list(color = "#080967"),
+              name = 'bicycle',
+              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Commute Mode Share (%)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified") %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(modeBarButtonsList),
+           toImageButtonOptions = list(
+             format = "png",
+             filename = "mode_share_chart"
+           ))
+}
+
+# function for creating pedestrian commuters plot
+fx_plot_activetrans <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`walk`      = sum(walk))
+  
+  plot_ly(data = plot_data) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `walk`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#9F1928"),
+      line = list(color = "#9F1928"),
+      name = 'walk',
+      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+    )  %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Walk Commuters"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5,
+        y = -0.1
+      ),
+      hovermode = "x unified"
+    ) %>%
+    config(
+      displaylogo = FALSE,
+      modeBarButtons = list(modeBarButtonsList),
+      toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
+    )
+}
+```
+
+
+```{r}
 #| label: fig-modesharetrends
-#| fig-cap: Average Commute Mode Share among US Counties by Select Modes, 2010 to 2024
+#| fig-cap: Commuting Patterns by Select Modes, United States, 2010 to 2024
 #| fig-subcap:
-#|   - "Mode Share by Select Modes"
-#|   - "Total Walk Commuters by Year"
+#|   - "Mode Share for Select Modes"
+#|   - "Pedestrian Commuters by Year"
 #| layout-ncol: 2
 #| eval: true
 #| echo: false
 
 fx_plot_modeshare("all") # all counties combined
 
-fx_plot_activetrans("all") # total walk commuters by year, all counties combined
+fx_plot_activetrans("all") # total pedestrian commuters
 
 ```
 
@@ -243,31 +357,33 @@ Each time you work through your script, be sure to copy and paste new code *at t
 
 ```{r}
 #| label: fig-modesharetrendscook
-#| fig-cap: Average Commute Mode Share for Cook County, Illinois, 2010 to 2024
+#| fig-cap: Commuting Patterns by Select Modes, Cook County, Illinois, 2010 to 2024
 #| fig-subcap:
-#|   - "Mode Share by Select Modes"
-#|   - "Total Walk Commuters by Year"
+#|   - "Mode Share for Select Modes"
+#|   - "Pedestrian Commuters by Year"
 #| layout-ncol: 2
 #| echo: true
 
 custom_geoid <- "17031" # EDIT HERE! Replace with the GEOID for the county you selected
 
-# run the following function to create a custom transportation mode share plot
+# run function below to create custom mode share trend plot
 fx_plot_modeshare(custom_geoid)
 
-fx_plot_activetrans(custom_geoid) # total walk commuters by year
+# run function below to create pedestrian commuters trend plot
+fx_plot_activetrans(custom_geoid) 
 ```
 
 ## Mode share by county
 
-### Plot
+### Interquartile range plot
 @fig-modeshareboxplot below shows the interquartile range (IQR) of each transportation mode across all US counties. The central box represents the middle 50 percent of the data, which is the range captured by the IQR. The IQR is calculated as the difference between the third quartile (Q3) and the first quartile (Q1), the 75th and 25th percentiles of the data, respectively. The lines extending from the box, called whiskers, typically show the range of the data within 1.5 times the IQR beyond Q1 and Q3. Data points beyond the whiskers are considered outliers. When the median line sits in the middle of the box and the whiskers are similar in length, the distribution is symmetric. When the median sits closer to Q1 or Q3, and one whisker is noticeably longer than the other, the data are skewed, either positively or negatively.
 
 ```{r}
 #| label: fig-modeshareboxplot
 #| fig-cap: Interquartile Box Plots of Commute Mode Share among US Counties, 2024
 #| eval: true
-#| echo: false
+#| echo: true
+#| code-fold: true
 
 modeBarButtonsList <- list("toImage")
 
@@ -290,12 +406,10 @@ plot_ly(modeshare_county_period_pivoted %>%
 
 ```
 
-### Maps
-The US Census Bureau makes both attribute and geographic data available at multiple [geographic levels](https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html), organized according to a [standard geographic hierarchy](https://www.census.gov/programs-surveys/geography/guidance/hierarchy.html) [@census_geohierarchy]. For this exercise, we evaluate counties within their state and Census division, downloading the boundary files in R using the *tigris* package [@walker_tigris], which retrieves Census TIGER/Line shapefiles [@census_tiger]. Once downloaded, these geographies can be joined with attribute data such as commute mode share to produce meaningful maps.
-
-TIGER/Line shapefiles are the Census Bureau's authoritative digital boundary files for states, counties, tracts and other geographies. They are used throughout the geographic information systems (GIS) field, including by transportation agencies, to map demographic, economic and infrastructure data at a consistent, nationwide scale.
-
+### Maps by county
 @fig-modesharerates shows, county by county, the percent of workers age 16 and older who walk (a), bicycle (b), use transit (c), or drive alone (d) to work. Use the layer control in the upper right of each map to switch between the default basemap and satellite imagery, and toggle the county and division layers on or off.
+
+Compare the four maps. Which modes show high values clustered in just a few regions, and which are more evenly spread across the country? What role might population density, infrastructure like sidewalks, bike lanes, or transit lines, land use, or history play in explaining these patterns? Look for any results that surprise you, such as a rural county with unusually high bicycle commuting or a small city with transit use rivaling a major metro. Return to the county you selected earlier in this exercise and see how it compares to the counties surrounding it across these four modes. Are the neighboring counties similar, or does your county stand out? Use the satellite imagery layer to see if features like a street grid, a college campus, a dense downtown, or a coastline help explain any differences you notice. Finally, think about the many rural and suburban counties where driving alone is nearly universal. What economic, environmental, or health related trade offs come with having few practical alternatives to driving alone?
 
 ```{r}
 #| label: fig-modesharerates
@@ -464,7 +578,10 @@ ped_fatalities <- crashes_fars %>%
 
 ```{r}
 #| label: fig-pedfatalitytrend
-#| fig-cap: Pedestrian Fatalities by Year, 2010 to 2024
+#| fig-cap: Crash Fatalities by Year, 2010 to 2024
+#| fig-subcap:
+#|   - "Crash Fatalities by Mode"
+#|   - "Pedestrian Fatalities"
 #| layout-ncol: 2
 #| echo: true
 
@@ -567,9 +684,14 @@ plot_ly(
   ) %>%
   layout(
     title = "Fatalities by Mode and Year, 2010 to 2024",
-    xaxis = list(title = "Year", dtick = 1),
+    xaxis = list(title = "", dtick = 1),
     yaxis = list(title = "Number of Fatalities"),
-    legend = list(title = list(text = "Collision Type")),
+    legend = list(
+        text = "Collision Type",
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
     hovermode = "x unified"
   ) %>%
   config(displaylogo = FALSE,
@@ -587,7 +709,7 @@ plot_ly(
 ) %>%
   layout(
     title = "Pedestrian Fatalities by Year, 2010 to 2024",
-    xaxis = list(title = "Year", dtick = 1),
+    xaxis = list(title = "", dtick = 1),
     yaxis = list(title = "Number of Pedestrian Fatalities"),
     hovermode = "x unified"
   ) %>% 
@@ -596,17 +718,19 @@ plot_ly(
 ```
 
 ## Maps of pedestrian fatalities over time
-Before running a formal hotspot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. @fig-pedfatalityperiods below locates pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels. Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hotspot analysis that follows.
+Before running a formal hot spot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. @fig-pedfatalityperiods below locates pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels. 
+
+*Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hot spot analysis that follows.*
 
 ```{r}
 #| label: fig-pedfatalityperiods
 #| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
 #| echo: true
 
-us_county_boundary <- us_counties_population_geo %>% 
-  select(NAME,
-         GEOID) %>% 
-  filter(GEOID == custom_geoid)
+us_county_boundary <- modeshare_county_latest_geom %>% 
+  select(county_name,
+         GEOID_county) %>% 
+  filter(GEOID_county == custom_geoid)
 
 ## Step A: define rolling 4 year periods across 2010 to 2024
 period_breaks <- c(2010, 2014, 2018, 2022, 2025)
@@ -664,23 +788,20 @@ latticeView(
 
 ```
 
-## Hotspot map of pedestrian fatalities
-Now run a formal hotspot analysis. The code below estimates a kernel density surface from the pedestrian fatality locations in your county, which highlights corridors and intersections with a concentration of pedestrian crashes more rigorously than eyeballing the period maps above. @fig-pedfatalityhotspot shows the relative intensity/concentration of fatalities, not raw counts such that warmer colors (orange/red) represent a larger number of spatially clustered fatalities, while lighter areas mean fewer nearby fatalities. And since the color breaks are based on natural gaps in this particular dataset, they're useful for visual comparison but shouldn't be treated as fixed, universal risk thresholds.
+## Hot spot map of pedestrian fatalities
+Now run a formal hot spot analysis. The code below estimates a kernel density surface from the pedestrian fatality locations in your county, which highlights corridors and intersections with a concentration of pedestrian crashes more rigorously than eyeballing the period maps above. @fig-pedfatalityhotspot shows the relative intensity/concentration of fatalities, not raw counts such that warmer colors (orange/red) represent a larger number of spatially clustered fatalities, while lighter areas mean fewer nearby fatalities. And since the color breaks are based on natural gaps in this particular dataset, they're useful for visual comparison but shouldn't be treated as fixed, universal risk thresholds.
 
-*Copy, paste and run the code into your Exercise #1 script. Identify any hotspots in your county. Are there areas where pedestrian fatalities appear to cluster? Copy the map into slide #4 of your presentation and describe what you find.*
+*Copy, paste and run the code into your Exercise #1 script. Identify any hot spots in your county. Are there areas where pedestrian fatalities appear to cluster? Copy the map into slide #4 of your presentation and describe what you find.*
 
 ```{r}
 #| label: fig-pedfatalityhotspot
-#| fig-cap: Pedestrian Fatality Hotspot Maps
-#| fig-subcap:
-#|   - "Pedestrian Fatality Density Surface"
-#|   - "Pedestrian Fatality Density Surface with County Boundary"
+#| fig-cap: Pedestrian Fatality Hot Spot Map, Cook County, Illinois, 2024
 #| echo: true
 
 ## Determine local UTM CRS from county centroid
-us_county_boundary <- us_counties_population_geo %>%
-  filter(GEOID == custom_geoid) %>%
-  select(NAME, STATE_NAME, GEOID) %>%
+us_county_boundary <- modeshare_county_latest_geom %>%
+  filter(GEOID_county == custom_geoid) %>%
+  select(county_name, GEOID_county) %>%
   st_set_crs(4326)
 
 county_centroid <- st_centroid(us_county_boundary)
@@ -767,7 +888,7 @@ leaflet() %>%
 
 ::: {.callout-note collapse="false"}
 ## More about the hot spot map
-This script computes a kernel density estimate (KDE) on the pedestrian fatality points using the *spatstat* package's [@baddeley_spatstat] density.ppp() function — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hotspots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using the *classInt* package [@bivand_classint] to calculate Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hotspot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
+This script computes a kernel density estimate (KDE) on the pedestrian fatality points using the *spatstat* package's [@baddeley_spatstat] density.ppp() function — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hot spots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using the *classInt* package [@bivand_classint] to calculate Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hot spot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
 :::
 
 <!-- ::: {.callout-tip collapse="true"} -->
@@ -791,7 +912,7 @@ Use the satellite view on you hot spot map and/or Google Street View to examine 
 <!-- ::: -->
 
 # Step 6. Submit your completed presentation
-The final step is to navigate to the course D2L page and submit your exercise presentation to the appropriate submission folder.
+The final step is to navigate to the course D2L page and submit your exercise presentation to the Exercise #1 submission folder.
 
 # References
 
@@ -805,13 +926,13 @@ This exercise draws on several nationwide datasets maintained by federal agencie
 
 **Basemap tiles.** Every interactive map in this exercise is built on CARTO's Positron basemap tiles [@carto_basemaps], a minimal, light-colored basemap designed to keep thematic data (such as the county polygons and fatality points shown here) legible in the foreground. Each map also offers Esri's World Imagery satellite basemap [@esri_worldimagery] as an alternate layer, which is useful for examining the physical street design of the corridors and intersections identified in Step 5.
 
-**Hotspot analysis.** The pedestrian fatality density surface in Step 4 is estimated with the *spatstat* package [@baddeley_spatstat], which implements kernel density estimation (KDE) for spatial point patterns. The resulting density values are grouped into map classes using Jenks natural breaks, calculated with the *classInt* package [@bivand_classint].
+**hot spot analysis.** The pedestrian fatality density surface in Step 4 is estimated with the *spatstat* package [@baddeley_spatstat], which implements kernel density estimation (KDE) for spatial point patterns. The resulting density values are grouped into map classes using Jenks natural breaks, calculated with the *classInt* package [@bivand_classint].
 
 This exercise also points to several supplementary resources that are not code inputs but inform how you interpret and act on the results.
 
 **Dangerous by Design.** *Dangerous by Design* [@sga_dangerousbydesign], published by Smart Growth America, ranks states and metro areas by pedestrian fatality rate using the same FARS and ACS data analyzed in this exercise, and is suggested as optional background reading before Step 1.
 
-**Urban street design guidance.** The urban street redesign recommendations called for in Step 5 draw on two practitioner resources: NACTO's *Urban Street Design Guide* [@nacto_urbanstreetdesignguide], which catalogs street design treatments by context and safety issue, and the Chicago Department of Transportation's *Pedestrian Program* [@cdot_pedestrianprogram], which illustrates how one city's Complete Streets initiative applies hotspot-driven prioritization in practice.
+**Urban street design guidance.** The urban street redesign recommendations called for in Step 5 draw on two practitioner resources: NACTO's *Urban Street Design Guide* [@nacto_urbanstreetdesignguide], which catalogs street design treatments by context and safety issue, and the Chicago Department of Transportation's *Pedestrian Program* [@cdot_pedestrianprogram], which illustrates how one city's Complete Streets initiative applies hot spot-driven prioritization in practice.
 
 ::: {#refs}
 :::

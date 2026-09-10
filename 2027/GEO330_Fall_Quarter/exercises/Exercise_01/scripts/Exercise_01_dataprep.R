@@ -266,7 +266,7 @@ fx_plot_modeshare <- function(geoid = "all") {
            ))
 }
 
-# function for creating modeshare plot
+# function for creating pedestrian commuters plot
 fx_plot_activetrans <- function(geoid = "all") {
   
   modeBarButtonsList <- list("toImage")
