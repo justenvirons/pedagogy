@@ -501,6 +501,231 @@ ped_fatalities <- crashes_fars %>%
 
 ```
 
+The three R functions below carry out the plotting and mapping steps behind the remaining figures in this section (@fig-pedfatalitytrend, @fig-pedfatalityperiods and @fig-pedfatalityhotspot). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how each figure is built. Click "Show the function code" below to expand it.
+
+```{r}
+#| label: define pedestrian fatality plotting functions
+#| code-fold: true
+#| code-summary: "Show the function code"
+#| echo: true
+
+# function for plotting the yearly pedestrian fatality trend
+fx_plot_pedfatalitytrend <- function(crashes_fars) {
+
+  # Identify pedestrian-involved fatal crashes
+  # harm_ev == 8 (Pedestrian) captures the crash's first harmful event as a pedestrian strike;
+  # peds > 0 also works as a check that at least one pedestrian was involved
+  pedestrian_fatalities <- crashes_fars %>%
+    filter(harm_ev == 8 | peds > 0) %>%
+    group_by(year) %>%
+    summarise(total_fatalities = sum(fatals, na.rm = TRUE),
+              total_crashes = n(),
+              .groups = "drop") %>%
+    arrange(year)
+
+  # Plot with plotly
+  plot_ly(
+    pedestrian_fatalities,
+    x = ~year,
+    y = ~total_fatalities,
+    type = "scatter",
+    mode = "lines+markers",
+    line = list(color = "firebrick", width = 3),
+    marker = list(color = "firebrick", size = 8)
+  ) %>%
+    layout(
+      title = "Pedestrian Fatalities by Year, 2010 to 2024",
+      xaxis = list(title = "Year", dtick = 1),
+      yaxis = list(title = "Number of Pedestrian Fatalities"),
+      hovermode = "x unified"
+    )
+}
+
+# function for mapping pedestrian fatalities across four multi-year periods
+fx_map_pedfatalityperiods <- function(ped_fatalities, county_geoid) {
+
+  us_county_boundary <- us_counties_population_geo %>%
+    select(NAME, GEOID) %>%
+    filter(GEOID == county_geoid)
+
+  ## Step A: define rolling 4 year periods across 2010 to 2024
+  period_breaks <- c(2010, 2014, 2018, 2022, 2025)
+  period_labels <- c("2010 to 2013", "2014 to 2017", "2018 to 2021", "2022 to 2024")
+
+  ped_fatalities <- ped_fatalities %>%
+    mutate(period = cut(year, breaks = period_breaks, right = FALSE, labels = period_labels))
+
+  print(table(ped_fatalities$period))  # confirm every period actually has rows
+
+  ## Step B: common map extent (unname to avoid named vector JSON warnings)
+  county_bbox <- st_bbox(us_county_boundary)
+  bbox_vals <- unname(county_bbox)
+  names(bbox_vals) <- c("xmin", "ymin", "xmax", "ymax")
+
+  ## Step C: build one map per period
+  period_maps <- lapply(period_labels, function(p) {
+
+    ped_period <- ped_fatalities %>% filter(period == p)
+
+    m <- leaflet() %>%
+      addTiles(urlTemplate = paste0(
+        "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+        CARTO_API_KEY
+      )) %>%
+      addPolygons(
+        data = us_county_boundary,
+        fill = FALSE, color = "black", weight = 1.5, opacity = 1
+      ) %>%
+      fitBounds(
+        lng1 = as.numeric(bbox_vals["xmin"]), lat1 = as.numeric(bbox_vals["ymin"]),
+        lng2 = as.numeric(bbox_vals["xmax"]), lat2 = as.numeric(bbox_vals["ymax"])
+      ) %>%
+      addResetMapButton() %>%
+      addControl(
+        html = paste0("<strong>", p, "</strong> (n = ", nrow(ped_period), ")"),
+        position = "topright"
+      )
+
+    if (nrow(ped_period) > 0) {
+      m <- m %>%
+        addCircleMarkers(
+          data = ped_period, radius = 4, color = "firebrick",
+          stroke = FALSE, fillOpacity = 0.7
+        )
+    }
+
+    m
+  })
+
+  ## Step D: arrange as a synced 2x2 grid (pan and zoom linked across all panels)
+  latticeView(
+    period_maps[[1]], period_maps[[2]], period_maps[[3]], period_maps[[4]],
+    ncol = 2,
+    sync = "all"
+  )
+}
+
+# function for mapping the pedestrian fatality hotspot density surface
+fx_map_pedfatalityhotspot <- function(ped_fatalities, county_geoid) {
+
+  ## Determine local UTM CRS from county centroid
+  us_county_boundary <- us_counties_population_geo %>%
+    filter(GEOID == county_geoid) %>%
+    select(NAME, STATE_NAME, GEOID) %>%
+    st_set_crs(4326)
+
+  county_centroid <- st_centroid(us_county_boundary)
+
+  county_centroid_zoned <- county_centroid %>%
+    st_join(utm_zones %>% select(ZONE), join = st_within) %>%
+    st_drop_geometry()
+
+  local_crs <- county_centroid_zoned$ZONE + 32600
+
+  ## Estimate the kernel density (KDE) surface
+  ped_ft  <- st_transform(ped_fatalities, crs = local_crs)
+  ped_win <- as.owin(st_convex_hull(st_union(ped_ft)))
+  ped_ppp <- as.ppp(st_coordinates(ped_ft), W = ped_win)
+
+  ped_density <- density.ppp(ped_ppp, sigma = bw.diggle(ped_ppp), edge = TRUE)
+
+  # Rescale from events per square meter to events per square kilometer (x 1e6)
+  # so values aren't vanishingly small. This is purely for readable legend
+  # labels and does not change the pattern of the surface.
+  dens_r <- as.data.frame(ped_density) %>%
+    rename(value = 3) %>%
+    mutate(value = value * 1e6) %>%
+    terra::rast(type = "xyz", crs = paste0("EPSG:", local_crs))
+
+  dens_r_ll <- terra::project(dens_r, "EPSG:4326", method = "bilinear")
+
+  ## Clip the raster to the county boundary
+  county_vect <- vect(us_county_boundary)
+  dens_r_ll <- terra::crop(dens_r_ll, county_vect)
+  dens_r_ll <- terra::mask(dens_r_ll, county_vect)
+
+  ## Bin density into readable classes (natural breaks on log scale)
+  dens_vals <- terra::values(dens_r_ll, na.rm = TRUE)
+
+  # log1p handles the near-zero values gracefully (log1p(0) = 0)
+  log_vals <- log1p(dens_vals)
+
+  breaks_log <- classIntervals(log_vals, n = 5, style = "jenks")$brks %>%
+    unique()
+
+  # Convert breakpoints back to the original density scale for the legend/palette
+  breaks <- expm1(breaks_log)
+
+  dens_pal <- colorBin(
+    palette  = "YlOrRd",
+    domain   = dens_vals,
+    bins     = breaks,
+    na.color = "transparent"
+  )
+
+  ## Map without county boundary
+  map_density <- leaflet() %>%
+    addTiles(urlTemplate = paste0(
+        "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+        CARTO_API_KEY
+      )) %>%
+    addRasterImage(
+      dens_r_ll, colors = dens_pal, opacity = 0.65,
+      group = "Density Surface"
+    ) %>%
+    addCircleMarkers(
+      data = ped_fatalities, radius = 3, color = "black", weight = 1,
+      fillOpacity = 0, stroke = TRUE,
+      group = "Pedestrian Fatalities"
+    ) %>%
+    addLegend(
+      pal = dens_pal, values = dens_vals,
+      title = "Pedestrian fatality<br>density (per km²)",
+      position = "bottomright",
+      labFormat = labelFormat(digits = 1)
+    ) %>%
+    addLayersControl(
+      overlayGroups = c("Density Surface", "Pedestrian Fatalities"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+
+  ## Map with county boundary
+  map_density_boundary <- leaflet() %>%
+    addTiles(urlTemplate = paste0(
+        "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+        CARTO_API_KEY
+      )) %>%
+    addRasterImage(
+      dens_r_ll, colors = dens_pal, opacity = 0.65,
+      group = "Density Surface"
+    ) %>%
+    addPolygons(
+      data = us_county_boundary,
+      fill = FALSE, color = "darkgrey", weight = 2, opacity = 1,
+      group = "County Boundary"
+    ) %>%
+    addCircleMarkers(
+      data = ped_fatalities, radius = 3, color = "#555555", weight = 1,
+      fillOpacity = 0, stroke = TRUE,
+      group = "Pedestrian Fatalities"
+    ) %>%
+    addLegend(
+      pal = dens_pal, values = dens_vals,
+      title = "Pedestrian fatality<br>density (per km²)",
+      position = "bottomright",
+      labFormat = labelFormat(digits = 1)
+    ) %>%
+      addResetMapButton() %>%
+      addFullscreenControl() %>%
+    addLayersControl(
+      overlayGroups = c("Density Surface", "County Boundary", "Pedestrian Fatalities"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+
+  list(map_density, map_density_boundary)
+}
+```
+
 ## Plot of pedestrian fatalities trend
 @fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in your county for each year between 2010 and 2024. Copy and paste this figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.
 
@@ -511,33 +736,8 @@ ped_fatalities <- crashes_fars %>%
 #| fig-cap: Pedestrian Fatalities by Year, 2010 to 2024
 #| echo: true
 
-# Identify pedestrian-involved fatal crashes
-# harm_ev == 8 (Pedestrian) captures the crash's first harmful event as a pedestrian strike;
-# peds > 0 also works as a check that at least one pedestrian was involved
-pedestrian_fatalities <- crashes_fars %>%
-  filter(harm_ev == 8 | peds > 0) %>%
-  group_by(year) %>%
-  summarise(total_fatalities = sum(fatals, na.rm = TRUE),
-            total_crashes = n(),
-            .groups = "drop") %>%
-  arrange(year)
-
-# Plot with plotly
-plot_ly(
-  pedestrian_fatalities,
-  x = ~year,
-  y = ~total_fatalities,
-  type = "scatter",
-  mode = "lines+markers",
-  line = list(color = "firebrick", width = 3),
-  marker = list(color = "firebrick", size = 8)
-) %>%
-  layout(
-    title = "Pedestrian Fatalities by Year, 2010 to 2024",
-    xaxis = list(title = "Year", dtick = 1),
-    yaxis = list(title = "Number of Pedestrian Fatalities"),
-    hovermode = "x unified"
-  )
+# run the following function to plot the yearly pedestrian fatality trend
+fx_plot_pedfatalitytrend(crashes_fars)
 ```
 
 ## Maps of pedestrian fatalities over time
@@ -550,67 +750,8 @@ Before running a formal hotspot analysis, it helps to simply look at where pedes
 #| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
 #| echo: true
 
-
-us_county_boundary <- us_counties_population_geo %>% 
-  select(NAME,
-         GEOID) %>% 
-  filter(GEOID == custom_geoid)
-
-## Step A: define rolling 4 year periods across 2010 to 2024
-period_breaks <- c(2010, 2014, 2018, 2022, 2025)
-period_labels <- c("2010 to 2013", "2014 to 2017", "2018 to 2021", "2022 to 2024")
-
-ped_fatalities <- ped_fatalities %>%
-  mutate(period = cut(year, breaks = period_breaks, right = FALSE, labels = period_labels))
-
-print(table(ped_fatalities$period))  # confirm every period actually has rows
-
-## Step B: common map extent (unname to avoid named vector JSON warnings)
-county_bbox <- st_bbox(us_county_boundary)
-bbox_vals <- unname(county_bbox)
-names(bbox_vals) <- c("xmin", "ymin", "xmax", "ymax")
-
-## Step C: build one map per period
-period_maps <- lapply(period_labels, function(p) {
-
-  ped_period <- ped_fatalities %>% filter(period == p)
-
-  m <- leaflet() %>%
-    addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      CARTO_API_KEY
-    )) %>%
-    addPolygons(
-      data = us_county_boundary,
-      fill = FALSE, color = "black", weight = 1.5, opacity = 1
-    ) %>%
-    fitBounds(
-      lng1 = as.numeric(bbox_vals["xmin"]), lat1 = as.numeric(bbox_vals["ymin"]),
-      lng2 = as.numeric(bbox_vals["xmax"]), lat2 = as.numeric(bbox_vals["ymax"])
-    ) %>%
-    addResetMapButton() %>%
-    addControl(
-      html = paste0("<strong>", p, "</strong> (n = ", nrow(ped_period), ")"),
-      position = "topright"
-    )
-
-  if (nrow(ped_period) > 0) {
-    m <- m %>%
-      addCircleMarkers(
-        data = ped_period, radius = 4, color = "firebrick",
-        stroke = FALSE, fillOpacity = 0.7
-      )
-  }
-
-  m
-})
-
-## Step D: arrange as a synced 2x2 grid (pan and zoom linked across all panels)
-latticeView(
-  period_maps[[1]], period_maps[[2]], period_maps[[3]], period_maps[[4]],
-  ncol = 2,
-  sync = "all"
-)
+# run the following function to map pedestrian fatalities across four multi-year periods
+fx_map_pedfatalityperiods(ped_fatalities, custom_geoid)
 
 ```
 
@@ -629,118 +770,10 @@ Now run a formal hotspot analysis. The code below estimates a kernel density sur
 #|   - "Pedestrian Fatality Density Surface with County Boundary"
 #| echo: true
 
-## Determine local UTM CRS from county centroid
-us_county_boundary <- us_counties_population_geo %>%
-  filter(GEOID == custom_geoid) %>%
-  select(NAME, STATE_NAME, GEOID) %>%
-  st_set_crs(4326)
-
-county_centroid <- st_centroid(us_county_boundary)
-
-county_centroid_zoned <- county_centroid %>%
-  st_join(utm_zones %>% select(ZONE), join = st_within) %>%
-  st_drop_geometry()
-
-local_crs <- county_centroid_zoned$ZONE + 32600
-
-## Estimate the kernel density (KDE) surface
-ped_ft  <- st_transform(ped_fatalities, crs = local_crs)
-ped_win <- as.owin(st_convex_hull(st_union(ped_ft)))
-ped_ppp <- as.ppp(st_coordinates(ped_ft), W = ped_win)
-
-ped_density <- density.ppp(ped_ppp, sigma = bw.diggle(ped_ppp), edge = TRUE)
-
-# Rescale from events per square meter to events per square kilometer (x 1e6)
-# so values aren't vanishingly small. This is purely for readable legend
-# labels and does not change the pattern of the surface.
-dens_r <- as.data.frame(ped_density) %>%
-  rename(value = 3) %>%
-  mutate(value = value * 1e6) %>%
-  terra::rast(type = "xyz", crs = paste0("EPSG:", local_crs))
-
-dens_r_ll <- terra::project(dens_r, "EPSG:4326", method = "bilinear")
-
-## Clip the raster to the county boundary
-county_vect <- vect(us_county_boundary)
-dens_r_ll <- terra::crop(dens_r_ll, county_vect)
-dens_r_ll <- terra::mask(dens_r_ll, county_vect)
-
-## Bin density into readable classes (natural breaks on log scale)
-dens_vals <- terra::values(dens_r_ll, na.rm = TRUE)
-
-# log1p handles the near-zero values gracefully (log1p(0) = 0)
-log_vals <- log1p(dens_vals)
-
-breaks_log <- classIntervals(log_vals, n = 5, style = "jenks")$brks %>%
-  unique()
-
-# Convert breakpoints back to the original density scale for the legend/palette
-breaks <- expm1(breaks_log)
-
-dens_pal <- colorBin(
-  palette  = "YlOrRd",
-  domain   = dens_vals,
-  bins     = breaks,
-  na.color = "transparent"
-)
-
-## Map with toggleable layers
-leaflet() %>%
-  addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      CARTO_API_KEY
-    )) %>%
-  addRasterImage(
-    dens_r_ll, colors = dens_pal, opacity = 0.65,
-    group = "Density Surface"
-  ) %>%
-  addCircleMarkers(
-    data = ped_fatalities, radius = 3, color = "black", weight = 1,
-    fillOpacity = 0, stroke = TRUE,
-    group = "Pedestrian Fatalities"
-  ) %>%
-  addLegend(
-    pal = dens_pal, values = dens_vals,
-    title = "Pedestrian fatality<br>density (per km²)",
-    position = "bottomright",
-    labFormat = labelFormat(digits = 1)
-  ) %>%
-  addLayersControl(
-    overlayGroups = c("Density Surface", "Pedestrian Fatalities"),
-    options = layersControlOptions(collapsed = FALSE)
-  )
-
-leaflet() %>%
-  addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      CARTO_API_KEY
-    )) %>%
-  addRasterImage(
-    dens_r_ll, colors = dens_pal, opacity = 0.65,
-    group = "Density Surface"
-  ) %>%
-  addPolygons(
-    data = us_county_boundary,
-    fill = FALSE, color = "darkgrey", weight = 2, opacity = 1,
-    group = "County Boundary"
-  ) %>%
-  addCircleMarkers(
-    data = ped_fatalities, radius = 3, color = "#555555", weight = 1,
-    fillOpacity = 0, stroke = TRUE,
-    group = "Pedestrian Fatalities"
-  ) %>%
-  addLegend(
-    pal = dens_pal, values = dens_vals,
-    title = "Pedestrian fatality<br>density (per km²)",
-    position = "bottomright",
-    labFormat = labelFormat(digits = 1)
-  ) %>%
-    addResetMapButton() %>%
-    addFullscreenControl() %>%
-  addLayersControl(
-    overlayGroups = c("Density Surface", "County Boundary", "Pedestrian Fatalities"),
-    options = layersControlOptions(collapsed = FALSE)
-  )
+# run the following function to estimate and map the pedestrian fatality density surface
+ped_hotspot_maps <- fx_map_pedfatalityhotspot(ped_fatalities, custom_geoid)
+ped_hotspot_maps[[1]]
+ped_hotspot_maps[[2]]
 ```
 
 ::: {.callout-tip collapse="true"}
