@@ -42,7 +42,7 @@ knitr::opts_knit$set(root.dir = dirname(dirname(knitr::current_input(dir = TRUE)
 ```
 
 # Purpose
-This exercise uses two nationwide datasets, commuting (or "journey to work") mode share and pedestrian fatality records, to explore transportation mode share trends and safety patterns within a US county that you select. Working between 2010 and 2024, you will build maps, tables and figures that describe how people get to work, where pedestrian fatalities occur, and how these patterns have changed over time. You will then propose practical ideas for improving active transportation (walking, bicycling and transit) and reducing pedestrian injury in your chosen county.
+This exercise uses two nationwide datasets, commuting (or "journey to work") mode share and pedestrian fatality records, to explore transportation mode share trends and safety patterns within a US county that you select. Working between 2010 and 2024, you will build maps, tables and figures that describe how people get to work, where pedestrian fatalities occur, and how these patterns have changed over time. You will then propose practical ideas for improving active transportation (walking, bicycling and transit) and reducing pedestrian injury along a specific, higher risk intersection and/or corridor within your chosen county.
 
 Understanding who walks, bikes and takes transit, and where people face the greatest safety risk while doing so, sits at the center of sustainable urban transportation planning. The figures and maps you create in this exercise are the same types of evidence that planners, engineers and advocates use to justify investments in safer streets, better transit service and more walkable, bikeable neighborhoods.
 
@@ -60,7 +60,7 @@ This class does not have a coding prerequisite, and no prior programming experie
 :::
 
 ## Open R script, activate R packages and load project data
-In your default Exercise #1 project you will find an R script named *Exercise_01.R* in the "Files" panel in the lower right of the RStudio IDE on Posit Cloud. Click the Exercise_01.R file to open it in the editor window. You will use this script to enter, manage and run all code for this exercise. The script initially contains the same code as below, which will be used to activate the custom packages needed to complete Exercise #1. *Run the code in Posit Cloud by selecting all lines in RStudio Source panel and clicking the Run button located on the top right of the tool panel. It may take a while for RStudio to activate the packages. You may also receive several warning messages displayed in the Console panel but it should work.* 
+In your default Exercise #1 project you will find an R script named *Exercise_01.R* in the "Files" panel in the lower right of the RStudio IDE on Posit Cloud. Click the Exercise_01.R file to open it in the editor window. You will use this script to enter, manage and run all code for this exercise. The script initially contains the same code as below, which will be used to activate the custom packages needed to complete Exercise #1. *Run the code in Posit Cloud by selecting all lines in the RStudio Source panel and clicking the Run button located on the top right. It may take a while for RStudio to activate the packages. You may also receive several warning messages displayed in the Console panel but it should work.* 
 
 ```{r}
 #| label: activate r packages and load project data
