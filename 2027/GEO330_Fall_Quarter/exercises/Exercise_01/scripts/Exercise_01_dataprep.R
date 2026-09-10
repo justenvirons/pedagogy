@@ -37,7 +37,7 @@ for (agroup in grouplist) {
     acs_group <- getCensus(name = "acs/acs5",
                            vintage = ayear,
                            vars = c("NAME", "B01001_001E",agroupname),
-                           region = "county:*", # tracts
+                           region = "county:*",
                            # regionin="*", # places, counties, not msas
                            key=CENSUS_API_KEY)
     attach(acs_group)
@@ -65,20 +65,19 @@ us_states_geom <- states(class="sf")
 us_counties_geom <- counties(class="sf", cb=TRUE, resolution = "20m")
 us_divisions_geom <- divisions(class="sf")
 
-us_counties_geom <- st_read(county_filename_shp) %>%
-  mutate(STATEFP_NO = as.numeric(STATEFP)) %>%
-  filter(STATEFP_NO <= 56, STATEFP_NO != 15, STATEFP_NO != 2)
-
 # Create custom geographies for mapping
 modeshare_county_latest <- modeshare_county_latest_formatted %>%
   filter(year==2024,
          state_name != "Alaska",
          state_name != "Hawaii")
 
-modeshare_county_latest_geom <- us_counties_population_geo %>%
-  select(GEOID_county = GEOID) %>%
+modeshare_county_latest_geom <- us_counties_geom %>%
+  mutate(sqmi = ALAND / 2589988.11) %>% 
+  select(GEOID_county = GEOID,
+         sqmi) %>%
   left_join(modeshare_county_latest,
             by="GEOID_county") %>%
+  mutate(pop_density = total_population/sqmi) %>% 
   st_as_sf() %>%
   st_transform(4326) %>%
   drop_na()
@@ -315,11 +314,12 @@ save(modeshare_county_latest,
      modeshare_county_latest_geom,
      modeshare_county_latest_formatted,
      modeshare_county_period_pivoted,
-     us_counties_population_geo,
+     # us_counties_population_geo,
      us_states_sub_geom,
      us_divisions_sub_geom,
      utm_zones,
      CARTO_API_KEY,
      fx_plot_modeshare,
+     fx_plot_activetrans,
      file = paste0(getwd(),"/data/Exercise_01.RData"))
 

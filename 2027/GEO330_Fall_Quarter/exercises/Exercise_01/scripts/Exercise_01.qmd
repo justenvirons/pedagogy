@@ -48,7 +48,7 @@ Understanding who walks, bikes and takes transit, and where people face the grea
 
 ::: {.callout-note collapse="false"}
 ## Optional Reading
-- [Dangerous by Design](https://www.smartgrowthamerica.org/signature-reports/dangerous-by-design/) [@sga_dangerousbydesign] (Smart Growth America), produced with the National Complete Streets Coalition (a program of Smart Growth America) and with data analysis support from the State Smart Transportation Initiative, ranks all 50 states and the 101 largest U.S. metro areas by pedestrian fatality rate. The report's principal data source is the Fatality Analysis Reporting System (FARS), maintained by the National Highway Traffic Safety Administration (NHTSA). Smart Growth America uses these data, along with population data from the US Census Bureau's American Community Survey (ACS), to determine pedestrian death counts and rates by state and metro area for the report's rankings.
+[Dangerous by Design](https://www.smartgrowthamerica.org/signature-reports/dangerous-by-design/) [@sga_dangerousbydesign] (Smart Growth America), produced with the National Complete Streets Coalition (a program of Smart Growth America) and with data analysis support from the State Smart Transportation Initiative, ranks all 50 states and the 101 largest U.S. metro areas by pedestrian fatality rate. The report's principal data source is the Fatality Analysis Reporting System (FARS), maintained by the National Highway Traffic Safety Administration (NHTSA). Smart Growth America uses these data, along with population data from the US Census Bureau's American Community Survey (ACS), to determine pedestrian death counts and rates by state and metro area for the report's rankings.
 :::
 
 # Step 1. Open Exercise #1 in Posit Cloud course workspace
@@ -122,7 +122,7 @@ counties_bins <- c(0, 25000, 100000, 500000, 999999, Inf)
 # create palette using colorblind/accessible colors
 counties_pal <- colorBin(
   palette="viridis",
-  domain=us_counties_population_geo$total_population,
+  domain=modeshare_county_latest_geom$total_population,
   na.color="transparent",
   bins = counties_bins,
   reverse = TRUE
@@ -133,10 +133,10 @@ labels = sprintf(
   "<strong>%s County, %s</strong><br/>
   Population (2024): %s<br/>
   GEOID: %s",
-  us_counties_population_geo$NAME,
-  us_counties_population_geo$STATE_NAME,
-  format(us_counties_population_geo$total_population, big.mark = ","),
-  us_counties_population_geo$GEOID) %>%
+  modeshare_county_latest_geom$NAME,
+  modeshare_county_latest_geom$STATE_NAME,
+  format(modeshare_county_latest_geom$total_population, big.mark = ","),
+  modeshare_county_latest_geom$GEOID) %>%
   lapply(htmltools::HTML)
 
 # create thematic map using leaflet
@@ -148,7 +148,7 @@ leaflet() %>%
     )) %>%
     addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery (satellite)") %>%
   addPolygons(group = "Counties",
-              data=us_counties_population_geo %>% st_transform(crs=4326),
+              data=modeshare_county_latest_geom %>% st_transform(crs=4326),
               # fillColor = "orange",
               fillColor = ~counties_pal(total_population),
               weight = 0.5,
@@ -185,7 +185,7 @@ leaflet() %>%
       color = "black",
       group = "Divisions"
     ) %>%
-  addLegend("bottomleft", pal = counties_pal, values = us_counties_population_geo$total_pop,
+  addLegend("bottomleft", pal = counties_pal, values = us_counties_population_geo$total_population,
             title = paste0("Population (2024)"),
             opacity = 1) %>%
   addScaleBar(position = "bottomright") %>%
@@ -526,8 +526,20 @@ plot_ly(
   fillcolor = colors[["Motor Vehicle"]],
   name = "Motor Vehicle",
   customdata = ~pct,
-  hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+  hovertemplate = "%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
 ) %>%
+  add_trace(
+    data = filter(all_fatalities, collision_type == "Pedalcyclist"),
+    x = ~year,
+    y = ~n,
+    type = "scatter",
+    mode = "none",
+    stackgroup = "one",
+    fillcolor = colors[["Pedalcyclist"]],
+    name = "Bicyclist",
+    customdata = ~pct,
+    hovertemplate = "%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+  ) %>%
   add_trace(
     data = filter(all_fatalities, collision_type == "Pedestrian"),
     x = ~year,
@@ -538,19 +550,8 @@ plot_ly(
     fillcolor = colors[["Pedestrian"]],
     name = "Pedestrian",
     customdata = ~pct,
-    hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
-  ) %>%
-  add_trace(
-    data = filter(all_fatalities, collision_type == "Pedalcyclist"),
-    x = ~year,
-    y = ~n,
-    type = "scatter",
-    mode = "none",
-    stackgroup = "one",
-    fillcolor = colors[["Pedalcyclist"]],
-    name = "Pedalcyclist",
-    customdata = ~pct,
-    hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+    # hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+    hovertemplate = "%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
   ) %>%
   add_trace(
     data = filter(all_fatalities, collision_type == "Other"),
@@ -573,7 +574,6 @@ plot_ly(
   ) %>%
   config(displaylogo = FALSE,
          modeBarButtons = list(modeBarButtonsList))
-
 
 # second plot
 plot_ly(
@@ -780,8 +780,9 @@ Use the satellite view on you hot spot map and/or Google Street View to examine 
 
 ::: {.callout-note collapse="false"}
 ## Urban Street Design Resources
-- [The Urban Street Design Guide](https://nacto.org/publication/urban-street-design-guide/) [@nacto_urbanstreetdesignguide], published by NACTO (National Association of City Transportation Officials), is a practitioner-focused resource that outlines design principles and tactics cities use to make streets safer, more livable, and more economically vibrant. To identify safety interventions, users can match their specific context—such as a street type (e.g., Neighborhood Street, Downtown Thoroughfare) or intersection type—to the corresponding guide section, then review targeted design elements like curb extensions, vertical speed control (speed humps/tables), crosswalk treatments, corner radii, and signal timing that address common safety issues like speeding, poor sightlines, or pedestrian conflicts. It also provides guidance on design controls (design speed, design vehicle) to calibrate interventions to context, and offers lower-cost interim strategies (temporary closures, pilot-to-permanent conversions) for testing treatments before full capital investment. Overall, the guide functions as a diagnostic-to-solution reference, letting users move from identifying a street safety problem to selecting a specific, field-tested design countermeasure.
-- [The Pedestrian Program](https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/pedestrian-program.html) [@cdot_pedestrianprogram] is published by the Chicago Department of Transportation (CDOT) as part of its Complete Streets Chicago initiative, aiming to build a safer, more walkable, and accessible city by prioritizing the most vulnerable street users. To identify appropriate safety interventions, users can review CDOT's data-driven approach, which targets roughly 400 intersections annually by identifying crash hot spots and developing new treatments for the most serious issues, with resources concentrated around schools, parks, and other high-traffic destinations. The page also points to supporting documents—like the Vision Zero Chicago Action Plan, the Chicago Pedestrian Plan, and a Left Turn Traffic Calming flier—that offer more specific guidance on tools, policies, and infrastructure treatments (e.g., school zone crossing improvements, traffic signal upgrades) tied to particular safety problems. Overall, the resource functions less as a technical design manual and more as a program overview, directing practitioners toward CDOT's priority areas, funding mechanisms (Capital Plan, Aldermanic menu funds), and linked plans where specific interventions and their rationale are detailed further.
+[The Urban Street Design Guide](https://nacto.org/publication/urban-street-design-guide/) [@nacto_urbanstreetdesignguide], published by NACTO (National Association of City Transportation Officials), is a practitioner-focused resource that outlines design principles and tactics cities use to make streets safer, more livable, and more economically vibrant. To identify safety interventions, users can match their specific context—such as a street type (e.g., Neighborhood Street, Downtown Thoroughfare) or intersection type—to the corresponding guide section, then review targeted design elements like curb extensions, vertical speed control (speed humps/tables), crosswalk treatments, corner radii, and signal timing that address common safety issues like speeding, poor sightlines, or pedestrian conflicts. It also provides guidance on design controls (design speed, design vehicle) to calibrate interventions to context, and offers lower-cost interim strategies (temporary closures, pilot-to-permanent conversions) for testing treatments before full capital investment. Overall, the guide functions as a diagnostic-to-solution reference, letting users move from identifying a street safety problem to selecting a specific, field-tested design countermeasure.
+
+[The Pedestrian Program](https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/pedestrian-program.html) [@cdot_pedestrianprogram] is published by the Chicago Department of Transportation (CDOT) as part of its Complete Streets Chicago initiative, aiming to build a safer, more walkable, and accessible city by prioritizing the most vulnerable street users. To identify appropriate safety interventions, users can review CDOT's data-driven approach, which targets roughly 400 intersections annually by identifying crash hot spots and developing new treatments for the most serious issues, with resources concentrated around schools, parks, and other high-traffic destinations. The page also points to supporting documents—like the Vision Zero Chicago Action Plan, the Chicago Pedestrian Plan, and a Left Turn Traffic Calming flier—that offer more specific guidance on tools, policies, and infrastructure treatments (e.g., school zone crossing improvements, traffic signal upgrades) tied to particular safety problems. Overall, the resource functions less as a technical design manual and more as a program overview, directing practitioners toward CDOT's priority areas, funding mechanisms (Capital Plan, Aldermanic menu funds), and linked plans where specific interventions and their rationale are detailed further.
 :::
 
 <!-- ::: {.callout-tip collapse="true"} -->
