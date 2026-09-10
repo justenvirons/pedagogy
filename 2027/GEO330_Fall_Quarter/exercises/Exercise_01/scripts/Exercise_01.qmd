@@ -185,7 +185,7 @@ leaflet() %>%
       color = "black",
       group = "Divisions"
     ) %>%
-  addLegend("bottomleft", pal = counties_pal, values = us_counties_population_geo$total_population,
+  addLegend("bottomleft", pal = counties_pal, values = modeshare_county_latest_geom$total_population,
             title = paste0("Population (2024)"),
             opacity = 1) %>%
   addScaleBar(position = "bottomright") %>%
