@@ -513,18 +513,57 @@ all_fatalities <- all_fatalities %>%
 
 modeBarButtonsList <- list("toImage")
 
+# Build the stack one trace per mode, with an explicit fillcolor, rather than
+# relying on plot_ly's automatic color/colors domain mapping -- that mapping
+# was not reliably honoring the requested hex values above.
 plot_ly(
-  data = all_fatalities,
+  data = filter(all_fatalities, collision_type == "Motor Vehicle"),
   x = ~year,
   y = ~n,
-  color = ~collision_type,
-  colors = unname(colors[category_order]), # ordered to match factor levels, not by name, so the requested hex values are always used
-  customdata = ~pct,
   type = "scatter",
   mode = "none",
   stackgroup = "one",
+  fillcolor = colors[["Motor Vehicle"]],
+  name = "Motor Vehicle",
+  customdata = ~pct,
   hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
 ) %>%
+  add_trace(
+    data = filter(all_fatalities, collision_type == "Pedestrian"),
+    x = ~year,
+    y = ~n,
+    type = "scatter",
+    mode = "none",
+    stackgroup = "one",
+    fillcolor = colors[["Pedestrian"]],
+    name = "Pedestrian",
+    customdata = ~pct,
+    hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+  ) %>%
+  add_trace(
+    data = filter(all_fatalities, collision_type == "Pedalcyclist"),
+    x = ~year,
+    y = ~n,
+    type = "scatter",
+    mode = "none",
+    stackgroup = "one",
+    fillcolor = colors[["Pedalcyclist"]],
+    name = "Pedalcyclist",
+    customdata = ~pct,
+    hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+  ) %>%
+  add_trace(
+    data = filter(all_fatalities, collision_type == "Other"),
+    x = ~year,
+    y = ~n,
+    type = "scatter",
+    mode = "none",
+    stackgroup = "one",
+    fillcolor = colors[["Other"]],
+    name = "Other",
+    customdata = ~pct,
+    hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
+  ) %>%
   layout(
     title = "Fatalities by Mode and Year, 2010 to 2024",
     xaxis = list(title = "Year", dtick = 1),
