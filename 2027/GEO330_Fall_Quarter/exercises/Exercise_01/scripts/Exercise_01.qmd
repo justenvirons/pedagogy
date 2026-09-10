@@ -516,16 +516,25 @@ colors <- c(
 category_order <- c("Motor Vehicle", "Pedestrian", "Pedalcyclist", "Other")
 all_fatalities$collision_type <- factor(all_fatalities$collision_type, levels = category_order)
 
+# Share of fatalities each mode represents within a given year, for hover text
+all_fatalities <- all_fatalities %>%
+  group_by(year) %>%
+  mutate(pct = if_else(sum(n) > 0, n / sum(n) * 100, 0)) %>%
+  ungroup()
+
+modeBarButtonsList <- list("toImage")
+
 plot_ly(
   data = all_fatalities,
   x = ~year,
   y = ~n,
   color = ~collision_type,
-  colors = colors,
+  colors = unname(colors[category_order]), # ordered to match factor levels, not by name, so the requested hex values are always used
+  customdata = ~pct,
   type = "scatter",
   mode = "none",
   stackgroup = "one",
-  hovertemplate = "%{x}<br>%{fullData.name}: %{y}<extra></extra>"
+  hovertemplate = "%{x}<br>%{fullData.name}: %{y} (%{customdata:.1f}% of total)<extra></extra>"
 ) %>%
   layout(
     title = "Fatalities by Mode and Year, 2010 to 2024",
@@ -533,12 +542,12 @@ plot_ly(
     yaxis = list(title = "Number of Fatalities"),
     legend = list(title = list(text = "Collision Type")),
     hovermode = "x unified"
-  )
+  ) %>%
+  config(displaylogo = FALSE,
+         modeBarButtons = list(modeBarButtonsList))
 
 
 # second plot
-modeBarButtonsList <- list("toImage")
-
 plot_ly(
   pedestrian_fatalities,
   x = ~year,
