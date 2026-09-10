@@ -467,6 +467,9 @@ pedestrian_fatalities <- crashes_fars %>%
   arrange(year)
 
 # Plot with plotly
+
+modeBarButtonsList <- list("toImage")
+
 plot_ly(
   pedestrian_fatalities,
   x = ~year,
@@ -481,7 +484,9 @@ plot_ly(
     xaxis = list(title = "Year", dtick = 1),
     yaxis = list(title = "Number of Pedestrian Fatalities"),
     hovermode = "x unified"
-  )
+  ) %>% 
+  config(displaylogo = FALSE,
+         modeBarButtons = list(modeBarButtonsList))
 ```
 
 ## Maps of pedestrian fatalities over time
