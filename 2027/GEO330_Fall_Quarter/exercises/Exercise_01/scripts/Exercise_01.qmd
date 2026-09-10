@@ -1,6 +1,6 @@
 ---
-title: "GEO/SUD 3/430 Exercise #1"
-subtitle: "Mode Share, Pedestrian Fatalities and Urban Street Design"
+title: "Sustainable Urban Transportation (GEO 3/430) Exercise #1"
+subtitle: "Transportation Mode Share, Pedestrian Fatalities and Urban Street Design"
 author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
 format:
@@ -26,7 +26,7 @@ editor_options:
 ---
 
 ```{r}
-#| label: set up environment, api keys, and mode share plotting function
+#| label: set up environment
 #| eval: true
 #| echo: false
 
@@ -37,87 +37,26 @@ editor_options:
 # regardless of what folder the render was started from. Students do not
 # need this in their own Exercise_01.R script: in the Posit Cloud
 # project, the working directory is already the exercise folder.
+
 knitr::opts_knit$set(root.dir = dirname(dirname(knitr::current_input(dir = TRUE))))
-
-# API Keys
-CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
-CENSUS_API_KEY <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
-
-# option set
-modeBarButtonsList <- list("toImage")
-
-# function for creating modeshare plot
-fx_plot_modeshare <- function(geoid = "all") {
-
-  plot_data <- modeshare_county_latest_formatted %>%
-    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
-    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
-    drop_na() %>%
-    group_by(year) %>%
-    summarise(`from home` = mean(pct_fromhome),
-              `bicycle`   = mean(pct_bicycle),
-              `walk`      = mean(pct_walk),
-              `transit`   = mean(pct_transit))
-
-  plot_ly(data = plot_data,
-          x = ~year,
-          y = ~`from home`,
-          type = 'scatter',
-          mode = 'lines+markers',
-          marker = list(color = "#E0A100"),
-          line = list(color = "#E0A100"),
-          name = 'from home',
-          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`walk`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#9F1928"),
-              line = list(color = "#9F1928"),
-              name = 'walk',
-              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`transit`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#009BA6"),
-              line = list(color = "#009BA6"),
-              name = 'transit',
-              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`bicycle`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#080967"),
-              line = list(color = "#080967"),
-              name = 'bicycle',
-              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
-    layout(
-      xaxis = list(title = ""),
-      yaxis = list(title = "Commute Mode Share (%)"),
-      legend = list(
-        font = list(size = 10),
-        orientation = "h",
-        xanchor = "center",
-        x = 0.5, y = -0.1),
-      hovermode = "x unified")
-}
 ```
 
 # Purpose
-This exercise uses two nationwide datasets, commuting (or "journey to work") mode share and pedestrian fatality records, to explore transportation trends and safety patterns within a US county that you select. Working between 2010 and 2024, you will build maps, tables and figures that describe how people get to work, where pedestrian fatalities occur, and how these patterns have changed over time. You will then propose practical ideas for improving active transportation (walking, bicycling and transit) and reducing pedestrian injury in your chosen county.
+This exercise uses two nationwide datasets, commuting (or "journey to work") mode share and pedestrian fatality records, to explore transportation mode share trends and safety patterns within a US county that you select. Working between 2010 and 2024, you will build maps, tables and figures that describe how people get to work, where pedestrian fatalities occur, and how these patterns have changed over time. You will then propose practical ideas for improving active transportation (walking, bicycling and transit) and reducing pedestrian injury in your chosen county.
 
 Understanding who walks, bikes and takes transit, and where people face the greatest safety risk while doing so, sits at the center of sustainable urban transportation planning. The figures and maps you create in this exercise are the same types of evidence that planners, engineers and advocates use to justify investments in safer streets, better transit service and more walkable, bikeable neighborhoods.
+
+::: {.callout-note collapse="false"}
+## Optional Reading
+- [Dangerous by Design](https://www.smartgrowthamerica.org/signature-reports/dangerous-by-design/) (Smart Growth America), produced with the National Complete Streets Coalition (a program of Smart Growth America) and with data analysis support from the State Smart Transportation Initiative, ranks all 50 states and the 101 largest U.S. metro areas by pedestrian fatality rate. The report's principal data source is the Fatality Analysis Reporting System (FARS), maintained by the National Highway Traffic Safety Administration (NHTSA). Smart Growth America uses these data, along with population data from the US Census Bureau's American Community Survey (ACS), to determine pedestrian death counts and rates by state and metro area for the report's rankings.
+:::
 
 # Step 1. Open Exercise #1 in Posit Cloud course workspace
 Log into the course Posit Cloud "Sustainable Urban Transportation" workspace using the invitation link on the week #1 announcement. Open the Exercise #1 workspace by clicking the corresponding link. A cloud R session will launch in your web browser.
 
 ::: {.callout-note collapse="false"}
-## Note concerning coding
+## Concerning coding
 This class does not have a coding prerequisite, and no prior programming experience is required. Students will not be asked to write or prepare code from scratch at any point in the course. Instead, coding tools are used simply as a means to create flexible, interactive, and customizable learning activities. This approach allows students to explore different topics and areas of interest, and to integrate and work with a wide variety of datasets in ways that would otherwise be difficult to achieve. The goal is to enhance the learning experience, not to teach programming itself.
-
-## What is R?
-R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS, and is also available through a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It provides a set of tools built to help R users be more productive with R (and other languages, including Python). It includes a console and a syntax highlighting editor that supports direct code execution, along with tools for plotting, viewing history, debugging and managing your workspace.
 :::
 
 ## Open R script, activate R packages and load project data
@@ -152,17 +91,20 @@ load("data/Exercise_01.RData")
 
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #1
-{{< video videos/exercise_01_01.mp4 >}}
+::: {.callout-note collapse="false"}
+## What is R?
+R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS, and is also available through a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It provides a set of tools built to help R users be more productive with R (and other languages, including Python). It includes a console and a syntax highlighting editor that supports direct code execution, along with tools for plotting, viewing history, debugging and managing your workspace.
 :::
 
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #1 -->
+<!-- {{< video videos/exercise_01_01.mp4 >}} -->
+<!-- ::: -->
+
 # Step 2. Download exercise template and select US county
-Download the [exercise PowerPoint template](https://justenvirons.org/pedagogy/GEO330/Exercise_01/slides/Exercise01_Template.pptx) and the [journey to work data](https://justenvirons.org/pedagogy/GEO330/Exercise_01/data/Exercise_01.xlsx) (as an Excel spreadsheet) using the links provided. You will use the Excel table to explore the data and build the tables and figures that you will summarize in your PowerPoint presentation. You will also draw on resources from this page, such as the maps below, to complete your presentation. For now, just download the template and the spreadsheet.
+Download the [exercise PowerPoint template](https://justenvirons.org/pedagogy/GEO330/Exercise_01/slides/Exercise01_Template.pptx) using the link provided. You will draw on resources from this page, such as the maps and plots below, to complete your presentation. For now, just download the template and store locally on your machine for editing.
 
-For this exercise, choose a large (population over 500,000), urban county located in the contiguous United States as your study area. Browse the interactive map of US counties below (@fig-popbycountymap) to identify a study area that interests you. Note the county's name and its unique "GEOID". The GEOID combines a two digit state code with a three digit county code. For example, 17031 is the GEOID for Cook County, Illinois.
-
-Selecting a county with a large population gives you enough commuters and enough recorded crashes to see meaningful patterns rather than noise from a small sample, which matters whenever you are trying to draw conclusions that could inform real transportation policy.
+For this exercise, choose a large (population over 500,000), urban county located in the contiguous United States as your study area. Browse the interactive map of US counties below (@fig-popbycountymap) to identify a study area that interests you. Note the county's name and its unique "GEOID". The GEOID combines a two digit state code with a three digit county code. For example, 17031 is the GEOID for Cook County, Illinois. Selecting a county with a large population gives you enough commuters and enough recorded crashes to see meaningful patterns rather than noise from a small sample, which matters whenever you are trying to draw conclusions that could inform real transportation policy.
 
 Population counts shown on the map come from the American Community Survey (ACS) 5 year estimates [@census_acs], the same nationwide survey described in more detail in Step 3.
 
@@ -237,25 +179,23 @@ leaflet() %>%
 
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #2
-{{< video videos/exercise_01_02.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #2 -->
+<!-- {{< video videos/exercise_01_02.mp4 >}} -->
+<!-- ::: -->
 
 # Step 3. Transportation mode share analysis
-In this step, you will examine trends in commute mode share across US divisions, states and counties over the past fifteen years using a curated dataset. The data were downloaded using the [Census application programming interface (API)](https://www.census.gov/data/developers/data-sets.html) in RStudio. The Census API supports custom queries and downloads of American Community Survey (ACS) and other Census Bureau data.
+In this step, you will examine trends in commute mode share across US counties over the past fifteen years using a curated dataset. The data were downloaded using the [Census application programming interface (API)](https://www.census.gov/data/developers/data-sets.html) in RStudio (code available upon request). The Census API supports custom queries and downloads of American Community Survey (ACS) and other Census Bureau data.
 
-The commute mode share data for US counties come from table [B08301](https://censusreporter.org/tables/B08301/) [@census_b08301] of the American Community Survey (ACS) 5 year estimates [@census_acs]. These estimates represent data collected over a rolling five year period, which increases the statistical reliability of the data for smaller geographies such as counties.
+The commute mode share data for US counties come from table [B08301](https://censusreporter.org/tables/B08301/) [@census_b08301] of the American Community Survey (ACS) 5 year estimates [@census_acs]. Because the ACS is collected continuously, using the same questions and methods nationwide, it is one of the primary sources transportation planners, engineers and researchers use to track commuting behavior, evaluate demand for walking, bicycling and transit investment, and monitor progress toward sustainable transportation goals over time.
 
-The ACS is an ongoing nationwide survey administered by the US Census Bureau that covers a broad range of topics, including the social, economic, demographic and housing characteristics of the US population. It began full implementation in 2005, replacing the long form questionnaire that had previously been sent to a sample of households once every ten years as part of the decennial census. Today the Census Bureau surveys roughly three and a half million addresses every year and pools five years of responses to produce reliable estimates down to the county and census tract level. Because the ACS is collected continuously, using the same questions and methods nationwide, it is one of the primary sources transportation planners, engineers and researchers use to track commuting behavior, evaluate demand for walking, bicycling and transit investment, and monitor progress toward sustainable transportation goals over time.
+The Census Bureau asks a "journey to work" question that supports a variety of planning and policy purposes, including those related to sustainable transportation. The exact wording of the question is "How did this person usually get to work last week?" A respondent who used more than one mode of transportation was [asked to select the mode](https://www2.census.gov/programs-surveys/acs/about/qbyqfact/2016/JourneytoWork.pdf) [@census_journeytowork] used for *most* of the distance traveled. For example, a respondent would select "bicycle" or "walk" only if that mode covered most of the commute distance. Because of this, the ACS captures only each person's primary commuting mode during the single week before the survey, which may not fully represent their travel behavior across the year. Even with this limitation, the ACS remains the most reliable nationwide source for tracking change over time in commute mode share.
 
-Among the many topics it covers, the Census Bureau also asks a "journey to work" question that supports a variety of planning and policy purposes, including those related to sustainable transportation. The exact wording of the question is "How did this person usually get to work last week?" A respondent who used more than one mode of transportation was [asked to select the mode](https://www2.census.gov/programs-surveys/acs/about/qbyqfact/2016/JourneytoWork.pdf) [@census_journeytowork] used for *most* of the distance traveled. For example, a respondent would select "bicycle" or "walk" only if that mode covered most of the commute distance. Because of this, the ACS captures only each person's primary commuting mode during the single week before the survey, which may not fully represent their travel behavior across the year. Even with this limitation, the ACS remains the most reliable nationwide source for tracking change over time in commute mode share.
-
-Relevance to sustainable urban transportation: commute mode share is one of the clearest signals of how sustainable a region's transportation system is. A county where walking, bicycling and transit make up a growing share of commutes is generally reducing its per capita vehicle emissions, traffic congestion and demand for parking, all central goals of sustainable urban transportation planning.
+Commute mode share is one of the clearest signals of how sustainable a region's transportation system is. A county where walking, bicycling and transit make up a growing share of commutes, for example, is generally reducing its per capita vehicle emissions, traffic congestion and demand for parking.
 
 ## Trends in mode share
 
-Examine @fig-modesharetrends below, which shows trends for selected commute modes across the United States between 2010 and 2024. Copy and paste the figure into slide #1 of your presentation and summarize the trends you observe.
+Examine @fig-modesharetrends below, which shows trends for selected commute modes across the United States between 2010 and 2024. Copy and paste this figure and @fig-modeshareboxplot into slide #1 of your presentation and summarize the trends you observe.
 
 ```{r}
 #| label: fig-modesharetrends
@@ -267,22 +207,23 @@ fx_plot_modeshare("all")     # all counties combined
 
 ```
 
-Now build the same kind of plot for your own county. @fig-modesharetrendscook shows this plot for Cook County, Illinois, as a worked example.
+Now copy, paste and edit the following code *at the end* of your own Exercise_01.R script to build the same kind of plot for your own county. @fig-modesharetrendscook shows such a plot for Cook County, Illinois, as a worked example. Essentially replace the GEOID value with the code for your selected county to generate your own version of the figure. Copy and paste your county's version of the figure into slide #2 of your presentation, summarize the trends you see, and compare them with the nationwide pattern shown in @fig-modesharetrends and the other figures below.
 
-*Purpose of the code below: reproduce the mode share trend plot above for a single county. Replace the GEOID value with the code for your selected county to generate your own version of the figure.*
+::: {.callout-note collapse="false"}
+## Copying and pasting code
+Each time you work through your script, be sure to copy and paste new code at the end of the file. This step is important for ensuring your progress is saved and executed correctly. Even though you are not writing code from scratch, copying and pasting each successive code chunk at the end of your Exercise #1 script is important as skipping this step may result in errors, incomplete or missing work.
+:::
 
 ```{r}
 #| label: fig-modesharetrendscook
 #| fig-cap: Average Commute Mode Share for Cook County, Illinois, 2010 to 2024
 #| echo: true
 
-custom_geoid <- "17031" # replace with your county GEOID
+custom_geoid <- "17031" # EDIT HERE! Replace with your county GEOID
 
 # run the following function to create a custom transportation mode share plot
 fx_plot_modeshare(custom_geoid)
 ```
-
-Copy and paste your county's version of the figure into slide #2 of your presentation, summarize the trends you see, and compare them with the nationwide pattern shown in @fig-modesharetrends.
 
 ## Mode share by county
 
@@ -458,27 +399,22 @@ drove_map
 
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #3
-{{< video videos/exercise_01_03.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #3 -->
+<!-- {{< video videos/exercise_01_03.mp4 >}} -->
+<!-- ::: -->
 
 # Step 4. Pedestrian fatalities
 
 ## Download pedestrian fatalities and examine table
 Next, you will download pedestrian fatality records for your county from the Fatality Analysis Reporting System (FARS) [@nhtsa_fars], using the NHTSA CrashViewer API [@nhtsa_crashviewer]. FARS is a nationwide census, not a sample, of every crash on a US public road that results in a death within 30 days of the crash. It has been maintained by the National Highway Traffic Safety Administration (NHTSA) since 1975 and records detailed information about each crash, the vehicles involved, and the people involved, including whether a pedestrian or bicyclist was struck. Because FARS is a complete accounting of fatal crashes rather than a sample survey like the ACS, transportation planners, safety engineers and researchers rely on it to identify high injury streets and intersections, evaluate how street design relates to safety outcomes, and prioritize projects intended to reduce traffic deaths under Vision Zero and Safe System initiatives.
 
-Relevance to sustainable urban transportation: a transportation system cannot be considered sustainable if it is unsafe for people walking and bicycling. Pedestrian fatality data let planners target the specific corridors and intersections where investment in safer street design will save the most lives.
-
-Copy, paste and revise the code below to download pedestrian fatality data for your county using the FARS API.
-
-*Purpose of the code below: connect to the NHTSA FARS API, download all fatal crash records for your selected county between 2010 and 2024, and filter those records to the crashes that involved a pedestrian.*
+Copy, paste and revise the code below in your Exercise_01.R script to download pedestrian fatality data for your county using the FARS API. The code will download all fatal crash records for your selected county between 2010 and 2024, and filter those records to the crashes that involved a pedestrian.
 
 ```{r}
 #| label: download and filter FARS pedestrian fatality records
 #| echo: true
 
-custom_geoid <- "17031" # replace with your county GEOID
 state_fips   <- as.integer(substr(custom_geoid, 1, 2))
 county_fips  <- as.integer(substr(custom_geoid, 3, 5))
 
@@ -502,9 +438,7 @@ ped_fatalities <- crashes_fars %>%
 ```
 
 ## Plot of pedestrian fatalities trend
-@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in your county for each year between 2010 and 2024. Copy and paste this figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.
-
-*Purpose of the code below: count pedestrian fatalities and pedestrian involved fatal crashes recorded in your county for each year, then plot the yearly totals as a trend line.*
+@fig-pedfatalitytrend below shows the number of pedestrian fatalities recorded in Cook County for each year between 2010 and 2024. Copy, paste and run the code below in your Exercise_01.R to create a similar figure for your selected county. When finished, copy and paste the custom figure into slide #3 of your presentation and summarize the trend, noting any years with notable increases or decreases.
 
 ```{r}
 #| label: fig-pedfatalitytrend
@@ -541,15 +475,12 @@ plot_ly(
 ```
 
 ## Maps of pedestrian fatalities over time
-Before running a formal hotspot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. @fig-pedfatalityperiods below places pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels. Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hotspot analysis that follows.
-
-*Purpose of the code below: split pedestrian fatalities into four multi-year periods and map their locations side by side so you can visually compare how the pattern has shifted over time.*
+Before running a formal hotspot analysis, it helps to simply look at where pedestrian fatalities have occurred over time. @fig-pedfatalityperiods below locates pedestrian fatalities from your county into four multi-year periods (2010 to 2013, 2014 to 2017, 2018 to 2021 and 2022 to 2024) and maps each period side by side, with panning and zooming synced across all four panels. Copy, paste and run the following code in your custom R script. As you compare the four panels, look for areas where fatalities appear repeatedly across periods. These recurring locations are good candidates to examine further in the formal hotspot analysis that follows.
 
 ```{r}
 #| label: fig-pedfatalityperiods
 #| fig-cap: Pedestrian Fatalities by Four Year Period, 2010 to 2024
 #| echo: true
-
 
 us_county_boundary <- us_counties_population_geo %>% 
   select(NAME,
@@ -562,8 +493,6 @@ period_labels <- c("2010 to 2013", "2014 to 2017", "2018 to 2021", "2022 to 2024
 
 ped_fatalities <- ped_fatalities %>%
   mutate(period = cut(year, breaks = period_breaks, right = FALSE, labels = period_labels))
-
-print(table(ped_fatalities$period))  # confirm every period actually has rows
 
 ## Step B: common map extent (unname to avoid named vector JSON warnings)
 county_bbox <- st_bbox(us_county_boundary)
@@ -684,32 +613,6 @@ dens_pal <- colorBin(
   na.color = "transparent"
 )
 
-## Map with toggleable layers
-leaflet() %>%
-  addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      CARTO_API_KEY
-    )) %>%
-  addRasterImage(
-    dens_r_ll, colors = dens_pal, opacity = 0.65,
-    group = "Density Surface"
-  ) %>%
-  addCircleMarkers(
-    data = ped_fatalities, radius = 3, color = "black", weight = 1,
-    fillOpacity = 0, stroke = TRUE,
-    group = "Pedestrian Fatalities"
-  ) %>%
-  addLegend(
-    pal = dens_pal, values = dens_vals,
-    title = "Pedestrian fatality<br>density (per km²)",
-    position = "bottomright",
-    labFormat = labelFormat(digits = 1)
-  ) %>%
-  addLayersControl(
-    overlayGroups = c("Density Surface", "Pedestrian Fatalities"),
-    options = layersControlOptions(collapsed = FALSE)
-  )
-
 leaflet() %>%
   addTiles(urlTemplate = paste0(
       "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
@@ -743,30 +646,21 @@ leaflet() %>%
   )
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #4
-{{< video videos/exercise_01_04.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #4 -->
+<!-- {{< video videos/exercise_01_04.mp4 >}} -->
+<!-- ::: -->
 
 # Step 5. Urban street redesign recommendations
 Use Google Street View to examine one of the hotspot corridors or intersections identified in @fig-pedfatalityhotspot. What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.
 
-Relevance to sustainable urban transportation: redesigning even a small number of high risk streets can meaningfully improve safety, encourage more walking and bicycling, and support the broader shift toward sustainable, human scaled urban transportation systems.
-
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #5
-{{< video videos/exercise_01_05.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #5 -->
+<!-- {{< video videos/exercise_01_05.mp4 >}} -->
+<!-- ::: -->
 
 # Step 6. Submit your completed presentation
-Navigate to the course D2L page and submit your exercise presentation to the appropriate submission folder.
-
-Relevance to sustainable urban transportation: sharing your findings, whether with classmates, instructors or (eventually) the public and decision makers, is what turns transportation data analysis into action. Clear communication is as much a part of sustainable transportation planning as the underlying data.
-
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #6
-{{< video videos/exercise_01_06.mp4 >}}
-:::
+The final step is to navigate to the course D2L page and submit your exercise presentation to the appropriate submission folder.
 
 # References
 

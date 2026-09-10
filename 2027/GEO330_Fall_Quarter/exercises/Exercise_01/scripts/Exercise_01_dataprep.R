@@ -170,12 +170,79 @@ us_counties_population_geo <- us_counties_geom %>%
          STATE_NAME,
          GEOID) %>%
   left_join(modeshare_county_latest_formatted %>%
-              filter(yea)
+              filter(year) %>%  
               select("GEOID",
                      total_population = B01001_001E),
             by="GEOID")  %>%
   mutate(total_pop_q = ntile(total_pop, 5)) %>%
   st_as_sf()
+
+
+# API Keys
+CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
+CENSUS_API_KEY <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
+
+# Create plot function
+# option set
+modeBarButtonsList <- list("toImage")
+
+# function for creating modeshare plot
+fx_plot_modeshare <- function(geoid = "all") {
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`from home` = mean(pct_fromhome),
+              `bicycle`   = mean(pct_bicycle),
+              `walk`      = mean(pct_walk),
+              `transit`   = mean(pct_transit))
+  
+  plot_ly(data = plot_data,
+          x = ~year,
+          y = ~`from home`,
+          type = 'scatter',
+          mode = 'lines+markers',
+          marker = list(color = "#E0A100"),
+          line = list(color = "#E0A100"),
+          name = 'from home',
+          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`walk`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#9F1928"),
+              line = list(color = "#9F1928"),
+              name = 'walk',
+              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`transit`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#009BA6"),
+              line = list(color = "#009BA6"),
+              name = 'transit',
+              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`bicycle`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#080967"),
+              line = list(color = "#080967"),
+              name = 'bicycle',
+              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Commute Mode Share (%)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
 # Save in RData file format -----------------------------------------------
 
 save(modeshare_county_latest_formatted,
@@ -184,5 +251,7 @@ save(modeshare_county_latest_formatted,
      us_states_geom,
      us_divisions_geom,
      utm_zones,
+     CARTO_API_KEY,
+     fx_plot_modeshare,
      file = paste0(getwd(),"/data/Exercise_01.RData"))
 
