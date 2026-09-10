@@ -506,8 +506,10 @@ all_fatalities$collision_type <- factor(all_fatalities$collision_type, levels = 
 # Share of fatalities each mode represents within a given year, for hover text
 all_fatalities <- all_fatalities %>%
   group_by(year) %>%
-  mutate(pct = if_else(sum(n) > 0, n / sum(n) * 100, 0)) %>%
-  ungroup()
+  mutate(total = sum(n),
+         pct = if_else(total > 0, n / total * 100, 0)) %>%
+  ungroup() %>%
+  select(-total)
 
 modeBarButtonsList <- list("toImage")
 
