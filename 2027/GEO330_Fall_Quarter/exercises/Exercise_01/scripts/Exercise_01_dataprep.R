@@ -37,7 +37,7 @@ for (agroup in grouplist) {
     acs_group <- getCensus(name = "acs/acs5",
                            vintage = ayear,
                            vars = c("NAME", "B01001_001E",agroupname),
-                           region = "county:*", # tracts
+                           region = "county:*",
                            # regionin="*", # places, counties, not msas
                            key=CENSUS_API_KEY)
     attach(acs_group)
@@ -65,11 +65,30 @@ us_states_geom <- states(class="sf")
 us_counties_geom <- counties(class="sf", cb=TRUE, resolution = "20m")
 us_divisions_geom <- divisions(class="sf")
 
-us_counties_geom <- st_read(county_filename_shp) %>%
-  mutate(STATEFP_NO = as.numeric(STATEFP)) %>%
-  filter(STATEFP_NO <= 56, STATEFP_NO != 15, STATEFP_NO != 2)
+# Create custom geographies for mapping
+modeshare_county_latest <- modeshare_county_latest_formatted %>%
+  filter(year==2024,
+         state_name != "Alaska",
+         state_name != "Hawaii")
 
+modeshare_county_latest_geom <- us_counties_geom %>%
+  mutate(sqmi = ALAND / 2589988.11) %>% 
+  select(GEOID_county = GEOID,
+         sqmi) %>%
+  left_join(modeshare_county_latest,
+            by="GEOID_county") %>%
+  mutate(pop_density = total_population/sqmi) %>% 
+  st_as_sf() %>%
+  st_transform(4326) %>%
+  drop_na()
 
+us_states_sub_geom <- modeshare_county_latest_geom %>%
+  group_by(state_name) %>%
+  summarize(geometry = st_union(geometry))
+
+us_divisions_sub_geom <- modeshare_county_latest_geom %>%
+  group_by(division_name) %>%
+  summarize(geometry = st_union(geometry))
 
 # Download UTM zones
 utm_zones <- st_read("data/utm_zones.geojson") %>%
@@ -170,19 +189,137 @@ us_counties_population_geo <- us_counties_geom %>%
          STATE_NAME,
          GEOID) %>%
   left_join(modeshare_county_latest_formatted %>%
-              filter(yea)
+              filter(year) %>%  
               select("GEOID",
                      total_population = B01001_001E),
             by="GEOID")  %>%
   mutate(total_pop_q = ntile(total_pop, 5)) %>%
   st_as_sf()
+
+
+# API Keys
+CARTO_API_KEY <- "cb1_31xh_1_06fb99adb466f0f5a0392d7d"
+CENSUS_API_KEY <- "8f6a0a83c8a2466e3e018a966846c86412d0bb6e"
+
+# function for creating modeshare plot
+fx_plot_modeshare <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`from home` = mean(pct_fromhome),
+              `bicycle`   = mean(pct_bicycle),
+              `walk`      = mean(pct_walk),
+              `transit`   = mean(pct_transit))
+  
+  plot_ly(data = plot_data,
+          x = ~year,
+          y = ~`from home`,
+          type = 'scatter',
+          mode = 'lines+markers',
+          marker = list(color = "#E0A100"),
+          line = list(color = "#E0A100"),
+          name = 'from home',
+          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`walk`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#9F1928"),
+              line = list(color = "#9F1928"),
+              name = 'walk',
+              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`transit`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#009BA6"),
+              line = list(color = "#009BA6"),
+              name = 'transit',
+              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
+    add_trace(x = ~year,
+              y = ~`bicycle`,
+              type = 'scatter',
+              mode = 'lines+markers',
+              marker = list(color = "#080967"),
+              line = list(color = "#080967"),
+              name = 'bicycle',
+              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Commute Mode Share (%)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified") %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(modeBarButtonsList),
+           toImageButtonOptions = list(
+             format = "png",
+             filename = "mode_share_chart"
+           ))
+}
+
+# function for creating pedestrian commuters plot
+fx_plot_activetrans <- function(geoid = "all") {
+  
+  modeBarButtonsList <- list("toImage")
+  
+  plot_data <- modeshare_county_latest_formatted %>%
+    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    select(year, walk) %>%
+    drop_na() %>%
+    group_by(year) %>%
+    summarise(`walk`      = sum(walk))
+  
+  plot_ly(data = plot_data) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `walk`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#9F1928"),
+      line = list(color = "#9F1928"),
+      name = 'walk',
+      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+    )  %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Walk Commuters"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5,
+        y = -0.1
+      ),
+      hovermode = "x unified"
+    ) %>%
+    config(
+      displaylogo = FALSE,
+      modeBarButtons = list(modeBarButtonsList),
+      toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
+    )
+}
+
 # Save in RData file format -----------------------------------------------
 
-save(modeshare_county_latest_formatted,
+save(modeshare_county_latest,
+     modeshare_county_latest_geom,
+     modeshare_county_latest_formatted,
      modeshare_county_period_pivoted,
-     us_counties_population_geo,
-     us_states_geom,
-     us_divisions_geom,
+     # us_counties_population_geo,
+     us_states_sub_geom,
+     us_divisions_sub_geom,
      utm_zones,
+     CARTO_API_KEY,
+     fx_plot_modeshare,
+     fx_plot_activetrans,
      file = paste0(getwd(),"/data/Exercise_01.RData"))
 
