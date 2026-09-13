@@ -80,7 +80,6 @@ library(plotly) # interactive plots
 library(leaflet) # interactive maps
 library(leaflet.extras) # additional leaflet controls, such as fullscreen and reset view buttons
 library(leafsync) # synchronizes panning and zooming across multiple leaflet maps shown side by side
-library(crsuggest) # suggests an appropriate projected coordinate system for a given area
 library(spatstat.geom) # defines the spatial point pattern objects used in spatial analysis
 library(spatstat.explore) # calculates kernel density estimates and other exploratory spatial statistics
 library(terra) # processes raster data, such as the pedestrian fatality density surface

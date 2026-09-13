@@ -51,7 +51,6 @@ library(plotly) # interactive plots
 library(leaflet) # interactive maps
 library(leaflet.extras) # additional leaflet controls, such as fullscreen and reset view buttons
 library(leafsync) # synchronizes panning and zooming across multiple leaflet maps shown side by side
-library(crsuggest) # suggests an appropriate projected coordinate system for a given area
 library(spatstat.geom) # defines the spatial point pattern objects used in spatial analysis
 library(spatstat.explore) # calculates kernel density estimates and other exploratory spatial statistics
 library(terra) # processes raster data, such as the pedestrian fatality density surface
@@ -64,7 +63,7 @@ options(scipen=999, digits = 2)
 load("data/Exercise_01.RData")
 ```
 
-> At the top of the script, you'll see a block of `library()` lines. Each of these turns on a package — a bundle of pre-built tools — that the rest of the exercise depends on. You don't need to memorize what each one does, but here's the short version. `dplyr` and `tidyverse` handle general data wrangling — filtering, grouping, summarizing — and you'll see their pipe symbol, the `%>%`, used constantly throughout the script to chain steps together. `sf` handles geographic data: the county, state, and division boundaries used in every map. `plotly` builds the interactive trend charts and box plots you'll see in Step 3, and `leaflet`, `leaflet.extras`, and `leafsync` build the interactive maps, add controls like fullscreen and reset buttons, and let multiple small maps pan and zoom together. The last four packages — `crsuggest`, `spatstat.geom`, `spatstat.explore`, `terra`, and `classInt` — don't get used until Step 4, when you build the pedestrian fatality hot spot map, so just note them for now.
+> At the top of the script, you'll see a block of `library()` lines. Each of these turns on a package — a bundle of pre-built tools — that the rest of the exercise depends on. You don't need to memorize what each one does, but here's the short version. `dplyr` and `tidyverse` handle general data wrangling — filtering, grouping, summarizing — and you'll see their pipe symbol, the `%>%`, used constantly throughout the script to chain steps together. `sf` handles geographic data: the county, state, and division boundaries used in every map. `plotly` builds the interactive trend charts and box plots you'll see in Step 3, and `leaflet`, `leaflet.extras`, and `leafsync` build the interactive maps, add controls like fullscreen and reset buttons, and let multiple small maps pan and zoom together. The last four packages — `spatstat.geom`, `spatstat.explore`, `terra`, and `classInt` — don't get used until Step 4, when you build the pedestrian fatality hot spot map, so just note them for now.
 >
 > Select all of these lines and click Run at the top right of the source panel. It may take a minute or two the first time, and you'll probably see a bunch of messages scroll by in the Console — that's normal. As long as you don't see a message that starts with "Error," you're fine.
 >
