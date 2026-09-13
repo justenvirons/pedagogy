@@ -18,7 +18,7 @@ format:
     reference-location: document
     fontsize: 0.9em
     interlinespace: -0.75em
-    embed-resources: true
+    embed-resources: false
 date: 2026-9-15
 bibliography: ../references.bib
 editor_options:
@@ -49,6 +49,11 @@ Understanding who walks, bikes and takes transit, and where people face the grea
 ::: {.callout-note collapse="false"}
 ## Optional Reading
 [Dangerous by Design](https://www.smartgrowthamerica.org/signature-reports/dangerous-by-design/) [@sga_dangerousbydesign] (Smart Growth America), produced with the National Complete Streets Coalition (a program of Smart Growth America) and with data analysis support from the State Smart Transportation Initiative, ranks all 50 states and the 101 largest U.S. metro areas by pedestrian fatality rate. The report's principal data source is the Fatality Analysis Reporting System (FARS), maintained by the National Highway Traffic Safety Administration (NHTSA). Smart Growth America uses these data, along with population data from the US Census Bureau's American Community Survey (ACS), to determine pedestrian death counts and rates by state and metro area for the report's rankings.
+:::
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Introduction
+{{< video ../video/exercise_01_00.mp4 >}}
 :::
 
 # Step 1. Open Exercise #1 in Posit Cloud course workspace
@@ -94,10 +99,10 @@ load("data/Exercise_01.RData")
 R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS, and is also available through a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It provides a set of tools built to help R users be more productive with R (and other languages, including Python). It includes a console and a syntax highlighting editor that supports direct code execution, along with tools for plotting, viewing history, debugging and managing your workspace.
 :::
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #1 -->
-<!-- {{< video videos/exercise_01_01.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #1
+{{< video ../videos/exercise_01_01.mp4 >}}
+:::
 
 # Step 2. Download exercise template and select US county
 Download the [exercise PowerPoint template](https://justenvirons.org/pedagogy/GEO330/Exercise_01/slides/Exercise01_Template.pptx) using the link provided. You will draw on resources from this page, such as the maps and plots below, to complete your presentation. For now, just download the template and store locally on your machine for editing.
@@ -201,10 +206,10 @@ leaflet() %>%
 
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #2 -->
-<!-- {{< video videos/exercise_01_02.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #2
+{{< video ../videos/exercise_01_02.mp4 >}}
+:::
 
 # Step 3. Transportation mode share analysis
 In this step, you will examine trends in commute mode share across US counties over the past fifteen years using a curated dataset. The data were downloaded using the [Census application programming interface (API)](https://www.census.gov/data/developers/data-sets.html) in RStudio (code available upon request). The Census API supports custom queries and downloads of American Community Survey (ACS) and other Census Bureau data.
@@ -978,7 +983,7 @@ This exercise draws on several nationwide datasets maintained by federal agencie
 
 **Basemap tiles.** Every interactive map in this exercise is built on CARTO's Positron basemap tiles [@carto_basemaps], a minimal, light-colored basemap designed to keep thematic data (such as the county polygons and fatality points shown here) legible in the foreground. Each map also offers Esri's World Imagery satellite basemap [@esri_worldimagery] as an alternate layer, which is useful for examining the physical street design of the corridors and intersections identified in Step 5.
 
-**hot spot analysis.** The pedestrian fatality density surface in Step 4 is estimated with the *spatstat* package [@baddeley_spatstat], which implements kernel density estimation (KDE) for spatial point patterns. The resulting density values are grouped into map classes using Jenks natural breaks, calculated with the *classInt* package [@bivand_classint].
+**Hot spot analysis.** The pedestrian fatality density surface in Step 4 is estimated with the *spatstat* package [@baddeley_spatstat], which implements kernel density estimation (KDE) for spatial point patterns. The resulting density values are grouped into map classes using Jenks natural breaks, calculated with the *classInt* package [@bivand_classint].
 
 This exercise also points to several supplementary resources that are not code inputs but inform how you interpret and act on the results.
 
