@@ -16,7 +16,9 @@ format:
 
 This document is a recording script, not a student-facing handout. It is organized around the same video segments already referenced in `Exercise_01.qmd` (Introduction, Step 1 through Step 5), so each section below can be recorded on its own while sharing the exercise document and the Posit Cloud project on screen.
 
-Every section contains a literal, word-for-word script in blockquotes, meant to be read (or closely paraphrased) directly to students as the camera rolls. Stage directions — what to click, what to have on screen, when to pause — are written in *italics* above the line(s) they apply to, and are not meant to be read aloud. Because students are expected to read the full exercise text on their own, the script keeps background and context brief. Code sections are the opposite: since narrating code is the part students benefit from most by watching rather than reading, those scripts spell out in more depth what each chunk and function does, in the order it appears on screen. Reference code blocks are included so you can glance at exactly what should be visible while you read.
+Every section contains a literal, word-for-word script in blockquotes, meant to be read (or closely paraphrased) directly to students as the camera rolls. Stage directions — what to click, what to have on screen, when to pause — are written in *italics* above the line(s) they apply to, and are not meant to be read aloud. Because students are expected to read the full exercise text on their own, the script keeps background and context brief.
+
+Coding is not the point of this class, so the script treats code chunks differently depending on what students are actually asked to do with them. For chunks marked "code-fold" in the document — the collapsed, optional-to-read functions that build the maps and plots — the script gives only a brief three sentences: enough to say what the chunk produces, not how it works internally. For chunks students are actually told to copy and paste into their own Posit Cloud script, the narration stays practical and specific about what to copy, what to edit, and where to paste it. In both cases, and especially once a figure is on screen, the emphasis shifts to the data: what the plot or map shows, and what to look for when analyzing it, since that is the actual point of the exercise. Reference code blocks are included only for chunks students copy and paste themselves.
 
 # Video: Introduction
 
@@ -79,58 +81,9 @@ load("data/Exercise_01.RData")
 >
 > Hover over any county on the map to see a pop-up with its name, its 2024 population, its population density, and — importantly — its GEOID. Write that GEOID down. It's a five-digit code: the first two digits are the state, and the last three are the county. For example, 17031 is Cook County, Illinois, which is the worked example used throughout this document.
 
-*On screen: the code chunk behind `fig-popbycountymap`, expanded via "Show the county population map code."*
+*On screen: the rendered `fig-popbycountymap` map. The code behind it is collapsed behind a "Show the county population map code" toggle — no need to expand it.*
 
-```r
-counties_bins <- c(0, 25000, 100000, 500000, 999999, Inf)
-
-counties_pal <- colorBin(
-  palette="viridis",
-  domain=modeshare_county_latest_geom$total_population,
-  na.color="transparent",
-  bins = counties_bins,
-  reverse = TRUE
-  )
-
-labels = sprintf(
-  "<strong>%s</strong><br/>
-  Population (2024): %s<br/>
-  Pop density (per sqmi): %s<br/>
-  GEOID: %s",
-  modeshare_county_latest_geom$county_name,
-  format(modeshare_county_latest_geom$total_population, big.mark = ","),
-  formatC(modeshare_county_latest_geom$pop_density, format = "f", digits = 1, big.mark = ","),
-  modeshare_county_latest_geom$GEOID_county) %>%
-  lapply(htmltools::HTML)
-
-leaflet() %>%
-  addTiles(urlTemplate = "...CARTO Positron tile URL...") %>%
-  addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery (satellite)") %>%
-  addPolygons(group = "Counties",
-              data = modeshare_county_latest_geom %>% st_transform(crs = 4326),
-              fillColor = ~counties_pal(total_population),
-              label = labels, ...) %>%
-  addPolylines(data = us_states_sub_geom, ..., group = "States") %>%
-  addPolylines(data = us_divisions_sub_geom, ..., group = "Divisions") %>%
-  addLegend("bottomleft", pal = counties_pal, values = modeshare_county_latest_geom$total_population,
-            title = "Population (2024)") %>%
-  addScaleBar(position = "bottomright") %>%
-  addFullscreenControl() %>%
-  addResetMapButton() %>%
-  addLayersControl(
-    baseGroups = c("Positron (minimal)", "World Imagery (satellite)"),
-    overlayGroups = c("Counties", "States", "Divisions"))
-```
-
-> Let's look at how this map is actually built, since the same pattern shows up in every map for the rest of the exercise.
->
-> First, these two objects set up the color scale. `counties_bins` splits population into five groups, from small counties up through the largest metro counties, and `counties_pal` maps those groups onto a "viridis" color palette — that's a colorblind-friendly palette — reversed here so the darkest color represents the largest population.
->
-> Next, the `labels` object builds the pop-up text you see when you hover over a county. The `sprintf()` function fills in a small template with that county's name, population, density, and GEOID, and `lapply(..., htmltools::HTML)` tells the map to render that as formatted text instead of a plain string.
->
-> Then comes the map itself. It starts from a blank `leaflet()` canvas, adds CARTO's Positron tiles as the default basemap, and adds Esri's World Imagery satellite tiles as an alternate layer you can switch to. `addPolygons()` draws every county, colored by population, with the hover label attached. Then two `addPolylines()` calls draw thin white state outlines and black Census division outlines on top.
->
-> The last several lines add the finishing touches: a legend explaining the color scale, a scale bar, a fullscreen button, a button to reset the view if you get lost while panning around, and a layers control in the upper right that lets you switch basemaps or turn the county, state, and division layers on and off. You'll see this exact same set of controls on every map for the rest of this exercise, so once you're comfortable with it here, you're set for the whole assignment.
+> That map is built behind the scenes with a color scale, some pop-up formatting, and a stack of map layers, all folded away under a "Show the code" toggle since the coding isn't the point here. What matters is what's on screen: every county in the country shaded from light to dark by 2024 population, with the darkest counties being the largest — hover over any county for its name, population, density, and GEOID, and use the layers control in the upper right to compare the standard basemap against the satellite view. Take a few minutes here to actually browse and settle on your county, since every figure for the rest of the exercise builds on that one choice.
 
 # Video: Step 3 — Transportation mode share analysis
 
@@ -140,116 +93,29 @@ leaflet() %>%
 
 ## The plotting functions
 
-*On screen: the `fx_plot_modeshare()` and `fx_plot_activetrans()` function definitions, expanded via "Show the mode share and pedestrian commuter plotting functions."*
+*On screen: skip past the `fx_plot_modeshare()` and `fx_plot_activetrans()` function definitions — they're shown for transparency behind a "Show the code" toggle, not something you need to read line by line.*
 
-```r
-fx_plot_modeshare <- function(geoid = "all") {
-  plot_data <- modeshare_county_latest_formatted %>%
-    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
-    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
-    drop_na() %>%
-    group_by(year) %>%
-    summarise(`from home` = mean(pct_fromhome),
-              `bicycle`   = mean(pct_bicycle),
-              `walk`      = mean(pct_walk),
-              `transit`   = mean(pct_transit))
-
-  plot_ly(data = plot_data, x = ~year, y = ~`from home`, ...) %>%
-    add_trace(x = ~year, y = ~`walk`, ...) %>%
-    add_trace(x = ~year, y = ~`transit`, ...) %>%
-    add_trace(x = ~year, y = ~`bicycle`, ...) %>%
-    layout(yaxis = list(title = "Commute Mode Share (%)"), ...)
-}
-
-fx_plot_activetrans <- function(geoid = "all") {
-  plot_data <- modeshare_county_latest_formatted %>%
-    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
-    select(year, walk) %>%
-    drop_na() %>%
-    group_by(year) %>%
-    summarise(`walk` = sum(walk))
-
-  plot_ly(data = plot_data) %>%
-    add_trace(x = ~year, y = ~`walk`, ...) %>%
-    layout(yaxis = list(title = "Walk Commuters"), ...)
-}
-```
-
-> These two functions are the engine behind every mode share trend chart you'll see in this exercise, so it's worth understanding what they do, even though you'll never edit them directly.
->
-> Both functions take one input, called `geoid`, and it defaults to `"all"`. That one line near the top — `if (geoid != "all") filter(...) else .` — is doing all the work: if you give it a real county GEOID, it filters the data down to just that county; if you leave it as `"all"`, every county in the country passes through untouched. That's what lets the exact same function produce either the nationwide chart or your own county's chart, just by changing one value.
->
-> `fx_plot_modeshare()` groups the data by year and calculates the average share of four commute modes: working from home, walking, taking transit, and bicycling. Notice that drive-alone isn't one of them — it's left out on purpose, because it's such a large share that it would flatten the other four lines on the chart. The `plot_ly()` call after that builds one line for each of the four modes, each with a fixed color, so that walk and bicycle will match the colors used again in Step 4's pedestrian fatality charts.
->
-> `fx_plot_activetrans()` looks similar, but it's answering a different question. Instead of averaging a percentage, it *sums* the actual number of people who walk to work each year. So where the first chart tells you what share of commuters walk, this second chart tells you how many people, in raw numbers, are walking.
+> These two hidden functions are what generate every mode share chart in this step: one produces the percentage-based trend line for four commute modes, and the other produces a simple count of walk commuters by year. Both can run on the whole country or on a single county depending on what you feed them, which is exactly what the next two figures do. You'll see them called, not written, from here on.
 
 *On screen: `fig-modesharetrends`, then `fig-modesharetrendscook`, side by side.*
 
-> Below, `fig-modesharetrends` calls both of those functions with `"all"`, giving you the nationwide picture: mode share on the left, total walk commuters on the right. Copy this figure, along with the box plot coming up next, into slide #1 of your presentation, and write a few sentences about the trends you see.
+> Below, `fig-modesharetrends` calls both of those functions on the whole country, giving you the nationwide picture: mode share on the left, total walk commuters on the right. Look for which lines are rising and which are falling over the fifteen years, and whether the shape of the walk line on the right — actual commuter counts — tells the same story as the walk percentage on the left. Copy this figure, along with the box plot coming up next, into slide #1 of your presentation, and write a few sentences about the trends you see.
 >
-> Now scroll down to `fig-modesharetrendscook`. This is your template. You'll see one line of code: `custom_geoid <- "17031"`. That's Cook County, Illinois, shown here as a worked example. Copy this whole code chunk and paste it at the *end* of your own script — not in the middle, at the very end — and then change `"17031"` to the GEOID for the county you picked back in Step 2. Run it, and you'll get your own county's version of both charts. Copy those into slide #2, and write a few sentences comparing your county's pattern to the nationwide one you just looked at.
+> Now scroll down to `fig-modesharetrendscook`. This is your template. You'll see one line of code: `custom_geoid <- "17031"`. That's Cook County, Illinois, shown here as a worked example. Copy this whole code chunk and paste it at the *end* of your own script — not in the middle, at the very end — and then change `"17031"` to the GEOID for the county you picked back in Step 2. Run it, and you'll get your own county's version of both charts. Copy those into slide #2, and write a few sentences comparing your county's pattern to the nationwide one: does your county's trend move in the same direction as the country as a whole, or does it stand apart, and by how much?
 >
 > One habit to build right now: every time you copy a new chunk of code from this document, paste it at the end of your script, not somewhere in the middle. That keeps your script running top to bottom without errors, and it's the single most common thing that trips students up if skipped.
 
 ## Interquartile range plot
 
-*On screen: `fig-modeshareboxplot`.*
+*On screen: `fig-modeshareboxplot`. The code behind it is collapsed behind a "Show the box plot code" toggle.*
 
-```r
-plot_ly(modeshare_county_period_pivoted %>%
-          filter(year == 2024, !mode %in% c("motorcycle", "taxi", "other")) %>%
-          mutate(percent = round(percent, digits = 1)),
-        y = ~percent,
-        color = ~reorder(mode, order),
-        type = "box",
-        jitter = 0.5,
-        boxpoints = 'suspectedoutliers',
-        quartilemethod = "inclusive") %>%
-  layout(yaxis = list(title = 'Commute Mode Share (%)'), xaxis = list(title = 'Travel Mode'))
-```
-
-> This next figure is a box plot showing the spread of mode share across every county in the country, for 2024. The document already walks through how to read a box plot — the box, the whiskers, the outlier dots — so I won't repeat all of that here. On the code side, there are just two things worth pointing out. First, the data is filtered down to 2024 and to the modes that matter for this comparison — motorcycle, taxi, and "other" are dropped because they're negligible. Second, the dots you see scattered above and below some of the boxes are individual outlier counties, turned on by `boxpoints = 'suspectedoutliers'`. This is the same figure you were asked to copy into slide #1 alongside the mode share trend chart.
+> This box plot shows the full national spread of each travel mode's share in 2024, not just the average. Skip the code — the document already explains how to read the box, whiskers, and outlier dots — and instead compare the four modes directly: notice how tightly walk and bike are compressed near zero compared to drive-alone, and which modes carry the most outlier counties pulled far from the pack. Copy this chart into slide #1 alongside the mode share trend figure.
 
 ## County mode share maps
 
-*On screen: the `fx_create_bins()` and `fx_create_map()` functions, then the four resulting maps.*
+*On screen: skip past the two hidden helper functions, straight to the four resulting maps — walk, bicycle, transit, and drive-alone.*
 
-```r
-fx_create_bins <- function(pct_mode){
-  bins_mode <- modeshare_county_latest %>%
-    mutate(bins = ntile(get(pct_mode), 5)) %>%
-    group_by(bins) %>%
-    summarise(max = round(max(get(pct_mode)),2)) %>%
-    select(max) %>% unlist()
-  bins_mode[1] <- 0
-  bins_mode[5] <- bins_mode[5] + 0.01
-  return(bins_mode)
-}
-
-fx_create_map <- function(pct_mode, bincolors, legend_title) {
-  pal_mode <- colorBin(bincolors, domain = modeshare_county_latest_geom[[pct_mode]],
-                        bins = fx_create_bins(pct_mode))
-  leaflet(modeshare_county_latest_geom) %>%
-    addTiles(...) %>%
-    addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery (satellite)") %>%
-    addPolygons(fillColor = ~ pal_mode(get(pct_mode)), label = countylabels, group = "Counties") %>%
-    addPolylines(data = us_states_sub_geom, group = "States") %>%
-    addPolylines(data = us_divisions_sub_geom, group = "Divisions") %>%
-    addLegend("bottomleft", pal = pal_mode, title = legend_title, labFormat = labelFormat(suffix = "%")) %>%
-    addResetMapButton() %>% addFullscreenControl() %>% addLayersControl(...)
-}
-
-walk_map    <- fx_create_map("pct_walk", "Blues", "Walk Mode Share")
-bicycle_map <- fx_create_map("pct_bicycle", "Reds", "Bike Mode Share")
-transit_map <- fx_create_map("pct_transit", "Greens", "Transit Mode Share")
-drove_map   <- fx_create_map("pct_drovealone", "Greys", "Drive Alone Mode Share")
-```
-
-> This last block for Step 3 produces four maps — walk, bicycle, transit, and drive-alone mode share — one for every county in the country. Two small helper functions do all the work.
->
-> `fx_create_bins()` takes whichever mode you ask for and splits every county's value into five roughly equal-sized groups, called quintiles, using `ntile()`. It then finds the highest value in each group to use as a color break. The two lines right after that just make sure the very first bin starts at exactly zero, and the very last bin is nudged up slightly, so that not even the single highest county in the country gets left out by a rounding edge case.
->
-> `fx_create_map()` then builds one complete map for whichever mode you pass in: it creates a color scale from those quintile breaks, colors every county by that mode's share, and reuses the exact same basemap, state and division outlines, legend, and controls you already saw back in Step 2. The four lines after the function just call it once per mode, with a different color ramp and legend title each time — blue for walk, red for bicycle, green for transit, grey for drive-alone.
+> These four maps are all built from two functions folded away behind a code toggle, one that splits each mode into five color groups and one that draws the actual map, so there's no need to open that code. What matters is what you see: each map colors every county in the country by that mode's share of commuters, using the same basemap, outlines, and layer controls from Step 2. Cycle through all four before you start comparing, since the real analysis happens once you can see them side by side.
 >
 > As you look at these four maps, ask yourself: which modes cluster in just a few regions, and which are spread evenly across the whole country? Go back to the county you selected and compare it to its neighbors — are they similar, or does your county stand out? Try switching to the satellite layer to see if something visible, like a street grid, a college campus, or a coastline, might explain what you're seeing. And for the very large number of counties where driving alone is nearly universal, think about what trade-offs — economic, environmental, health-related — come with having few practical alternatives.
 
@@ -288,82 +154,25 @@ ped_fatalities <- crashes_fars %>%
 
 ## Fatality trend plots
 
-*On screen: `fx_plot_pedfatalitytrend()`, expanded, then the resulting two-panel `fig-pedfatalitytrend`.*
+*On screen: skip past the hidden `fx_plot_pedfatalitytrend()` function, straight to the resulting two-panel `fig-pedfatalitytrend`.*
 
-```r
-fx_plot_pedfatalitytrend <- function(crashes_fars) {
-  pedestrian_fatalities <- crashes_fars %>%
-    filter(harm_ev == 8 | peds > 0) %>%
-    group_by(year) %>%
-    summarise(total_fatalities = sum(fatals, na.rm = TRUE), ...)
-
-  all_fatalities <- crashes_fars %>%
-    mutate(collision_type = case_when(
-      harm_ev == 9  ~ "Pedalcyclist",
-      harm_ev == 8  ~ "Pedestrian",
-      is.na(harm_ev) ~ "Other",
-      TRUE ~ "Motor Vehicle")) %>%
-    group_by(year, collision_type) %>%
-    summarise(n = sum(persons, na.rm = TRUE), .groups = "drop") %>%
-    complete(year, collision_type, fill = list(n = 0))
-
-  colors <- c("Motor Vehicle" = "#4C72B0", "Pedestrian" = "#9F1928",
-              "Pedalcyclist" = "#080967", "Other" = "#C44E52")
-
-  # ... percent-of-year-total calculation for hover text ...
-
-  # stacked area chart, one add_trace() call per mode, plus a
-  # single-line chart of the pedestrian-only trend
-
-  list(plot_by_mode, plot_pedestrian)
-}
-```
-
-> This function builds both panels of the next figure, so let's look at it in pieces. `pedestrian_fatalities` is a simple yearly total: it counts every fatality where the crash's first harmful event was a pedestrian strike, or where at least one pedestrian was involved, just to make sure nothing gets missed.
+> This hidden function is doing the work behind the next figure — sorting every fatality into a category and matching its colors to the walk and bike colors from Step 3 — but it's tucked behind a code-fold toggle since you don't need to read it. What you do need to look at is the output: a stacked area chart showing fatalities by mode over time on the left, and a simple pedestrian-only trend line on the right. Watch how thick the pedestrian layer is relative to the whole stack, and whether that share is growing over time or just the raw numbers are.
 >
-> `all_fatalities` is the richer version behind the stacked area chart. Every fatality gets sorted into one of four categories — motor vehicle, pedestrian, pedalcyclist, or other — and summed up by year. Notice the `colors` vector right after it: the pedestrian color and the pedalcyclist color are deliberately set to match the walk and bicycle colors from the mode share charts back in Step 3. That's intentional, so if you notice more people walking in one chart, you can visually connect that to what's happening in the fatality chart.
->
-> The stacked area chart itself is built one mode at a time, each layer given its own fixed color and hover text that includes what percentage of that year's total fatalities it represents. Below it, a much simpler single line shows just the pedestrian fatality trend by itself.
->
-> Copy the code chunk that calls this function into your script and run it. This produces the version of the figure for Cook County shown in the document as the example; running it with your own county's data, which happens automatically since it uses the `crashes_fars` data you just downloaded, will give you your own version. Copy both panels into slide #3, and write a few sentences about the trend — call out any years where fatalities noticeably rose or fell.
+> Copy the code chunk that calls this function into your script, right after your FARS download code, and run it — it uses the `crashes_fars` data you just downloaded, so it automatically builds the chart for your own county. Copy both panels into slide #3, and write a few sentences describing the trend: is the pedestrian line rising, falling, or flat overall, and are there specific years with a sharp jump or drop worth calling out?
 
 ## Four-period fatality maps
 
-*On screen: `fx_map_pedfatalityperiods()`, expanded, then the resulting synced four-panel map.*
+*On screen: skip past the hidden `fx_map_pedfatalityperiods()` function, straight to the resulting synced four-panel map.*
 
-```r
-fx_map_pedfatalityperiods <- function(ped_fatalities, county_geoid) {
-  # county boundary + four period labels: 2010-13, 2014-17, 2018-21, 2022-24
-  # a shared map extent (bounding box) computed once, so all four panels
-  # zoom to exactly the same area
-  # one small leaflet map built per period, with a count shown in the corner
-  # latticeView() arranges all four into a synced 2x2 grid
-}
-```
-
-> Before jumping straight to a formal hot spot analysis, it helps to just look at where fatalities have happened over time. This function splits your county's pedestrian fatalities into four consecutive four-year windows — 2010 to 2013, 2014 to 2017, 2018 to 2021, and 2022 to 2024 — and builds one small map per period.
->
-> The key detail here is that all four maps share the exact same map extent, calculated once from your county's boundary, so they're always zoomed to the same area. Then `latticeView()`, from the `leafsync` package you loaded back in Step 1, arranges all four into a two-by-two grid and syncs their panning and zooming together. That means you can zoom in or drag on any one panel, and all four move together — which is exactly what makes it possible to compare the same location across all four time periods.
+> Before jumping straight to a formal hot spot analysis, this next map just lets you look at where fatalities have occurred over time. Behind the scenes it splits your county's pedestrian fatalities into four four-year windows and lines up four small maps, one per period, all sharing the exact same zoomed-in view of your county, so there's no need to open that code. All four panels pan and zoom together, so dragging or zooming on any one of them lets you instantly compare the same location across every time period.
 >
 > Copy the chunk that runs this function into your script. As you look at the four panels, watch for locations where fatalities show up again and again across multiple periods — those recurring locations are your best candidates for the formal hot spot analysis that comes next.
 
 ## Hot spot density map
 
-*On screen: `fx_map_pedfatalityhotspot()`, expanded, then the final density surface map.*
+*On screen: skip past the hidden `fx_map_pedfatalityhotspot()` function, straight to the final density surface map.*
 
-```r
-fx_map_pedfatalityhotspot <- function(ped_fatalities, county_geoid) {
-  # 1. find the correct local UTM zone from the county's centroid
-  # 2. reproject points, then compute a kernel density estimate with spatstat
-  # 3. rescale to fatalities per sq km, reproject back, clip to county boundary
-  # 4. split into 5 color classes using Jenks natural breaks on log-transformed values
-  # 5. map the density surface, county boundary, and points together in leaflet
-}
-```
-
-> This is the most technical piece of code in the whole exercise, so let's slow down here, but keep this conceptual rather than mathematical — if you want the full technical explanation, it's in a callout box right in the document.
->
-> The basic idea is this: instead of just showing individual fatality dots, we turn them into a smooth surface that shows where fatalities cluster most tightly. Here's how, in four steps. First, the function figures out which UTM zone your county falls into, because getting an accurate density surface requires measuring distance in real units like meters, not in latitude and longitude degrees. Second, it builds what's called a kernel density estimate: picture every single fatality point spreading a soft, bell-curve-shaped bump of influence outward, and wherever several of those bumps overlap, the surface builds up — that buildup is what shows up as a hot spot. Third, that surface gets rescaled into fatalities per square kilometer just so the numbers on the legend are readable, and it gets clipped so nothing outside your county boundary shows up. Fourth, the surface gets split into five color classes using a method called Jenks natural breaks, calculated on a log-transformed version of the data first, so that one or two extremely intense spots don't stretch the whole color scale and wash out other patterns in your county.
+> This is the most technical piece of code in the whole exercise, which is exactly why it's the one most worth leaving folded away — it takes your county's individual fatality points and turns them into a smooth surface, so that overlapping points build up into visible hot spots instead of just showing scattered dots. If you want the full technical explanation of how that surface is calculated, there's a callout box right beneath this figure in the document. What matters for the exercise is the result on screen: warmer colors show tighter clustering of fatalities, not raw counts.
 >
 > Copy the chunk that runs this function into your script, and look for hot spots — clusters of orange or red — in your own county's map. One important caution to pass along here, straight from the document: color intensity shows relative clustering *within your own dataset*. It's useful for comparing locations inside your county, but it's not a fixed, universal risk threshold you can compare across different cities or datasets.
 >
