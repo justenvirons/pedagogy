@@ -1,0 +1,241 @@
+---
+title: "GEO 3/430 Sustainable Urban Transportation"
+subtitle: "Week #4: Public Transit and the <br>Efficiencies of Mass Movement"
+author: "C. Scott Smith, PhD AICP"
+institute: "DePaul University"
+format: 
+  revealjs: 
+    slide-number: true
+    transition: fade
+    css: slides.css
+    footer: "© 2026 C. Scott Smith | DePaul University"
+    scrollable: true
+    progress: true
+    controls: true
+editor_options: 
+  chunk_output_type: console
+---
+
+::: {.img-center}
+![](images/tube_station.png){height=100%}
+:::
+
+::: notes
+This week examines public transit as a system of coordinated mass movement, emphasizing how fixed-route, shared vehicles deliver mobility at scale while optimizing energy use, street space, and network reliability. The focus is not on any single mode, but on how networks—bus, rail, and bus rapid transit—function together to move large numbers of people efficiently through dense urban environments.
+:::
+
+---
+
+## Periods of Public Transit
+
+:::: {.columns}
+
+::: {.column width="55%"}
+
+- Period 1: Horse-Drawn & Early Fixed-Route Transit (1830s–1880s)
+- Period 2: Electric Streetcars & Urban Expansion (1890s–1920s)
+- Period 3: Motorization, Decline & Public Takeover (1930s–1970s)
+- Period 4: Modern Transit Revival & Network Integration (1980s–2000s)
+- Period 5: Integration of Mass Transit with Other Shared Mobilities (2000s–Present)
+:::
+
+::: {.column width="45%"}
+
+### Sources
+
+![](images/source_mass_motorization_mass_transit.png)
+![](images/source_transforming_cities_with_transit.jpg)
+![](images/source_human_transit.jpg)
+:::
+
+::::
+
+::: notes
+Public transit history can be organized into five broad periods reflecting shifts in technology, governance, and urban form. Together, these periods illustrate how transit has alternately expanded and contracted in response to economic forces, policy choices, and competition with private automobiles.
+:::
+
+---
+
+## Period 1: Horse-Drawn & Early Fixed-Route Transit (1830s–1880s)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+### Key Developments
+
+- Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.
+- The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.
+- Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.
+
+### Urban Transportation Relevance
+
+- These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.
+- Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.
+- Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.
+
+### Sustainability Significance
+
+- Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.
+- The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.
+- These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.
+
+:::
+
+::: {.column width="45%"}
+![](images/transit_01.png)
+![](images/transit_02.png)
+![](images/transit_03.png)
+![](images/transit_04.png)
+:::
+
+::::
+
+::: notes
+Early transit systems addressed the limitations of walking cities by introducing shared, scheduled movement along corridors. While constrained by animal power, they marked the first scalable alternative to individualized urban travel.
+:::
+
+---
+
+## Period 2: Electric Streetcars & Urban Expansion (1890s–1920s)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+### Key Developments
+
+- Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.
+- The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.
+- Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.
+
+### Urban Transportation Relevance
+
+- These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.
+- Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.
+- Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.
+
+### Sustainability Significance
+
+- Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.
+- The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.
+- These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.
+:::
+
+::: {.column width="45%"}
+![](images/streetcar_01.png)
+![](images/streetcar_02.png)
+![](images/streetcar_03.png)
+:::
+::::
+
+::: notes
+The electric streetcar era represents the first mature phase of mass urban transit, fundamentally reshaping city size, density, and daily mobility patterns.
+:::
+
+---
+
+## Period 3: Motorization, Decline & Public Takeover (1930s–1970s)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+### Key Developments
+
+- Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.
+- The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.
+- Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.
+
+### Urban Transportation Relevance
+
+- These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.
+- Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.
+- Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.
+
+### Sustainability Significance
+
+- Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.
+- The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.
+- These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.
+:::
+
+::: {.column width="45%"}
+![](images/motorization_01.png)
+![](images/highway_urban.png)
+:::
+::::
+
+::: notes
+This period reflects a decisive policy shift toward automobility, with transit surviving largely through public intervention rather than market competitiveness.
+:::
+
+---
+
+## Period 4: Modern Transit Revival & Network Integration (1980s–2000s)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+### Key Developments
+
+- Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.
+- The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.
+- Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.
+
+### Urban Transportation Relevance
+
+- These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.
+- Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.
+- Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.
+
+### Sustainability Significance
+
+- Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.
+- The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.
+- These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.
+:::
+
+::: {.column width="45%"}
+![](images/modern_transit_01.png)
+![](images/modern_transit_02.png)
+:::
+::::
+
+::: notes
+Late twentieth-century transit planning emphasized rebuilding systems capable of supporting dense urban activity and regional mobility.
+:::
+
+---
+
+## Period 5: Integration of Mass Transit with Other Shared Mobilities (2000s–Present)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+### Key Developments
+
+- Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.
+- The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.
+- Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.
+
+### Urban Transportation Relevance
+
+- These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.
+- Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.
+- Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.
+
+### Sustainability Significance
+
+- Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.
+- The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.
+- These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.
+:::
+
+::: {.column width="45%"}
+![](images/multimodal_01.png)
+![](images/micromobility_transit.png)
+:::
+::::
+
+::: notes
+In the contemporary period, public transit is increasingly understood as part of an integrated mobility ecosystem, central to achieving sustainability, equity, and climate objectives.
+:::
+

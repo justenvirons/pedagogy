@@ -1,0 +1,33 @@
+---
+title: "slides_notes_comprehensive"
+format: html
+---
+
+# Periods of Urban Bicycling
+
+What I want to do this week is step back and look at bicycling not as a single technology, but as a mode whose role in cities has expanded, contracted, and re-emerged depending on broader economic, technological, and political conditions.
+
+We’ll start with proto-bicycles and mechanical curiosity in the early 19th century, where cycling was less about transportation and more about experimentation. This period matters not because of ridership, but because it introduced the idea of human-powered mechanical mobility—a conceptual break from walking and animal transport.
+
+From there, we move into the safety bicycle and the first urban cycling boom in the late 19th century. This is the first time bicycling materially influences urban transportation. For a brief moment, bicycles were a mainstream solution to everyday mobility, shaping road quality, travel distances, and even social norms.
+
+The early 20th century—cycling as a pre-automobile urban mode—shows us what cities looked like before cars dominated. Cycling coexisted with walking and streetcars in compact, human-scaled environments. This period is important because it demonstrates that high cycling rates did not require modern bike infrastructure—they required supportive urban form.
+
+The transitional streets period, roughly 1890 to 1920, is where things get messy. Streets became contested spaces as bicycles, pedestrians, streetcars, and automobiles all competed for priority. This was a critical moment when policy and design choices began to determine winners and losers.
+
+From the 1920s through roughly the 1960s, we see automobile ascendancy and pedestrian marginalization. Streets are re-engineered for speed and throughput, and both walking and bicycling are reframed as unsafe or outdated. This is where today’s transportation inequities and safety challenges are largely baked in.
+
+Beginning in the 1960s through the late 20th century, we enter a period of crisis and critique. Rising traffic deaths, environmental degradation, and urban decline prompt early pedestrian and cycling advocacy. While changes are limited, this era lays the intellectual and political groundwork for later reform.
+
+Finally, from the 1990s to the present, we enter the sustainability era, where bicycling and walking are reframed as tools for climate mitigation, public health, and equity. Importantly, this is not a return to the past—it’s an attempt to rebuild active transportation within systems still dominated by automobility.
+
+As we move through these periods, pay attention not just to technologies, but to who cities were designed for, whose movement was prioritized, and how those decisions continue to shape transportation outcomes today.
+
+## Figures
+
+### Player's Cycling Book
+'Cycling 1839-1939' book of cigarette cards produced by John Player and Sons in 1939. The book cover is illustrated in brown and dark green showing a group of male and female cyclists among trees with the title text above. A complete set of cards, each featuring a different bicycle or cycling activity, is pasted into the pages, accompanied by text and illustrations.
+
+Cigarette cards were originally produced to protect cigarettes within their boxes, but soon developed into tiny collectible artworks used to encourage buyer loyalty. First produced in the UK by W D and H O Wills Limited in 1887 by the 1930s, cigarette cards were hugely popular collectibles, analogous to the small toys offered in boxes of cereals in the 1990s. Cigarette companies rapidly started to produce albums or books that allowed a collector to store a set of cards in a structured format alongside short information on their subjects. These subjects depicted on cigarette cards were hugely diverse, from film stars to fish, offering a snapshot of attitudes to these subjects at the time, as well as which were considered appealing to buyers. 
+
+This is one of a group of seven books of cigarette cards collected by brothers Ian and Robert Hopkins in the 1930s and 40s in Shepperton, Surrey. The cards were compensation for regularly making the trip to buy their father’s cigarettes. They therefore combine social histories of smoking with small collectible prints aimed particularly at families and children, with subjects ranging from motor cars, railways and cycling to radio celebrities and film stars. 

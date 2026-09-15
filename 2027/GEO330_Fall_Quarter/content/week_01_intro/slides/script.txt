@@ -1,0 +1,98 @@
+
+### **Slide 1 – Title**
+
+“Hi everyone, welcome back to SUD 430. Today we’re talking about *The Value of Slow Transportation*. This session is about stepping back and thinking about why our transportation systems look the way they do — and how slowing things down can actually make cities healthier, safer, and more sustainable.”
+
+---
+
+### **Slide 2 – What is Sustainability?**
+
+“Let’s start with the big picture. When we talk about sustainability, we mean systems that balance environmental, social, and economic needs over the long term. Take a second and think: when you picture a sustainable transportation system, what comes to mind? Fewer cars? More transit? Walkable neighborhoods? I’ll have you submit three words using the Poll Everywhere link — we’ll build a class word cloud to see how we’re all thinking about this.”
+
+---
+
+### **Slide 3 – What is a Transportation System?**
+
+“A transportation system isn’t just buses and cars — it’s a network of vehicles, paths, and human behaviors, all working together. And like any system, it adapts over time, reacts to policy, and evolves based on technology and culture.”
+
+---
+
+### **Slides 4–6 – Streets Before the 1920s**
+
+“Before the car became dominant, streets were very different. They were shared spaces — kids played there, vendors set up shop, people walked freely. These photos from Manhattan and early Chicago remind us that the street was a public space, not just a conduit for cars.”
+
+---
+
+### **Slides 7–9 – Early Transit in Chicago**
+
+“Here we see the first wave of transit technology — cable cars, horsecars, and later the ‘L’ trains. These systems helped knit the city together and made dense, walkable neighborhoods viable. They were slow compared to cars, but they supported a completely different way of living.”
+
+---
+
+### **Slide 10 – Commuter Mode Share**
+
+“Fast forward to the late 20th century — and look what happens. By the 1980s and 90s, 70% of commutes are single-occupancy vehicle trips. That’s huge. But notice that since about 2000, we’ve seen a small plateau and even some diversification. More people are taking transit, biking, or working from home — and that’s an opportunity.”
+
+---
+
+### **Slide 11 – If You Plan for Cars…**
+
+“One of my favorite quotes: ‘If you plan for cars and traffic, you get cars and traffic. If you plan for people and places, you get people and places.’ It’s a reminder that urban design decisions — zoning, street design, infrastructure — shape behavior. Build wider roads and people will drive more. Build bike lanes and more people will bike.”
+
+---
+
+### **Slide 12 – Transportation Technology and Urban Form**
+
+“Technology drives urban form. Highways allowed cities to sprawl outward, while earlier streetcars concentrated development near transit lines. The big question is: which technologies are we planning for now, and what kind of cities will they create?”
+
+---
+
+### **Slide 13–15 – The Costs of Car-Centric Systems**
+
+“Car-centric systems are expensive. We doubled our roadway mileage between 1970 and 2010, and families now spend about 20% of their income on transportation. They’re also unsafe — pedestrian fatalities have been rising in the U.S., and many people simply opt not to walk at all because it feels too dangerous. And they carry environmental costs: emissions, noise, and huge land use impacts.”
+
+---
+
+### **Slide 16 – Designing Better Communities**
+
+“So what do we do instead? We design communities that are safer, greener, more affordable, and more equitable. This isn’t just about building bike lanes — it’s about thinking holistically about how people move.”
+
+---
+
+### **Slide 17 – Theory of Mode Choice**
+
+“When people decide how to travel, they weigh time, cost, comfort, and safety. If driving is cheap and easy, most people will drive. Change the incentives — through better transit, safe walking networks, pricing — and you change behavior.”
+
+---
+
+### **Slide 18 – Revised Transportation Hierarchy**
+
+“This is Peter Koonce’s ‘Revised Transportation Hierarchy.’ It flips the old priority order. Pedestrians and cyclists come first, then transit, then freight, and finally private cars. Portland has actually used this hierarchy to adjust signal timing and intersection design to favor people walking and biking. It’s a powerful example of how policy can shift a whole city’s behavior.”
+
+---
+
+### **Slide 19 – Leading Pedestrian Intervals**
+
+“Here’s a simple example: leading pedestrian intervals — giving walkers a 3-second head start at intersections — can reduce collisions by up to 60%. Small design tweaks can have big safety impacts.”
+
+---
+
+### **Slide 20 – General Theory of Walkability**
+
+“Jeff Speck’s *Walkable City* lays out four conditions for a good walking experience: it has to be useful, safe, comfortable, and interesting. All four matter — even if the street is safe, if it’s boring or uncomfortable, people won’t choose to walk.”
+
+---
+
+### **Slide 21–23 – Cultural and Historical Perspectives**
+
+“Walking isn’t just transportation — it’s cultural. Joseph Amato traces its role in human history, from migration to ritual. Jane Jacobs reminds us that walkability is what makes cities vibrant, with ‘eyes on the street.’ And Donald Appleyard shows how traffic volumes can erode neighborhood social life. These are powerful reminders of why slowing down matters.”
+
+---
+
+### **Slide 24–29 – Closing**
+
+“So as we wrap up: slowing transportation down isn’t about being anti-car, it’s about creating systems that work for everyone. It’s about designing places where people feel safe walking, where transit is viable, where driving is one option among many — not the only one. Next week, we’ll look at specific policy tools that cities are using to make this vision a reality.”
+
+---
+
+Would you like me to **add estimated timestamps for each slide** (e.g., when you should be moving to the next one) so you can pace yourself to stay within 15 minutes?

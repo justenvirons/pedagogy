@@ -1,0 +1,60 @@
+---
+title: "GEO 3/430 Sustainable Urban Transportation"
+subtitle: "Week #1: Foundational Concepts"
+author: "C. Scott Smith, PHD AICP"
+institute: "DePaul University"
+date: "8/2X/2026"
+format: 
+  revealjs: 
+    slide-number: true
+    transition: fade
+    css: slides.css
+    footer: "© 2026 C. Scott Smith | DePaul University"
+    scrollable: true
+    progress: true
+    controls: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Agenda
+
+- Course Overview
+- Introductions
+- Sustainability
+- Transportation Systems
+- Exercise #1 (Part 1)
+- Q & A
+
+---
+
+## Course Overview
+### D2L
+### Syllabus
+### Exercises
+### Final Project
+
+## Introductions
+### Urban Planning and Design
+### Public Health
+
+## Sustainability
+### Sustainability Activity
+### Evolution
+### Three Pillars
+
+## Transportation Systems
+### Historical Context and Evolution
+#### Vehicles, Networks and Nodes
+### Market Street Activity
+### Chicago Area's Transportation System
+#### Infrastructure
+#### Behaviors
+#### Plans and Policies
+
+## Exercise #1
+### RStudio and Posit Cloud
+### Part 1 Overview
+
+## Week #1 Q & A
+
