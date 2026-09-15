@@ -36,7 +36,7 @@
 
 .reveal .medium-text {
   font-size: 0.50em;
-  color: #666;
+  color: #555;
   padding-left: 2em;
 }
 
@@ -56,8 +56,8 @@
 /* Slide bullet points */
 .reveal ul,
 .reveal ol {
-  font-size: 16pt;
-  color: #666;          /* medium/dark grey */
+  font-size: 17pt;
+  color: #555;          /* medium/dark grey */
   font-weight: 400;
 }
 

@@ -30,7 +30,7 @@ editor_options:
   - Week 8 (11/3): Transportation and public health (Exercise #3 due; Exercise #4 assigned)
   - Week 9 (11/10): Economic benefits of sustainable transportation
   - Week 10 (11/17): Advocating for sustainable transportation systems (Exercise #4 due)
-  - Finals week (11/24): (Group project presentations)
+  - **Finals week (11/24): Group project presentations**
   - *Final projects, outstanding assignments due Friday, 11/27 by end of day*
 
 
@@ -211,8 +211,10 @@ This is the assigned Week 1 reading: Schneider, Robert J. 2013, "Theory of Routi
 1. **Awareness/Availability** — Which modes do you actually consider? Are there modes you rarely think about?
 2. **Safety/Security** — Does a safety concern rule out any mode?
 3. **Convenience/Cost** — What's the biggest factor pushing you to your usual transportation mode?
-4. **Enjoyment** — Eo you enjoy walking/biking generally, even if you don't use it for *this* trip?
+4. **Enjoyment** — Do you enjoy walking/biking generally, even if you don't use it for *this* trip?
 5. **Habit** — Is your choice automatic? When did you last reconsider it?
+
+![Midge riding bicycle, photograph, Oak Park, Illinois. Source: C. Scott Smith](images/dog_on_bike.jpg){.bordered-img fig-align="center" height="300"}
 
 ::: {.notes}
 Schneider found many interviewees enjoyed walking/biking for leisure but still drove for errands — flag this "enjoyment–behavior gap" if it comes up.
