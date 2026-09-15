@@ -47,7 +47,7 @@ Welcome students to the first session of GEO 3/430, Sustainable Urban Transporta
 - Degree program
 - Preferred mode of travel
 
-![Cadillac Ranch, July 9, 2008, photograph, Amarillo, Texas. Source: C. Scott Smith](images/cars.jpg){.bordered-img fig-align="center" height="400"}
+![Cadillac Ranch, July 9, 2008, photograph, Amarillo, Texas. Source: C. Scott Smith](images/cars.JPG){.bordered-img fig-align="center" height="400"}
 
 ::: notes
 Icebreaker. Go around (or use chat/breakout rooms, since this is an online synchronous class) and have each student share their name, degree program, and preferred mode of travel. Listen for the range of answers — you will likely get walkers, drivers, transit riders, and cyclists in the same room, which is a useful, low-stakes way to surface that "sustainable transportation" is not one mode but a mix, and that everyone in the room already has a personal stake in and opinion about how it should work. Keep this brief, a few minutes at most, since there is a lot of ground to cover today.
@@ -240,7 +240,18 @@ Schneider found many interviewees enjoyed walking/biking for leisure but still d
 
 ## Applied Example: The Leading Pedestrian Interval
 
+:::: {.columns}
+::: {.column width="55%"}
 ![Pedestrian scramble at State and Jackson, Chicago](images/pedestrian-scramble.jpg){.bordered-img fig-align="center" height="300"}
+:::
+
+::: {.column width="45%"}
+- A Leading Pedestrian Interval (LPI) typically gives pedestrians a 3–7 second head start when entering an intersection with a corresponding green signal in the same direction of travel.
+- LPIs have been shown to reduce pedestrian-vehicle collisions as much as 60% at treated intersections.
+
+![A bicycle signal head paired with a "turning vehicles yield" sign — another low-cost signal treatment](images/bike-signal.jpeg){.bordered-img fig-align="center" height="180"}
+:::
+::::
 
 ::: notes
 Close the lecture with one small, concrete, well-evidenced example of the transportation hierarchy and the routine-mode-choice framework put into practice: the Leading Pedestrian Interval, or LPI. An LPI gives pedestrians a several-second head start — typically 3 to 7 seconds — before parallel vehicle traffic gets a green light, so pedestrians are already visible and established in the crosswalk before turning vehicles start moving. This is a low-cost signal timing change, not a capital project, and it has been shown to reduce pedestrian-vehicle collisions by as much as 60% at treated intersections. The large photo shows Chicago's pedestrian scramble at State and Jackson, an even more aggressive version of prioritizing pedestrian crossing time by stopping all vehicle traffic simultaneously; the smaller photo shows a similarly low-cost signal treatment for cyclists — a dedicated bicycle signal head paired with a sign reminding turning vehicles to yield. Both are good illustrations that improving safety for the top of the transportation hierarchy is often more about signal timing and small design details than expensive capital construction. Connect this directly to what's coming next: Exercise #1, assigned this week, asks students to analyze commute mode share and pedestrian fatality trends for a county of their choosing — the LPI is a preview of the kind of specific, evidence-based intervention they'll be asked to identify from their own hot spot analysis later in the exercise.
