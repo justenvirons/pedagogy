@@ -13,7 +13,6 @@ format:
     preview-links: true
     footer: "GEO 330 / SUD 430 · Sustainable Urban Transportation · Week 1"
     embed-resources: true
-    chalkboard: true
 ---
 
 ## Introductions
