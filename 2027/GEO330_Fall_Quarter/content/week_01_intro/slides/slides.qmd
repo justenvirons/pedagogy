@@ -206,7 +206,7 @@ This is the assigned Week 1 reading: Schneider, Robert J. 2013, "Theory of Routi
 
 ## In-Class Transportation Mode Choice Activity
 
-- Individual reflection. Consider one routine trip you make regularly.
+[Individual reflection. Consider one routine trip you make regularly.]{.prompt-lead}
 
 1. **Awareness/Availability** — Which modes do you actually consider? Are there modes you rarely think about?
 2. **Safety/Security** — Does a safety concern rule out any mode?

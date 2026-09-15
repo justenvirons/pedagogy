@@ -82,6 +82,13 @@
   padding: 1px;
 }
 
+/* Lead-in prompt line above a numbered activity list */
+.prompt-lead {
+  font-size: 18pt;
+  color: #3A4A66;   /* milky dark blue - distinct from heading grey, doesn't compete */
+  font-weight: 700;
+}
+
 .reveal .slide-background { opacity: 0.1 !important; }         /* default for others */
 
 .reveal .slide-background.present { opacity: 0.1 !important; }/* the active slide */
