@@ -230,13 +230,15 @@ Schneider found many interviewees enjoyed walking/biking for leisure but still d
   - **Life events** — has a past transition (moving, new job, school) ever changed your habit? What would break your *current* one?
 
 ---
-
+azx
 ## Part 3: Class Debrief
 
 - Quick poll: biggest barrier — awareness? safety? convenience/cost? enjoyment? habit?
 - What single strategy from Table 2 (secure bike parking, individualized marketing, protected bike lanes, reduced parking, street trees) would move *you* past your barrier?
 
 - Because people are blocked at **different steps for different reasons**, a single intervention rarely shifts community-wide mode share — a **comprehensive approach** across all five steps is usually needed.
+
+![Example strategies to increase active transportation mode choices](images/routine-mode-choice-diagram_table_02_strategies.png){.bordered-img fig-align="center" height="500"}
 
 ---
 
