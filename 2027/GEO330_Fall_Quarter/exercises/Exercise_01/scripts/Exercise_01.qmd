@@ -53,7 +53,7 @@ Understanding who walks, bikes and takes transit, and where people face the grea
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Introduction
-{{< video ../video/exercise_01_00.mp4 >}}
+{{< video video/exercise_01_00.mp4 >}}
 :::
 
 # Step 1. Open Exercise #1 in Posit Cloud course workspace
@@ -100,7 +100,7 @@ R is a free software environment for statistical computing and graphics. It comp
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Step #1
-{{< video ../videos/exercise_01_01.mp4 >}}
+{{< video video/exercise_01_01.mp4 >}}
 :::
 
 # Step 2. Download exercise template and select US county
@@ -207,7 +207,7 @@ leaflet() %>%
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Step #2
-{{< video ../videos/exercise_01_02.mp4 >}}
+{{< video video/exercise_01_02.mp4 >}}
 :::
 
 # Step 3. Transportation mode share analysis
@@ -543,10 +543,10 @@ drove_map
 
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #3 -->
-<!-- {{< video videos/exercise_01_03.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #3
+{{< video video/exercise_01_03.mp4 >}}
+:::
 
 # Step 4. Pedestrian fatalities
 
@@ -947,10 +947,10 @@ fx_map_pedfatalityhotspot(ped_fatalities, custom_geoid)
 This script computes a kernel density estimate (KDE) on the pedestrian fatality points using the *spatstat* package's [@baddeley_spatstat] density.ppp() function — essentially smoothing the individual crash locations into a continuous surface rather than leaving them as discrete dots. Each point spreads its influence outward in a soft, bell-curve-shaped bump, and where these bumps from nearby points overlap, the resulting intensity builds up, creating "hot spots" where fatalities cluster tightly together. After computing the surface, the units get converted to fatalities per km² just for readability, the raster is reprojected onto a normal map (lat/long), clipped to the county boundary, and then split into 5 color categories using the *classInt* package [@bivand_classint] to calculate Jenks natural breaks — calculated on a log-transformed version of the values first (since a few extreme hot spot cells could otherwise dominate the breaks and wash out finer patterns elsewhere).
 :::
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #4 -->
-<!-- {{< video videos/exercise_01_04.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #4
+{{< video video/exercise_01_04.mp4 >}}
+:::
 
 # Step 5. Urban street redesign recommendations
 Use the satellite view on you hot spot map and/or Google Street View to examine one of the corridors or intersections identified in @fig-pedfatalityhotspot. *What do you observe about the street design in this area? What challenges does the current design create for pedestrian safety? What infrastructure-related interventions, such as narrower travel lanes, raised crosswalks, protected bike lanes or shorter crossing distances, would you recommend for this location? Use slide #5 to summarize and illustrate your ideas.*
@@ -962,10 +962,10 @@ Use the satellite view on you hot spot map and/or Google Street View to examine 
 [The Pedestrian Program](https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/pedestrian-program.html) [@cdot_pedestrianprogram] is published by the Chicago Department of Transportation (CDOT) as part of its Complete Streets Chicago initiative, aiming to build a safer, more walkable, and accessible city by prioritizing the most vulnerable street users. To identify appropriate safety interventions, users can review CDOT's data-driven approach, which targets roughly 400 intersections annually by identifying crash hot spots and developing new treatments for the most serious issues, with resources concentrated around schools, parks, and other high-traffic destinations. The page also points to supporting documents—like the Vision Zero Chicago Action Plan, the Chicago Pedestrian Plan, and a Left Turn Traffic Calming flier—that offer more specific guidance on tools, policies, and infrastructure treatments (e.g., school zone crossing improvements, traffic signal upgrades) tied to particular safety problems. Overall, the resource functions less as a technical design manual and more as a program overview, directing practitioners toward CDOT's priority areas, funding mechanisms (Capital Plan, Aldermanic menu funds), and linked plans where specific interventions and their rationale are detailed further.
 :::
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #5 -->
-<!-- {{< video videos/exercise_01_05.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #5
+{{< video video/exercise_01_05.mp4 >}}
+:::
 
 # Step 6. Submit your completed presentation
 The final step is to navigate to the course D2L page and submit your exercise presentation to the Exercise #1 submission folder.

@@ -1,6 +1,9 @@
 # Folders
 2027/GEO330_Fall_Quarter/content/*
-2027/GEO330_Fall_Quarter/exercises/Exercise_01/video*
+2027/GEO330_Fall_Quarter/slides/*
+
+# Files
+*.mp4
 
 # History files
 .Rhistory
