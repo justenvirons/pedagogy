@@ -35,13 +35,42 @@
 }
 
 .reveal .medium-text {
-  font-size: 0.70em;
+  font-size: 0.50em;
   color: #999;
   padding-left: 2em;
 }
 
-.reveal .slide-background {                             
-  background-image: url("images/chicago_health_atlas_background.png") !important;
+/* Slide content headings */
+.reveal h2 {
+  font-size: 24pt;
+  color: #222;          /* dark grey */
+  font-weight: 600;
+}
+
+.reveal h3 {
+  font-size: 18pt;
+  color: #555;          /* medium grey */
+  font-weight: 500;
+}
+
+/* Slide bullet points */
+.reveal ul,
+.reveal ol {
+  font-size: 16pt;
+  color: #777;          /* medium/dark grey */
+  font-weight: 400;
+}
+
+.reveal figure figcaption {
+  font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+  font-size: 12pt !important;
+  font-style: italic;
+  color: #999;
+  text-align: center;
+}
+
+.reveal .slide-background {
+  background-image: url("images/content-bg.jpg") !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;  /* prevents tiling */
