@@ -36,7 +36,13 @@ editor_options:
 
 
 ::: notes
-Welcome students to the first session of GEO 3/430, Sustainable Urban Transportation. This is class orientation plus Week 1: Foundational Concepts, per the syllabus topical agenda. Briefly introduce yourself beyond the title slide: your background as an epidemiologist with Cook County Public Health and your work with the Chaddick Institute for Metropolitan Development gives you an applied, data-driven lens on transportation and health that will show up throughout the quarter. Mention logistics briefly: this is an online, synchronous course; office hours are by appointment; all readings are posted to D2L. Preview today's session: introductions, an interactive exercise on defining sustainability, a systems-thinking framework for transportation, a short video and discussion, a walk through the historical evolution of urban streets from shared space to auto-dominance, a look at how density relates to transportation emissions, the Schneider (2013) theory of routine mode choice that anchors this week's reading, and a first look at the transportation hierarchy and pedestrian safety design — all of which sets up Exercise #1 (mode share and pedestrian fatality analysis), assigned this week.
+Welcome, everyone, to the first session of GEO 3/430, Sustainable Urban Transportation. Quick introduction before we get going: I'm Scott Smith. Alongside teaching here at DePaul, I work as an epidemiologist with the Cook County Department of Public Health, and I'm also an urban programs advisor with DePaul's Chaddick Institute for Metropolitan Development. So you'll see me bring in a lot of health data and applied planning examples throughout the quarter — that's where my own background sits.
+
+A few logistics up front, since we're meeting online and synchronously: office hours are by appointment, so just email me and we'll find a time. Everything — readings, slides, assignments — lives on D2L, so bookmark that page now if you haven't already.
+
+Let's walk through the quarter at a glance. [Point to the schedule.] Today is class orientation plus foundational concepts, and I'll assign Exercise number one at the end of this session. Weeks two through five each focus on one mode — walking, bicycling, transit, then driving — and that's also when your first two methods exercises will be assigned and due. From week six on we shift into more analytical lenses: equity, environment and public health, the economics of sustainable transportation, and advocacy, before your group project presentations during finals week. I'll always flag what's due at the start of each session, but it helps to have this whole map in your head now.
+
+Any questions on logistics before we dive in? [pause] Good — let's get into it.
 :::
 
 ---
@@ -50,9 +56,9 @@ Welcome students to the first session of GEO 3/430, Sustainable Urban Transporta
 ![Cadillac Ranch, July 9, 2008, photograph, Amarillo, Texas. Source: C. Scott Smith](images/cars.JPG){.bordered-img fig-align="center" height="400"}
 
 ::: notes
-Icebreaker. Go around (or use chat/breakout rooms, since this is an online synchronous class) and have each student share their name, degree program, and preferred mode of travel. Listen for the range of answers — you will likely get walkers, drivers, transit riders, and cyclists in the same room, which is a useful, low-stakes way to surface that "sustainable transportation" is not one mode but a mix, and that everyone in the room already has a personal stake in and opinion about how it should work. Keep this brief, a few minutes at most, since there is a lot of ground to cover today.
+Let's go around and get to know each other a bit. When it's your turn — or drop it in the chat if that's easier — tell us your name, what degree program you're in, and your preferred way of getting around, whatever mode you find yourself reaching for most. [Give students time to respond.] I'd bet we've already got walkers, drivers, transit riders, and cyclists all in this one room, and that's actually worth noticing right away: sustainable transportation isn't one mode, it's a mix, and every one of you already has a personal stake in how that mix works.
 
-This is Cadillac Ranch, the famous public art installation just outside Amarillo, Texas, along old Route 66 (I-40). It's a row of ten vintage Cadillacs (models spanning roughly 1949–1963) buried nose-down in a field at the same angle as the Great Pyramid of Giza. It was created in 1974 by a group of artists from the Ant Farm collective, commissioned by local millionaire Stanley Marsh 3. The cars are covered in layers upon layer of spray-paint graffiti, since visitors are actually encouraged to bring their own paint and add to them — which is why the surfaces look like a constantly-evolving mural rather than the original car paint. It's a popular roadside stop for Route 66 travelers.
+While you're thinking, let me tell you about this photo. [Gesture to image.] This is Cadillac Ranch, a public art installation just outside Amarillo, Texas, right along old Route 66. It's ten vintage Cadillacs — spanning about 1949 to 1963 — buried nose-down in a field, tilted at the same angle as the Great Pyramid of Giza. A group of artists called the Ant Farm collective built it back in 1974, commissioned by a local millionaire named Stanley Marsh 3. Visitors are actually encouraged to bring their own spray paint and add to it, which is why it looks like a constantly evolving mural rather than the original car paint — it's one of the more famous roadside stops for Route 66 travelers, and a nice visual reminder that our relationship with the automobile has always been part practical, part cultural performance.
 :::
 
 ---
@@ -68,9 +74,11 @@ This is Cadillac Ranch, the famous public art installation just outside Amarillo
 ![QR Code for poll. PollEv.com/urbantransport](images/qr_code_survey.jpg){.bordered-img fig-align="center" height="200"}
 
 ::: notes
-This is a live, participatory activity using Poll Everywhere (PollEv.com/urbantransport — https://www.polleverywhere.com/home). Give students a minute to think individually first before they submit, so the group discussion doesn't just anchor on the first idea shared. Have them submit at least three words or short phrases that come to mind when they hear "sustainability" — don't over-constrain the prompt yet; the goal is to see the raw, varied associations people already bring (environmental, economic, social, generational, personal). After individual submission, break into groups of three for about five minutes to compare answers, then let groups add any new concepts they generated together back into the same poll. The next slide will display the live results.
+Now let's do a quick activity. Take a minute on your own first — don't talk to your neighbor yet — and just think about what sustainability actually means to you. [pause] Once you've got something in mind, scan the QR code on screen, or go to PollEv.com slash urbantransport, and submit at least three words or short phrases that come to mind when you hear the word "sustainability." Don't overthink it — I want your gut reactions: environmental, economic, social, personal, whatever comes up.
 
-Pull up the live Poll Everywhere results (word cloud or response list) on screen and walk through what came in. Look for clusters around the three classic pillars — environmental (emissions, resource use, climate), economic (cost, efficiency, jobs), and social/equity (access, health, fairness) — and note anywhere students converge or diverge. If the responses skew heavily environmental, that's a good moment to explicitly introduce the "three-legged stool" or triple-bottom-line framing of sustainability (environment, economy, equity) and note that this course treats all three as equally central to "sustainable urban transportation," not just emissions. Keep this discussion tight; the point is to establish a shared, broadened working definition before moving into systems thinking.
+Once you've submitted, get into groups of three, and spend about five minutes comparing what you each wrote. Did you land on similar words, or completely different ones? Feel free to add any new ideas your group comes up with back into the same poll.
+
+[After a few minutes] Let's pull up the live results together. Walk through what came in with me — look for clusters around the three classic pillars of sustainability: environmental things like emissions and climate, economic things like cost and efficiency, and social or equity things like access and health. If everything skews environmental, that's my cue to introduce the idea of a triple-bottom-line, or "three-legged stool," framing of sustainability — because this course treats all three of those pillars as equally central to what we mean by "sustainable urban transportation," not just carbon emissions. Let's keep this part brief; the goal is just to get us on the same page before we move into how transportation systems actually work.
 :::
 
 ---
@@ -94,13 +102,11 @@ Pull up the live Poll Everywhere results (word cloud or response list) on screen
 </figure>
 
 ::: notes
-Introduce Donella Meadows' basic definition of a system — elements, interconnections, and a purpose — and connect it directly to transportation: the elements are vehicles and modes, the interconnections are the paths and networks they travel on, and the whole thing is animated by human behavior and choices. Emphasize the second point especially: transportation systems are not static engineering artifacts, they are historical and geographic — they were built by specific decisions at specific times and in specific places, and they adapt, resist change, and sometimes evolve in response to new pressures (technology, policy, demand). This systems framing is the conceptual foundation for the whole course: every mode-specific week (walking, biking, transit, driving) and every analytical week (equity, health, economics) will come back to how elements, interconnections, and behavior interact. It also previews why simply swapping in a new vehicle technology, without addressing networks and behavior, rarely produces a more sustainable outcome on its own.
+Let's talk for a second about what we actually mean by a "transportation system." Donella Meadows gives us a useful, general definition: a system is just an interconnected set of elements, organized in a way that achieves some function or purpose. For a transportation system specifically, those elements boil down to three things — the vehicles or modes people use, the paths or networks those vehicles move through, and the behaviors of the people actually making choices within it. And like any system, ours are historical and geographic: they were built through specific decisions, in specific places, at specific times, and they adapt — sometimes slowly, sometimes suddenly — as pressures change around them.
 
-- Foundational infrastructure (1840s) — The brick viaduct itself dates to the earliest era of London's railway expansion, when elevated masonry arches were the standard solution for carrying trains over dense urban terrain without disrupting streets below. This is a physical layer that's remained largely unchanged for180 years.
-- Operational upgrades over time — While the viaduct's brick-and-arch structure is unchanged, the trains, signaling, and electrification running on it have been modernized repeatedly (steam → diesel → electric multiple units, now part of the London Overground network since 2007).
-Overlaid modern elements — The gantry crane/signal structure on the right shows newer steel infrastructure bolted onto or built alongside the historic brick, reflecting incremental modernization rather than full replacement — a common pattern in mature transit systems where upgrading in place is more practical than rebuilding.
-- Adaptive reuse and neglect — The arches beneath viaducts like this one are often repurposed as commercial units (visible as the arched doorways at street level), while the tops are sometimes left to nature, as seen with the dense vegetation — an unintentional but increasingly valued "green infrastructure" element in urban rail corridors.
-- Layered urban growth — The skyline of modern glass towers rising behind a 19th-century rail structure illustrates how transportation corridors often become anchors around which later urban development is built, with the transit infrastructure predating and outlasting multiple waves of surrounding architectural change.
+Now let's watch this time-lapse I shot in London, of the Southwark rail viaduct. [Play video.] I want you to notice a few layers here as it plays. First, the brick viaduct itself — that structure dates back to the 1840s, the very earliest era of London's railway expansion, when elevated masonry arches were the standard way to carry trains over dense city streets without disrupting everything below. That physical layer has barely changed in a hundred and eighty years. But look at what's running on top of it: the trains, the signaling, the electrification — all of that has been modernized again and again, steam to diesel to today's electric multiple units, now part of the London Overground network since 2007. See that gantry crane and signal structure on the right? That's newer steel bolted onto the historic brick — incremental modernization, not full replacement, which is actually the normal pattern in mature transit systems, since upgrading in place is usually far more practical than tearing everything down and starting over. Notice too how the arches underneath get reused — commercial units in those doorways at street level — while the tops are sometimes just left to nature, like that vegetation you can see, which has become an unintentional but genuinely valued bit of green infrastructure in urban rail corridors. And zoom out: you've got a skyline of brand-new glass towers rising up behind a nineteenth-century rail structure. That's a great example of how transportation corridors often become anchors that later urban development just builds itself around — the infrastructure outlasts wave after wave of the architecture surrounding it.
+
+Keep that framing in mind — elements, interconnections, and behavior, all layered across time — because we're going to come back to it constantly this quarter.
 :::
 
 ---
@@ -120,26 +126,13 @@ Overlaid modern elements — The gantry crane/signal structure on the right show
 </figure>
 
 ::: {.notes}
-Play the embedded archival street film and give students a moment to actually count modes before discussing — most will be surprised how many different modes (pedestrians, cyclists, horse-drawn carts and streetcars, and early automobiles) shared the same street space simultaneously, often with no lane markings, signals, or dedicated space at all. Use the discussion questions in order: first the literal count of modes, then a qualitative characterization of the system (informal, mixed, negotiated, chaotic-but-functioning), then push on the sustainability question directly — there is no single right answer, but look for students noticing that the system was arguably efficient and space-sharing by necessity, even without today's vocabulary of "sustainability," while also being genuinely dangerous by modern safety standards. The last question is the pivot into the rest of the lecture: what data would you actually need (mode share, collision records, speeds, volumes) to move from an impression to an evidence-based evaluation — which is exactly what Exercise #1 will have them do.
+Alright, let's watch a short clip — this is "A Trip Down Market Street," filmed in San Francisco in 1906. [Play video.] As you watch, try to actually count: how many different transportation modes do you see sharing this one street at the same time? [Let it play, then pause for discussion.]
 
-**A Trip Down Market Street (1906, San Francisco)**
+So — what did you count? [pause for responses] You've probably spotted cable cars and streetcars, horse-drawn carriages, wagons and freight carts — actually the dominant mode at this point — a few rare, disruptive early automobiles, bicycles, and pedestrians crossing wherever they like, since there isn't a crosswalk in sight. Now, how would you characterize this as a system? [pause] I'd call it informal, mixed, and negotiated in real time — genuinely no lane markings, no signals, no dedicated space for anyone. Does that count as sustainable? There's no single right answer here, but it's worth noticing it was arguably efficient, in the sense that it shared space by necessity, even though nobody at the time would have used the word "sustainability." It was also, frankly, quite dangerous by any modern safety standard.
 
-Filmed by the Miles Brothers just days before the 1906 earthquake, from a camera mounted on a cable car heading down Market Street toward the Ferry Building.
+A little bit of trivia on this footage: it was filmed by the Miles Brothers just days before the 1906 earthquake, from a camera mounted right on the front of a cable car heading down Market Street toward the Ferry Building. That's part of what makes this period so turbulent, transportation-wise — you've got four completely different propulsion types, animal, cable, electric rail, and combustion, sharing one totally unregulated street, with right-of-way worked out moment to moment. Automobiles are still a marginal curiosity here, but within a decade or two they'll displace nearly everything else you just watched — and that same tension between fixed-guideway rail and flexible-path vehicles competing for the same space is still unresolved in cities today, just think of bus and bike lanes versus general traffic. There's a poignant footnote too: the original footage was very nearly destroyed by the earthquake just days later, so what we're watching is almost an accidental last snapshot of a mobility system on the very eve of being forced to reinvent itself.
 
-**Vehicles visible:**
-- Cable cars / streetcars (fixed-rail mass transit)
-- Horse-drawn carriages, wagons, freight carts (dominant mode)
-- Early automobiles (rare, disruptive newcomers)
-- Bicycles
-- Pedestrians crossing freely, no crosswalks
-
-**Why this period is transportation's most turbulent transition:**
-1. Four propulsion types — animal, cable, electric rail, combustion — sharing one unregulated street
-2. No traffic infrastructure yet: no lanes, signals, or crossings; right-of-way negotiated in real time
-3. Automobiles still marginal here, but about to displace nearly every other mode within a decade or two
-4. Fixed-guideway rail vs. flexible-path vehicles competing for the same space — a tension still unresolved in cities today (bus/bike lanes vs. general traffic)
-5. Captures rapid, compressed change — contrast with slow-evolving infrastructure (e.g., Victorian rail viaducts layered with modern transit over centuries)
-6. Footage destroyed days later by the earthquake — an accidental "last snapshot" of a mobility system on the eve of forced reinvention
+Last question for you: what information would you actually need to properly evaluate — and potentially improve — a system like this one? [pause for responses] Hold onto that thought, because that's exactly the kind of evidence-based evaluation Exercise number one is going to have you do, just with modern data instead of a hundred-year-old film reel.
 :::
 
 ---
@@ -149,7 +142,9 @@ Filmed by the Miles Brothers just days before the 1906 earthquake, from a camera
 ![Manhattan's Hester Street, Lower East Side, 1914. Source: Getty Images](images/hester-street-1914.jpg){.bordered-img fig-align="center" height="500"}
 
 ::: notes
-Prior to the 1920s, city streets looked dramatically different than they do today. They were considered to be a public space for play and exchange, not solely a conduit for vehicle movement. This photo shows Manhattan's Hester Street, on the Lower East Side, in 1914 — a street market packed with pedestrians, pushcarts, and children playing, with almost no motor vehicles present. Use this image to set up the historical arc for the rest of the lecture: streets were once shared, multi-purpose civic space, and the reallocation of that space almost entirely to motor vehicles over the following decades was neither inevitable nor natural — it was a series of specific planning, engineering, and legal decisions (including the campaign to redefine "jaywalking" as a crime in the 1920s). That reframing is central to a lot of contemporary "complete streets" and sustainable transportation advocacy: it's less about inventing something new and more about reclaiming space that streets used to serve.
+Take a look at this photo. [Gesture to image.] This is Hester Street, on Manhattan's Lower East Side, in 1914. Before the 1920s, city streets simply looked like this — they were public space for play, for commerce, for just being outside, not a conduit built exclusively for moving vehicles. Look how packed this street market is: pedestrians, pushcarts, kids playing, and almost no motor vehicles at all.
+
+I want you to hold onto this image, because it sets up the arc of everything we're about to walk through. Streets used to be shared, multi-purpose civic space. The fact that we reallocated nearly all of that space to motor vehicles over the following decades wasn't inevitable, and it wasn't natural — it was a series of very specific planning, engineering, and even legal decisions, including a deliberate campaign in the 1920s to redefine "jaywalking" as a crime. A lot of what we now call "complete streets" advocacy isn't really inventing something new — it's reclaiming space that streets already used to serve.
 :::
 
 ---
@@ -159,7 +154,7 @@ Prior to the 1920s, city streets looked dramatically different than they do toda
 ![Various forms of transit in 1904 at State and Madison Streets, Chicago, with two cable car trains. Source: Chicago's Forgotten Cable Cars](images/state-madison-1904.jpg){.bordered-img fig-align="center" height="500"}
 
 ::: notes
-Point out how busy and multimodal this intersection already was well before automobiles arrived in force — cable cars, horse-drawn carriages, and dense pedestrian crowds all sharing one of the country's busiest commercial intersections. This is a good moment to note that Chicago's "State and Madison" is historically considered the zero-point for the city's street numbering grid, underscoring how central this corner was to the city's transportation network from very early on.
+Here's State and Madison in Chicago, in 1904, with two cable car trains visible. [Gesture to image.] Notice how busy and multimodal this intersection already is, well before automobiles show up in force — cable cars, horse-drawn carriages, dense pedestrian crowds, all sharing one of the country's busiest commercial corners. Fun bit of trivia: State and Madison is historically considered the zero point of Chicago's entire street numbering grid, which tells you just how central this one corner was to the city's transportation network, even this early on.
 :::
 
 ---
@@ -181,7 +176,9 @@ Point out how busy and multimodal this intersection already was well before auto
 ::::
 
 ::: notes
-The postwar decades (1950s–1990s) mark a sharp break from everything shown in the previous slides: federal highway funding, cheap land at the urban edge, and single-use zoning together produced a geographic dispersion of housing and jobs that could only really function with car ownership, which in turn justified building more automobile infrastructure to serve that dispersed pattern — a self-reinforcing loop. The Fred Kent quote captures this concisely: infrastructure investment is not a neutral response to demand, it actively produces the travel behavior and land use pattern that follows. The two images pair a congested urban freeway with an aerial view of a sprawling, curvilinear suburban subdivision — visually, very little pedestrian or transit infrastructure is legible in either. Introduce the concept of induced demand explicitly here: adding highway capacity tends to generate new vehicle trips rather than durably relieving congestion, because it lowers the time-cost of longer, more dispersed trip patterns — cities became, in short, wedded to automobility. This is a good bridge into Week 5 (driving and automation) and Week 9 (economic benefits of sustainable transportation), both of which will revisit this dynamic.
+Let's fast forward to the 1950s through the 1990s. This period is marked by the geographic dispersion of housing and jobs, and by all the automobile infrastructure built to serve that dispersal. There's a quote I like from Fred Kent that captures this really well: "If you plan for cars and traffic, you get cars and traffic. If you plan for people and places, you get people and places." Infrastructure investment was never a neutral response to demand — it actively produced the travel behavior and land-use pattern that followed.
+
+Look at these two images. [Gesture to freeway photo.] This is a Los Angeles freeway from the early 2000s. [Gesture to aerial photo.] And this is an aerial view of Gilbert, Arizona — notice how little pedestrian or transit infrastructure is even visible in either one. This is a good moment to introduce a concept we'll come back to: induced demand. Adding highway capacity tends to generate new vehicle trips rather than durably relieving congestion, because it lowers the time cost of living farther out. Cities became, in short, wedded to automobility — and we'll pick this exact thread back up in week five, on driving and automation, and again in week nine, on the economic benefits of sustainable transportation.
 :::
 
 ---
@@ -199,7 +196,19 @@ The postwar decades (1950s–1990s) mark a sharp break from everything shown in 
 ::::
 
 ::: notes
-This is the assigned Week 1 reading: Schneider, Robert J. 2013, "Theory of Routine Mode Choice Decisions: An Operational Framework to Increase Sustainable Transportation," Transport Policy 25: 128–37. Walk through the five-step framework in the diagram in order, since it's the conceptual model the whole course will keep returning to. (1) Awareness and availability: a mode has to be known about and actually available before it can be chosen at all — you can't bike somewhere if you don't own a bike or don't know a safe route exists. (2) Basic safety and security: people filter out modes they perceive as unsafe from traffic or crime, regardless of the mode's actual convenience. (3) Convenience and cost: among the remaining "safe enough" options, people weigh acceptable time, effort, and money. (4) Enjoyment: people also weigh the personal, social, or environmental benefit or pleasure a mode provides — not everything reduces to cost and time. (5) Habit: once someone regularly chooses a mode, that choice becomes self-reinforcing and more likely to be considered again in the future, looping back to awareness and availability. Socioeconomic factors run alongside all five steps, since income, ability, and life circumstances shape how people experience each one differently. This framework is useful precisely because it identifies five distinct levers — not just "make it cheaper" or "make it faster" — that a planner or policy can pull to shift routine travel behavior toward walking, bicycling, and transit.
+This is your assigned reading for this week — Robert Schneider's 2013 paper in Transport Policy, "Theory of Routine Mode Choice Decisions." [Gesture to diagram.] Let's walk through his five-step framework together, because we're going to use this model again and again this quarter.
+
+Step one is awareness and availability — a mode has to be something you actually know about and have access to before you can choose it at all. You can't bike somewhere if you don't own a bike, or don't know a safe route exists.
+
+Step two is basic safety and security — people rule out modes they perceive as unsafe, whether that's traffic risk or personal security, regardless of how convenient that mode might otherwise be.
+
+Step three is convenience and cost — among whatever options survive that safety filter, people weigh acceptable time, effort, and money.
+
+Step four is enjoyment — people also factor in the personal, social, or even environmental pleasure a mode gives them. Not everything reduces to time and cost.
+
+And step five is habit — once you choose a mode regularly, that choice becomes self-reinforcing, and it loops all the way back around to step one, making that mode even more likely to come to mind next time.
+
+Running alongside all five of these steps are socioeconomic factors — income, physical ability, life circumstances — which shape how differently people experience each step. What I like about this framework is that it hands us five distinct levers, not just one. If you want to shift routine travel behavior toward walking, biking, or transit, "make it cheaper" or "make it faster" is only one possible lever out of five.
 :::
 
 ---
@@ -217,7 +226,19 @@ This is the assigned Week 1 reading: Schneider, Robert J. 2013, "Theory of Routi
 ![Midge riding bicycle, photograph, Oak Park, Illinois. Source: C. Scott Smith](images/dog_on_bike.jpg){.bordered-img fig-align="center" height="300"}
 
 ::: {.notes}
-Schneider found many interviewees enjoyed walking/biking for leisure but still drove for errands — flag this "enjoyment–behavior gap" if it comes up.
+Now let's apply Schneider's framework to your own life. Think of one routine trip you make regularly — your commute, a grocery run, whatever comes to mind — and let's walk through these five questions for that one trip. [Give students a minute to think and jot down answers.]
+
+First, awareness and availability: which modes do you actually consider for this trip? Are there modes you barely even think about as options?
+
+Second, safety and security: does a safety concern rule out any mode before you even get to comparing convenience?
+
+Third, convenience and cost: what's the single biggest factor pushing you toward whatever mode you actually use?
+
+Fourth, enjoyment: do you generally enjoy walking or biking, even if you don't use it for this particular trip?
+
+And fifth, habit: is this choice basically automatic at this point? When's the last time you actually reconsidered it?
+
+One thing worth flagging as you're working through this: Schneider found that a lot of his interviewees genuinely enjoyed walking or biking for leisure, but still drove for everyday errands. Watch for that same gap in your own answers — call it the "enjoyment–behavior gap" — because it's a good example of how these five factors don't always point in the same direction for the same person.
 :::
 
 ---
@@ -229,8 +250,12 @@ Schneider found many interviewees enjoyed walking/biking for leisure but still d
   - **Socioeconomic factors** — how would your answers change with different income, physical ability, household size, or life stage?
   - **Life events** — has a past transition (moving, new job, school) ever changed your habit? What would break your *current* one?
 
+::: notes
+Now get into groups of two or three and compare what you each wrote down. [Give the class a few minutes.] I want you to talk through three things. First, where's the real barrier for you — is it awareness, safety, convenience and cost, enjoyment, or habit? And is that the same barrier across everyone in your group, or does it differ person to person? Second, think about socioeconomic factors — how would your answers change if you had a different income, a different physical ability, a bigger household, or you were at a different life stage? And third, life events — has some past transition, like a move, a new job, or starting school, ever actually changed one of your travel habits? What do you think it would take to break your current one?
+:::
+
 ---
-azx
+
 ## Part 3: Class Debrief
 
 - Quick poll: biggest barrier — awareness? safety? convenience/cost? enjoyment? habit?
@@ -239,6 +264,14 @@ azx
 - Because people are blocked at **different steps for different reasons**, a single intervention rarely shifts community-wide mode share — a **comprehensive approach** across all five steps is usually needed.
 
 ![Example strategies to increase active transportation mode choices](images/routine-mode-choice-diagram_table_02_strategies.png){.bordered-img fig-align="center" height="500"}
+
+::: notes
+Let's come back together. Quick poll for the room: for your own trip, what turned out to be the biggest barrier — awareness, safety, convenience and cost, enjoyment, or habit? [Take a show of hands or a quick poll for each.]
+
+Now look at this table of strategies. [Gesture to image.] Secure bike parking, individualized marketing, protected bike lanes, reduced parking, street trees — which single strategy here do you think would actually move you past your own barrier? [Discuss a few responses.]
+
+Here's the takeaway I want you to leave with: because people get blocked at different steps, for different reasons, a single intervention rarely shifts mode share across an entire community. You almost always need a comprehensive approach that addresses multiple steps in this framework at once, not just whichever one is cheapest or easiest to build.
+:::
 
 ---
 
@@ -258,5 +291,9 @@ azx
 ::::
 
 ::: notes
-Close the lecture with one small, concrete, well-evidenced example of the transportation hierarchy and the routine-mode-choice framework put into practice: the Leading Pedestrian Interval, or LPI. An LPI gives pedestrians a several-second head start — typically 3 to 7 seconds — before parallel vehicle traffic gets a green light, so pedestrians are already visible and established in the crosswalk before turning vehicles start moving. This is a low-cost signal timing change, not a capital project, and it has been shown to reduce pedestrian-vehicle collisions by as much as 60% at treated intersections. The large photo shows Chicago's pedestrian scramble at State and Jackson, an even more aggressive version of prioritizing pedestrian crossing time by stopping all vehicle traffic simultaneously; the smaller photo shows a similarly low-cost signal treatment for cyclists — a dedicated bicycle signal head paired with a sign reminding turning vehicles to yield. Both are good illustrations that improving safety for the top of the transportation hierarchy is often more about signal timing and small design details than expensive capital construction. Connect this directly to what's coming next: Exercise #1, assigned this week, asks students to analyze commute mode share and pedestrian fatality trends for a county of their choosing — the LPI is a preview of the kind of specific, evidence-based intervention they'll be asked to identify from their own hot spot analysis later in the exercise.
+Let's close today's lecture with one small, concrete example of this framework in action: the Leading Pedestrian Interval, or LPI. [Gesture to photo.] This photo is Chicago's pedestrian scramble at State and Jackson — an especially aggressive version of prioritizing pedestrian crossing time, where all vehicle traffic actually stops at once. An LPI itself is a more modest version of the same idea: it just gives pedestrians a three-to-seven-second head start into the intersection before parallel vehicle traffic gets its green light, so people on foot are already visible and established in the crosswalk before any turning vehicle starts moving. This is purely a signal-timing change — no capital construction required — and it's been shown to reduce pedestrian-vehicle collisions by as much as sixty percent at treated intersections.
+
+Here's a similar low-cost idea for cyclists. [Gesture to bike-signal photo.] This is a dedicated bicycle signal head, paired with a sign reminding turning vehicles to yield. Both of these examples make the same point: improving safety at the top of our transportation hierarchy is often much more about signal timing and small design details than it is about expensive capital projects.
+
+Keep this in mind, because it's exactly the kind of specific, evidence-based intervention you'll be asked to identify yourselves: Exercise number one, assigned this week, has you analyze commute mode share and pedestrian fatality trends for a county of your choosing, and by the end of that exercise, you'll be pointing to your own hot spot and proposing your own version of exactly this kind of fix.
 :::
