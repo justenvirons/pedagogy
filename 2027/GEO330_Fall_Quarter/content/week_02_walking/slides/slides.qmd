@@ -15,34 +15,32 @@ format:
 editor_options:
   chunk_output_type: console
 ---
+## Week #2 agenda
 
-::: {.img-center}
-![](images/florence_medieval_street.jpg){height=100%}
+:::: {.columns}
+::: {.column width="40%"}
+- Week #1 recap
+- Periods of urban pedestrian form & movement
+- Final project brainstorming
+- Exercise #1 part 2
+- All topic Q&A
 :::
+
+::: {.column width="60%"}
+![Venice, Italy, 2026, photograph. Source: C. Scott Smith](images/venice_2026.jpg){.bordered-img fig-align="center" height="550px"}
+:::
+::::
 
 ::: notes
 Welcome back, everyone. Last week we laid the conceptual groundwork for the quarter — what we mean by sustainability, what a transportation system actually is, and Schneider's five-step framework for routine mode choice. This week we slow all the way down and spend a full session on the oldest mode there is: walking.
 
-The image behind me is a street in Florence I photographed a few years ago — a food cart, a cyclist, people stopped mid-conversation, not a single car in the frame. I want you to hold onto that image, because it's really the argument of the whole session in one photograph: for most of human history, cities were built at the speed and scale of the human body, and a great deal of what we now call "walkability" is really just what happened by default before we engineered it away.
+Here's the shape of today's session. We'll start with a very quick recap of where we left off last week, then spend the bulk of our time moving through seven historical periods of urban pedestrian form and movement — think of this as the walking-focused companion to the "transportation system" framing we built last week. After that we'll shift into discussion mode: time to brainstorm your final group projects. At about 8pm, we'll walk through part 2 of Exercise #1. and I'll leave some time at the end all topic Q&A.
+
+One housekeeping note before we dive in: today's assigned reading was a section of Jeff Speck's Walkability Rules, and I'll be weaving pieces of that in as we go rather than treating it as a separate block — keep it in mind especially once we get to the industrial era. Lastly, Assignment #2, which draws from the Market Street video is due today. 
+
+The image on the right column is of a street in Venice, Italy. An image I photographed this past summer — restaurants, people stopped mid-conversation, not a single car in the frame. I want you to hold onto that image, because it's really the argument of the whole session in one photograph: for most of human history, cities were built at the speed and scale of the human body, and a great deal of what we now call "walkability" is really just what happened by default before we engineered it away.
 
 Today we're going to move chronologically through seven broad periods of how walking's role in cities has expanded, contracted, and — in the last thirty years or so — been deliberately reclaimed. Along the way we'll pick up some of the foundational texts in this field: Amato, Jacobs, Appleyard, Bullard, Speck. By the end, I want you to be able to explain not just that streets used to be different, but specifically which decisions made them the way they are today — because those same decisions are reversible.
-:::
-
----
-
-## Week #2 agenda
-
-- Week #1 recap
-- Periods of Urban Pedestrian Form & Movement
-- Discussion, Q&A
-- Urban pedestrian case studies
-- Final project brainstorming
-- Exercise #1 Q&A
-
-::: notes
-Here's the shape of today's session. We'll start with a very quick recap of where we left off last week, then spend the bulk of our time moving through seven historical periods of urban pedestrian form and movement — think of this as the walking-focused companion to the "transportation system" framing we built last week. After that we'll shift into discussion mode: a set of applied urban pedestrian case studies, time to brainstorm your final group projects, and I'll leave real time at the end for questions on Exercise #1, since it's due at the end of next week alongside Exercise #2 being assigned.
-
-One housekeeping note before we dive in: today's assigned reading was Joseph Amato's *On Foot: A History of Walking*, and I'll be weaving pieces of that in as we go rather than treating it as a separate block — keep it in mind especially once we get to the industrial era.
 :::
 
 ---
@@ -58,20 +56,20 @@ One housekeeping note before we dive in: today's assigned reading was Joseph Ama
 - Sustainability Era & Emerging Futures of Pedestrian Cities (1990 – Present)
 
 ::: notes
-Just like we organized bicycling and transit history into distinct periods in later weeks, we can do the same thing for walking — and honestly, walking is the mode where this periodization matters most, because for the first six thousand years or so of urban history, walking wasn't a "mode choice" at all. It was simply how cities worked, full stop.
+Just like we will organize bicycling and transit history into distinct periods in later weeks, we can do the same thing for walking — and honestly, walking is the mode where this periodization matters most, because for the first six thousand years or so of urban history, walking wasn't a "mode choice" at all. It was simply how cities worked.
 
-Notice the shape of this list. The first three periods — spanning roughly five thousand years — are all fundamentally pedestrian-scaled cities, just with different technologies layered on top of walking: nothing, then early wheeled transport, then early industrial transit. The real rupture happens in the fourth period, the transitional streets era, when automobiles enter a street system that was never designed for them. From there we get about forty years of auto ascendancy, then thirty years of backlash and critique, and finally the last three decades where walking gets explicitly reframed as infrastructure — something you plan for and measure, not just something that's left over.
+Notice the shape of this list. The first three periods — spanning roughly five thousand years — are all fundamentally pedestrian-scaled cities, just with different technologies layered on top of walking: nothing, then early wheeled transport, then early industrial transit. The real rupture happens in the fourth period, the transitional streets era, when automobiles enter a street system that was never designed for them (the Market Street video). From there we get about forty years of auto ascendancy, then thirty years of backlash and critique, and finally the last three decades where walking gets explicitly reframed as infrastructure — something you plan for and measure, not just something that's left over.
 
 Keep this arc in your head as we go: compatible with cities for millennia, actively engineered out in a few decades, and now being deliberately reclaimed. None of those three states was inevitable — they were each the product of specific planning and policy choices, which is exactly the kind of thing this course is designed to help you diagnose.
 :::
 
 ---
 
-## Assigned Reading: *On Foot: A History of Walking*
+## Assigned Reading: *Walkable City Rules: 101 Steps to Make Better Places*
 
 :::: {.columns}
 ::: {.column width="40%"}
-![Amato, J. (2004)](images/reference_Amato_OnFoot.png){.bordered-img}
+![Speck, Jeff (2021)](images/walkable_city_rules_speck_cover.jpeg){.bordered-img}
 :::
 
 ::: {.column width="60%"}
@@ -110,16 +108,19 @@ Notice two things. First, walking — labeled Roman numeral one here — is alwa
 
 :::: {.columns}
 ::: {.column width="45%"}
-### Core condition
-Walking is the only viable urban transport mode
+[Core condition]{.prompt-lead}
 
-### Urban form
+- Walking is the only viable urban transport mode
+
+[Urban form]{.prompt-lead}
+
 - Compact city footprints
 - Mixed uses by necessity
 - Streets as social and economic space
 
-### Key idea
-The limits of the human body defined the size and structure of cities.
+[Key idea]{.prompt-lead}
+
+- The limits of the human body defined the size and structure of cities.
 :::
 
 ::: {.column width="55%"}

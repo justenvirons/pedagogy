@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="slides_files/libs/clipboard/clipboard.min.js"></script>
+<script src="slides_files/libs/quarto-html/tabby.min.js"></script>
+<script src="slides_files/libs/quarto-html/popper.min.js"></script>
+<script src="slides_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="slides_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="slides_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="slides_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.27">
+
+  <meta name="author" content="C. Scott Smith, PhD AICP">
+  <title>GEO 3/430 Sustainable Urban Transportation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/theme/quarto-534cd8e3a96973385dffff3f4709048d.css">
+  <link rel="stylesheet" href="slides.css">
+  <link href="slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">GEO 3/430 Sustainable Urban Transportation</h1>
+  <p class="subtitle">Week #2: Walking and the Value of<br>Slow Transportation</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+C. Scott Smith, PhD AICP 
+</div>
+        <p class="quarto-title-affiliation">
+            DePaul University
+          </p>
+    </div>
+</div>
+
+</section>
+<section id="week-2-agenda" class="slide level2">
+<h2>Week #2 agenda</h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<ul>
+<li>Week #1 recap</li>
+<li>Periods of urban pedestrian form &amp; movement</li>
+<li>Final project brainstorming</li>
+<li>Exercise #1 part 2</li>
+<li>All topic Q&amp;A</li>
+</ul>
+</div><div class="column" style="width:60%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/venice_2026.jpg" class="bordered-img" height="550"></p>
+<figcaption>Venice, Italy, 2026, photograph. Source: C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Welcome back, everyone. Last week we laid the conceptual groundwork for the quarter — what we mean by sustainability, what a transportation system actually is, and Schneider’s five-step framework for routine mode choice. This week we slow all the way down and spend a full session on the oldest mode there is: walking.</p>
+<p>Here’s the shape of today’s session. We’ll start with a very quick recap of where we left off last week, then spend the bulk of our time moving through seven historical periods of urban pedestrian form and movement — think of this as the walking-focused companion to the “transportation system” framing we built last week. After that we’ll shift into discussion mode: time to brainstorm your final group projects. At about 8pm, we’ll walk through part 2 of Exercise #1. and I’ll leave some time at the end all topic Q&amp;A.</p>
+<p>One housekeeping note before we dive in: today’s assigned reading was a section of Jeff Speck’s Walkability Rules, and I’ll be weaving pieces of that in as we go rather than treating it as a separate block — keep it in mind especially once we get to the industrial era. Lastly, Assignment #2, which draws from the Market Street video is due today.</p>
+<p>The image on the right column is of a street in Venice, Italy. An image I photographed this past summer — restaurants, people stopped mid-conversation, not a single car in the frame. I want you to hold onto that image, because it’s really the argument of the whole session in one photograph: for most of human history, cities were built at the speed and scale of the human body, and a great deal of what we now call “walkability” is really just what happened by default before we engineered it away.</p>
+<p>Today we’re going to move chronologically through seven broad periods of how walking’s role in cities has expanded, contracted, and — in the last thirty years or so — been deliberately reclaimed. Along the way we’ll pick up some of the foundational texts in this field: Amato, Jacobs, Appleyard, Bullard, Speck. By the end, I want you to be able to explain not just that streets used to be different, but specifically which decisions made them the way they are today — because those same decisions are reversible.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="periods-of-urban-pedestrian-form-movement" class="slide level2">
+<h2>Periods of Urban Pedestrian Form &amp; Movement</h2>
+<ul>
+<li>Pre-Urban &amp; Early Urban Walking Cities (~3000 BCE – 500 CE)</li>
+<li>Medieval &amp; Early Modern Walking Cities (500 – 1700)</li>
+<li>Industrial Walking Cities (1700 – 1890)</li>
+<li>Transitional Streets: Walking Meets the Automobile (1890 – 1920)</li>
+<li>Auto Ascendancy &amp; Pedestrian Marginalization (1920 – 1960)</li>
+<li>Crisis, Critique and Early Pedestrian Revival (1960 – 1990)</li>
+<li>Sustainability Era &amp; Emerging Futures of Pedestrian Cities (1990 – Present)</li>
+</ul>
+<aside class="notes">
+<p>Just like we will organize bicycling and transit history into distinct periods in later weeks, we can do the same thing for walking — and honestly, walking is the mode where this periodization matters most, because for the first six thousand years or so of urban history, walking wasn’t a “mode choice” at all. It was simply how cities worked.</p>
+<p>Notice the shape of this list. The first three periods — spanning roughly five thousand years — are all fundamentally pedestrian-scaled cities, just with different technologies layered on top of walking: nothing, then early wheeled transport, then early industrial transit. The real rupture happens in the fourth period, the transitional streets era, when automobiles enter a street system that was never designed for them (the Market Street video). From there we get about forty years of auto ascendancy, then thirty years of backlash and critique, and finally the last three decades where walking gets explicitly reframed as infrastructure — something you plan for and measure, not just something that’s left over.</p>
+<p>Keep this arc in your head as we go: compatible with cities for millennia, actively engineered out in a few decades, and now being deliberately reclaimed. None of those three states was inevitable — they were each the product of specific planning and policy choices, which is exactly the kind of thing this course is designed to help you diagnose.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="assigned-reading-walkable-city-rules-101-steps-to-make-better-places" class="slide level2">
+<h2>Assigned Reading: <em>Walkable City Rules: 101 Steps to Make Better Places</em></h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/walkable_city_rules_speck_cover.jpeg" class="bordered-img"></p>
+<figcaption>Speck, Jeff (2021)</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:60%;">
+<ul>
+<li>Walking as human evolution: bipedalism freed the hands and shaped human migration across the globe</li>
+<li>Cultural and religious significance: pilgrimage as spiritual practice, from Mecca to Santiago de Compostela</li>
+<li>Industrialization transformed walking from necessity into a marker of leisure — or of poverty</li>
+<li>Philosophical and literary traditions: Rousseau, Nietzsche, and Thoreau all treated walking as a path to reflection</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>This week’s reading was Joseph Amato’s <em>On Foot: A History of Walking</em>, a 2004 cultural and historical survey that treats walking as far more than a mobility choice — he frames it as fundamental to human identity, culture, and cognition.</p>
+<p>A few threads from the book worth pulling into today’s discussion. First, Amato argues bipedalism was a defining evolutionary trait: walking upright freed the hands for tool use and let early humans migrate out of Africa and populate every other continent, which means walking quite literally shaped where and how humans live today. Second, walking carries enormous cultural and religious weight — pilgrimage traditions, from Mecca to Santiago de Compostela, treat the act of walking itself as spiritually significant, not just a means of arriving somewhere.</p>
+<p>Where this connects directly to our course is Amato’s third thread: industrialization and mechanized transport didn’t just add new options alongside walking, they fundamentally changed what walking <em>meant</em>. As cars, elevators, and mechanized transport reduced the necessity of walking for daily life, it split into two very different social meanings — a leisurely, healthful, even philosophical pursuit for those who had the time and the neighborhood for it, and a marker of poverty for those who had no other option. That split matters enormously for how we think about equity in active transportation, and we’ll come back to it later today when we get to Bullard’s <em>Just Transportation</em>.</p>
+<p>Discussion prompt for you: what in this book most surprised you, and what are the implications of this history for how we advocate for sustainable transportation today?</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="transportation-technologys-impact-on-urban-form" class="slide level2">
+<h2>Transportation Technology’s Impact on Urban Form</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/transport_urban_form_evolution.png" class="bordered-img" height="420"></p>
+<figcaption>Evolution of urban form by transportation era, North America and Europe. Source: transportgeography.org</figcaption>
+</figure>
+</div>
+<aside class="notes">
+<p>Before we walk period by period, I want to show you this diagram, because it’s a useful map for the whole session. It comes from the Geography of Transport Systems textbook, and it shows how urban form expanded outward in concentric rings as each new transportation technology arrived: walking and horsecar era at the core, then a streetcar-era ring, then automobile-era sprawl, then the highway era pushing the edge out even further.</p>
+<p>Notice two things. First, walking — labeled Roman numeral one here — is always the innermost, densest ring in both the North American and European versions: it’s the layer every later technology gets built on top of, never replaced outright. Second, compare the two diagrams: the North American city has a much larger, more dominant automobile-and-highway ring than the European one, where the walking-and-streetcar core stays proportionally larger. That’s not an accident of geography — it reflects decades of different policy choices about how much space and priority each mode gets. Keep this image in mind as we move through today’s periods, because we’re essentially going to zoom into the “I” at the center of this diagram and watch, layer by layer, how it got surrounded.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-1-pre-urban-early-urban-walking-cities-3000-bce-500-ce" class="slide level2">
+<h2>Period 1: Pre-Urban &amp; Early Urban Walking Cities (~3000 BCE – 500 CE)</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<p><span class="prompt-lead">Core condition</span></p>
+<ul>
+<li>Walking is the only viable urban transport mode</li>
+</ul>
+<p><span class="prompt-lead">Urban form</span></p>
+<ul>
+<li>Compact city footprints</li>
+<li>Mixed uses by necessity</li>
+<li>Streets as social and economic space</li>
+</ul>
+<p><span class="prompt-lead">Key idea</span></p>
+<ul>
+<li>The limits of the human body defined the size and structure of cities.</li>
+</ul>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/ancient_pompeii.jpg" class="bordered-img" height="420"></p>
+<figcaption>Pompeii, Italy, 7th–6th century BCE – 79 CE. Sources: Pompeii.org; C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>For the first five thousand years or so of urban history, this slide’s “core condition” is really the whole story: walking wasn’t one mode among several, it was the only way to get around, and that single fact determined everything about how cities were shaped. Cities had to be compact, because nobody could walk more than a few miles in a day and still get anything done. Land uses had to mix — housing next to workshops next to markets — because there was no way to separate them and still have people reach them on foot. And streets themselves had to double as social and economic space, since there was no separate “transportation corridor” carved out from everything else city life needed.</p>
+<p>Pompeii is a wonderful case study for this, and it’s a place I’ve actually visited. It’s an ancient Roman city in Campania, at the base of Mount Vesuvius, occupied from roughly the seventh or sixth century BCE until it was buried by the eruption in 79 CE — which is exactly why it survives so well archaeologically; we’re looking at a walking city frozen in time. Look at the density of that street grid radiating out from the amphitheater, and the tight block structure: every destination in that city was reachable on foot within minutes, because it had to be. There was no alternative.</p>
+<p>The key idea I want you to leave this slide with: the limits of the human body — how far you can comfortably walk, how much you can carry — weren’t a constraint planners worked around. They <em>were</em> the plan. Everything about scale, density, and mixed use in ancient cities follows directly from that one fact.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-2-medieval-early-modern-walking-cities-500-1700" class="slide level2">
+<h2>Period 2: Medieval &amp; Early Modern Walking Cities (500 – 1700)</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<h3 id="core-condition">Core condition</h3>
+<p>Walking remains dominant mode; wheeled transport marginal</p>
+<h3 id="urban-form">Urban form</h3>
+<ul>
+<li>Dense, organic street networks</li>
+<li>Strong street-front activity</li>
+<li>Public squares and marketplaces</li>
+</ul>
+<h3 id="key-idea">Key idea</h3>
+<p>Proximity was not a planning goal — it was a survival strategy.</p>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/florence_medieval_street.jpg" class="bordered-img" height="420"></p>
+<figcaption>A narrow street in Florence, Italy. Source: C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Fast forward through the fall of Rome and into the medieval and early modern period, and walking is still completely dominant — wheeled transport exists, but it’s marginal, expensive, and often impractical on streets this narrow. What changes from the ancient period isn’t the mode, it’s the form: instead of the more planned, gridded layout we saw in Pompeii, medieval cities grow organically, block by block, producing these dense, winding, unplanned street networks.</p>
+<p>Florence is a great example, and this is a photo I took there myself. Florence was founded as a Roman military settlement around 59 BCE, but the city you’d actually recognize today — its street network, its block structure — was largely shaped later, particularly between the eleventh and fourteenth centuries, as the city expanded within successive rings of medieval walls. Notice how narrow this street is, how the buildings press right up to the edge, how there’s a food cart doing business right in the middle of the pedestrian flow, and a cyclist just threading through — no cars anywhere in this frame even today, because the street genuinely cannot accommodate one at any real speed. Most daily destinations in historic Florence are reachable in fifteen to thirty minutes on foot, and the piazzas function as social, commercial, and political gathering points along those pedestrian routes.</p>
+<p>The key idea here is important: proximity in medieval cities wasn’t a design philosophy anyone chose — it was survival. If your bakery, your church, and your market weren’t within walking distance, you were in real trouble. It took the automobile to fully sever that link between proximity and survival, which is exactly why New Urbanist and fifteen-minute-city advocates today are often, in effect, arguing for a partial return to medieval logic — just with modern sanitation.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-3-industrial-walking-cities-1700-1890" class="slide level2">
+<h2>Period 3: Industrial Walking Cities (1700 – 1890)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="core-condition-1">Core condition</h3>
+<p>Walking combined with early transit (horsecars, trams)</p>
+<h3 id="urban-form-1">Urban form</h3>
+<ul>
+<li>Extremely high densities</li>
+<li>Mixed-use neighborhoods near employment</li>
+<li>Severe public health challenges</li>
+</ul>
+<h3 id="key-idea-1">Key idea</h3>
+<p>Early industrial cities were fundamentally pedestrian-scaled.</p>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/nyc_central_park.jpg" class="bordered-img" height="220"></p>
+<figcaption>New York City street life, 19th century. Source: C. Scott Smith</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/chicago_loop_early1900s.jpg" class="bordered-img" height="220"></p>
+<figcaption>State Street, Chicago Loop, early 1900s, with cable car trains. Source: Chicago’s Forgotten Cable Cars</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Industrialization from roughly 1700 to 1890 is where things get genuinely crowded. Cities like Manchester, Paris, New York, and Mumbai grow explosively during this period, but — and this is the point I want you to hold onto — they grow within a fundamentally pedestrian framework, just supplemented now by early streetcars and horsecars. Workers typically live within short walking distance of factories, ports, or workshops, because that’s still the only affordable way to get to work reliably every day.</p>
+<p>New York is a textbook case: founded as New Amsterdam in 1624, its formative growth long predates the automobile, and even after the Commissioners’ Plan of 1811 laid out that famous street grid and industrialization accelerated through the nineteenth century, daily life for most residents — especially working-class and immigrant populations — stayed overwhelmingly pedestrian, just supplemented by horse-drawn vehicles and streetcars. High density, short blocks, and intense street-level activity made walking the default for commuting and social life alike. Chicago’s Loop in this same era looked similar — look at this intersection at State Street, cable cars, horse carriages, and dense pedestrian crowds all sharing one of the country’s busiest commercial corners, years before automobiles show up in any real numbers.</p>
+<p>I want to flag something important here, because it connects to a theme running through the whole quarter: these industrial cities demonstrate that walking wasn’t just <em>compatible</em> with industrial productivity — it was essential to it. The high densities that made industrial cities work economically were only possible because most trips were short enough to walk. So when we get to the mid-twentieth century and watch density and walkability get engineered away, understand that wasn’t some inevitable byproduct of economic progress. It was a later, and very deliberate, policy choice — one that partially undid a pattern industrial cities had proven could work.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-4-transitional-streets-walking-meets-the-automobile-1890-1920" class="slide level2">
+<h2>Period 4: Transitional Streets — Walking Meets the Automobile (1890 – 1920)</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<h3 id="core-condition-2">Core condition</h3>
+<p>Early automobiles enter shared streets</p>
+<h3 id="urban-form-2">Urban form</h3>
+<ul>
+<li>No clear hierarchy of users</li>
+<li>High pedestrian injury and fatality rates</li>
+<li>Streets still socially multifunctional</li>
+</ul>
+<h3 id="key-idea-2">Key idea</h3>
+<p>Streets did not “naturally” belong to cars — this was a contested period.</p>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/sf_market_street_1906.jpg" class="bordered-img" height="260"></p>
+<figcaption>San Francisco’s Market Street, c.&nbsp;1906, shortly before the earthquake. Source: <em>A Trip Down Market Street</em></figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/automobile_fatalities_1907_1923.jpg" class="bordered-img" height="160"></p>
+<figcaption>Growth in automobile fatalities in the United States, 1907–1923.</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>This is the hinge point of the whole session. Somewhere between 1890 and 1920, the automobile arrives on streets that were never designed with it in mind, and for about thirty years, nobody has agreed on who those streets actually belong to. There’s no clear hierarchy of users — pedestrians, streetcars, horse-drawn wagons, bicycles, and early cars are all just negotiating right-of-way in real time — and pedestrian injury and fatality rates climb sharply as a result, which is exactly what that automobile-fatalities chart is showing you: a nearly forty-fold increase between 1907 and 1923 alone.</p>
+<p>Some of you will remember this exact footage from week one — “A Trip Down Market Street,” filmed in San Francisco just days before the 1906 earthquake. I’m showing you a still from it again deliberately, because now that we’ve built out this whole periodization, you can place it precisely: San Francisco at this moment is the textbook transitional city, still functioning largely as a walking-and-transit city, with dense mixed-use blocks and short walking distances, but automobiles are now a growing, disruptive presence sharing the same unregulated space as cable cars, horses, and pedestrians crossing wherever they please. The 1906 rebuilding after the earthquake and fire actually accelerated modernization — wider streets, new infrastructure — while still prioritizing streetcars and pedestrians for a few more years yet.</p>
+<p>The key idea I want you to really sit with: streets did not “naturally” belong to cars. That outcome, which today feels like the default, was the result of a genuinely contested multi-decade struggle — and part of that struggle, which we’ll pick up again in a few slides, involved a deliberate legal and cultural campaign to redefine “jaywalking” as a pedestrian’s fault rather than a driver’s responsibility. Nothing about this period was inevitable.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-5-auto-ascendancy-pedestrian-marginalization-1920-1960" class="slide level2">
+<h2>Period 5: Auto Ascendancy &amp; Pedestrian Marginalization (1920 – 1960)</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<h3 id="core-condition-3">Core condition</h3>
+<p>Cars prioritized in planning and engineering</p>
+<h3 id="urban-form-3">Urban form</h3>
+<ul>
+<li>Road widening and highway construction</li>
+<li>Sidewalk narrowing or removal</li>
+<li>Land-use separation and suburbanization</li>
+</ul>
+<h3 id="key-idea-3">Key idea</h3>
+<p>Walkability declined because it was actively engineered out.</p>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/detroit_futurama_1939.jpg" class="bordered-img" height="220"></p>
+<figcaption>Model of a Futurama-style automobile city, General Motors’ Futurama exhibit, 1939 World’s Fair, New York. Detroit exemplified this auto-ascendant metropolitan model.</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/la_freeway_congestion.jpg" class="bordered-img" height="200"></p>
+<figcaption>Los Angeles freeway, early 2000s legacy of mid-century auto-first planning. Source: C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>From 1920 to 1960, the contest we just described gets resolved decisively in the automobile’s favor — and this time not by accident, but by design. Planning and traffic engineering practice reorganize themselves around vehicle speed and throughput: roads get widened, highways get built, sidewalks get narrowed or removed outright, and land uses that used to sit within walking distance of each other get deliberately separated by zoning, pushing cities toward the suburbanized, single-use pattern many of us now take for granted.</p>
+<p>Detroit is the archetypal case. As the global center of the automotive industry, it experienced rapid population growth and spatial expansion between 1910 and 1950, with car ownership becoming widespread among working- and middle-class households earlier there than almost anywhere else in the country. That image is a detail from General Motors’ Futurama exhibit at the 1939 World’s Fair — a model city entirely organized around high-speed automobile movement, presented to millions of visitors as the aspirational future of American urban life. It’s genuinely stunning propaganda, and it worked: postwar highway construction accelerated decentralization, physically dividing older pedestrian neighborhoods and fueling suburbanization tied to automotive-sector jobs. Los Angeles followed a related but distinct path — despite having extensive early streetcar and interurban rail networks, rapid growth after 1900 coincided with cheap land and few constraints on outward expansion, producing the low-density, horizontally dispersed pattern you can see choking this freeway today.</p>
+<p>The key idea here matters more than almost any other in this deck: walkability did not simply fade away as some passive side effect of modernization. It was actively engineered out — narrower sidewalks, wider roads, separated land uses were each individually chosen, in engineering manuals and zoning codes, by people who believed they were building progress. That’s the essential move I want you to make in your own thinking: stop treating car-dependent urban form as a natural or neutral outcome, and start treating it as a policy choice with a specific, traceable history — one that, because it was chosen, can also be unchosen.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-6-crisis-critique-and-early-pedestrian-revival-1960-1990" class="slide level2">
+<h2>Period 6: Crisis, Critique and Early Pedestrian Revival (1960 – 1990)</h2>
+<ul>
+<li>Growing backlash to car-centric planning</li>
+<li>Pedestrian malls and traffic-calming experiments; historic core preservation</li>
+<li>Community-led resistance to highway construction</li>
+<li><strong>Key idea:</strong> pedestrianism re-emerges as <em>critique</em>, not nostalgia</li>
+</ul>
+<aside class="notes">
+<p>By the 1960s, the costs of forty years of auto-first planning are becoming impossible to ignore — displaced neighborhoods, hollowed-out downtowns, rising traffic deaths — and a genuine backlash begins to build. Cities start experimenting with pedestrian malls and traffic calming, historic districts get organized to resist highway construction through their neighborhoods, and community-led resistance movements start winning real political fights.</p>
+<p>I want to be precise about the framing on this slide, because it matters: pedestrianism re-emerges here as <em>critique</em>, not nostalgia. The people leading this revival in the sixties, seventies, and eighties weren’t romanticizing some lost past for its own sake — they were making a pointed, evidence-based argument that mid-century planning had actively damaged American cities, and that walkable, human-scaled urban form was a corrective, not a step backward. That distinction is going to matter enormously as we look at the two foundational texts from this period on the next couple of slides — Jane Jacobs and Donald Appleyard were both making rigorous, observational arguments, not sentimental ones.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="jane-jacobs-the-death-and-life-of-great-american-cities-1961" class="slide level2">
+<h2>Jane Jacobs, <em>The Death and Life of Great American Cities</em> (1961)</h2>
+<div class="columns">
+<div class="column" style="width:35%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/reference_Jacobs_DeathAndLifeOfGreatAmericanCities.png" class="bordered-img"></p>
+<figcaption>Jacobs (1961)</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:65%;">
+<ul>
+<li>Sidewalks as social spaces: casual, repeated contact builds neighborhood trust</li>
+<li>“Eyes on the street”: informal surveillance by residents and shopkeepers deters crime</li>
+<li>Mixed-use, walkable neighborhoods sustain diverse activity at all hours</li>
+<li>Human-scaled street design fosters creativity and spontaneous exploration</li>
+<li>Walkability underwrites local economic vitality</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>Jane Jacobs published <em>The Death and Life of Great American Cities</em> in 1961, and it remains one of the single most influential critiques of mid-twentieth-century urban planning ever written. Jacobs argues directly against the large-scale, top-down planning we just spent two slides describing — planning that prioritized cars, single-use zoning, and superblock redevelopment — because she saw it as actively destroying the social fabric that made cities function.</p>
+<p>Her core insight is that sidewalks aren’t just circulation infrastructure, they’re the primary social space of a neighborhood: casual, repeated contact between neighbors on a lively sidewalk builds familiarity and trust in a way that few other urban spaces can. That leads to her most famous concept, “eyes on the street” — the idea that neighborhood safety comes not primarily from police presence but from the informal, continuous surveillance of residents, shopkeepers, and pedestrians who are simply out and using the street, which only happens if the street is genuinely walkable and interesting enough to draw people outside. She also connects walkability directly to economic vitality: pedestrians passing on foot, repeatedly, at all hours, are what sustains small local businesses — something a purely car-oriented commercial strip, designed around brief parking-lot visits, generally cannot replicate.</p>
+<p>Jacobs matters for this course because she’s arguably the first major figure to frame walkability not as a nostalgic preference but as a functional, load-bearing part of how a healthy city actually works — safety, economy, and community, all resting on the same underlying condition of people being out on foot.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="donald-appleyard-livable-streets-1981" class="slide level2">
+<h2>Donald Appleyard, <em>Livable Streets</em> (1981)</h2>
+<div class="columns">
+<div class="column" style="width:35%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/reference_Appleyard_LivableStreets.png" class="bordered-img"></p>
+<figcaption>Appleyard (1981)</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:65%;">
+<ul>
+<li>Compared three San Francisco streets, identical except for traffic volume</li>
+<li>Heavy-traffic streets: fewer friendships, smaller “perceived territory”</li>
+<li>Light-traffic streets: more gathering spots, more friendships, wider sense of home</li>
+<li>Traffic volume, not just design, shapes social health of a block</li>
+</ul>
+</div></div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/example_Appleyard_SocialInteractionsOnThreeStreets.png" class="bordered-img" height="280"></p>
+<figcaption>Social interactions on three streets — heavy, moderate, and light traffic. Source: Appleyard, <em>Livable Streets</em> (1981)</figcaption>
+</figure>
+</div>
+<aside class="notes">
+<p>In 1981, Berkeley urban design professor Donald Appleyard published <em>Livable Streets</em>, based on fieldwork he’d actually done back in the late 1960s. His method was elegant: he picked three residential streets in San Francisco that were essentially identical in every respect except one — the volume of traffic running down them — and then systematically measured how residents actually used the street.</p>
+<p>Look at this figure, because it’s one of the most reproduced images in all of urban planning literature. Each line represents a friendship or acquaintance connecting two residents; each cluster of dots represents a spot where people are known to gather. On the heavy-traffic street on the left, look how few lines there are, and how tightly they cluster right around each home — Appleyard’s residents there reported a shrunken sense of “perceived territory,” essentially just their own doorstep, because the street itself felt unsafe and unpleasant. Now compare that to the light-traffic street on the right: dramatically more connections, more gathering spots, and people reporting that their sense of home extended out across the whole street, not just their own front step.</p>
+<p>The finding that should stick with you: traffic volume alone — not architecture, not income, not any other variable Appleyard could identify — was strongly associated with how much community life a street supported. Fewer cars didn’t just mean less noise; it meant measurably more friendships, more play, more spontaneous social contact. This is the empirical backbone behind everything we now call traffic calming, and it’s worth remembering that this evidence has been sitting in the literature since 1981 — we’ve largely known this for over forty years.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="robert-bullard-glenn-johnson-just-transportation-1997" class="slide level2">
+<h2>Robert Bullard &amp; Glenn Johnson, <em>Just Transportation</em> (1997)</h2>
+<div class="columns">
+<div class="column" style="width:35%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/just_transportation_bullard_cover.jpg" class="bordered-img"></p>
+<figcaption>Bullard &amp; Johnson (1997)</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:65%;">
+<ul>
+<li>Transportation systems in the U.S. have been systematically shaped by racial and class inequity</li>
+<li>Highway construction routed disproportionately through Black neighborhoods</li>
+<li>Chronic underinvestment in transit; policy privileging car ownership</li>
+<li>Reframes transportation as a social determinant of opportunity, not a neutral technical system</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>The critique period wasn’t only about traffic volume and street design — it also produced a rigorous reckoning with <em>who</em> car-centric planning served and who it harmed. Robert Bullard and Glenn Johnson’s 1997 collection <em>Just Transportation: Dismantling Race and Class Barriers to Mobility</em> argues that American transportation systems have been systematically shaped by racial and class inequity, not as an unfortunate side effect, but as a direct consequence of specific, traceable policy decisions: highway construction routed disproportionately through Black neighborhoods, chronic underinvestment in public transit serving lower-income communities, and policies — mortgage lending among them — that actively privileged car ownership and single-family suburban development for some populations while foreclosing it for others.</p>
+<p>This matters directly for today’s topic, because pedestrian safety outcomes track these same inequities closely. I’ll flag one stark, more recent data point that extends Bullard’s argument: drivers strike and kill Black and Native American pedestrians at meaningfully higher rates than white or Asian pedestrians, even after controlling for differences in how much each group walks and where. Some of that gap traces back to exactly the infrastructure history Bullard describes — the more dangerous, high-speed arterial roads that the interstate system disproportionately routed through communities of color — and some of it appears to reflect implicit bias in driver behavior itself: research out of the University of Nevada found drivers were significantly more likely to yield to a white pedestrian in a crosswalk than to a Black pedestrian in the identical crosswalk.</p>
+<p>Bullard’s central reframing is the one I want you to carry forward into your final projects: transportation is not a neutral technical system. It is a powerful social determinant of who gets access to jobs, healthcare, and safety — and evaluating “sustainability” without evaluating equity is only doing half the job.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-7-sustainability-era-emerging-futures-1990-present" class="slide level2">
+<h2>Period 7: Sustainability Era &amp; Emerging Futures (1990 – Present)</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="core-condition-4">Core condition</h3>
+<p>Walking reframed as infrastructure</p>
+<h3 id="urban-form-4">Urban form</h3>
+<ul>
+<li>Complete Streets</li>
+<li>Vision Zero</li>
+<li>Walkability metrics and indices</li>
+<li>Low-traffic neighborhoods</li>
+<li>Climate-adaptive street design</li>
+</ul>
+<h3 id="key-idea-4">Key idea</h3>
+<p>Walking becomes central to sustainability, equity, and public health.</p>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/great_streets.jpg" class="bordered-img" height="420"></p>
+<figcaption>Compact, human-scaled street grids: Tokyo, Savannah, Amsterdam, and San Francisco compared at the same scale.</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>The final period, from 1990 to the present, is where walking gets explicitly reframed — no longer treated as a leftover mode for people without cars, but as infrastructure that cities deliberately plan for, fund, and measure. Complete Streets policies require that roadway projects accommodate pedestrians and cyclists, not just drivers, by design rather than by afterthought. Vision Zero programs set an explicit policy target of zero traffic deaths and treat every pedestrian fatality as a preventable engineering and policy failure rather than an inevitable cost of mobility. Cities now build and publish walkability indices, experiment with low-traffic neighborhoods, and increasingly design streets with climate adaptation — shade trees, permeable paving, stormwater management — built in alongside pedestrian safety.</p>
+<p>This comparison image is worth studying closely. These four historic street grids — Tokyo’s Nihonbashi district, Savannah, Amsterdam, and downtown San Francisco — are all shown at the exact same physical scale, and notice how strikingly similar their block sizes and street densities are, despite being built on different continents in different eras for different cultures. That’s not a coincidence: all four were substantially shaped by pedestrian-scale movement before the automobile arrived, and all four are now held up as models of walkable urban form specifically <em>because</em> of that shared underlying grain. The sustainability era isn’t inventing something new here so much as it’s rediscovering, and formalizing with data and policy, a pattern that pre-automobile cities across very different cultures arrived at independently.</p>
+<p>The key idea to close this historical arc: walking has moved from default, to marginalized, to deliberately engineered infrastructure — and that third stage is where we are now, which is exactly why your generation of planners has real influence over what happens next.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="recap-theory-of-routine-mode-choice" class="slide level2">
+<h2>Recap: Theory of Routine Mode Choice</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/schneider-2013-article.jpg" class="bordered-img"></p>
+<figcaption>Schneider (2013), <em>Transport Policy</em></figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/routine-mode-choice-diagram.png" class="bordered-img"></p>
+<figcaption>Five-step operational framework for routine mode choice decisions (Schneider, 2013)</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Quick callback to last week, because everything we’ve just walked through in seven historical periods maps directly onto Schneider’s five-step framework for routine mode choice. Remember the steps: awareness and availability, basic safety and security, convenience and cost, enjoyment, and habit, all running alongside socioeconomic factors that shape how differently people experience each step.</p>
+<p>What today’s history adds is the missing piece of context: those five steps don’t operate in a vacuum, they operate within whatever urban form and street design a given era has produced. In a pre-automobile walking city, step one — awareness and availability — was trivial, because walking was the only option anyone had ever known. By the mid-twentieth century, after decades of auto-ascendant planning, walking had become the mode plenty of people never even consider, precisely because sidewalks were narrowed or removed and destinations were spread too far apart to reach on foot. So when we ask today why someone doesn’t walk for a given trip, Schneider’s framework tells us where to look for the barrier, and today’s history tells us <em>why</em> that barrier exists in the built environment in the first place. Keep both frameworks running together for the rest of the quarter.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="commute-mode-share-since-1980" class="slide level2">
+<h2>Commute Mode Share Since 1980</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/cmap_mode_share_1980_2014.png" class="bordered-img" height="480"></p>
+<figcaption>Commute mode share in the Chicago region, 1980–2014. Source: CMAP analysis of U.S. Census / ACS data</figcaption>
+</figure>
+</div>
+<aside class="notes">
+<p>Here’s the mode-share data for the Chicago region specifically. Through the 1980s and 1990s, the share of commuters driving alone steadily climbed until it represented about seventy percent of all work trips — the direct downstream result of the auto-ascendancy period we just covered. But look at what happens after 2000: the drive-alone share essentially plateaus, and the composition of the remaining thirty percent starts to diversify — walking, biking, and working from home all pick up a bit of ground.</p>
+<p>This is a modest trend, and I don’t want to oversell it, but it’s a meaningful one: it lines up almost exactly with the start of the sustainability era we just discussed, when Complete Streets policies, Vision Zero campaigns, and walkability metrics started actually showing up in planning practice. Mode share is slow to move, because it’s downstream of decades of accumulated infrastructure decisions, but it does move when policy priorities shift — which is exactly the argument for staying engaged with this work rather than assuming current mode share is fixed.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="car-centric-systems-are-expensive" class="slide level2">
+<h2>Car-Centric Systems Are Expensive</h2>
+<ul>
+<li>Between 1970 and 2010, the U.S. roughly doubled the total amount of roadway</li>
+<li>Over that same period, the typical American household roughly doubled the share of its income spent on transportation — from 10% to 20%</li>
+<li>Transportation is typically a household’s second-largest expense, after housing</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/cnt_housing_transportation_costs.png" class="bordered-img" height="320"></p>
+<figcaption>Average combined housing + transportation costs as a share of income. Source: Center for Neighborhood Technology, H+T Index, 2019</figcaption>
+</figure>
+</div>
+<aside class="notes">
+<p>Let’s turn to the costs of the car-centric system we spent periods four and five building. Between 1970 and 2010, the U.S. roughly doubled the total mileage of roadway in the country — and over that same forty-year stretch, the typical American household roughly doubled the share of its income going to transportation, from about ten percent to twenty percent. Transportation is now typically a household’s second-largest expense after housing, and — this is the important analytical move — those two costs aren’t actually independent of each other.</p>
+<p>That’s what the Center for Neighborhood Technology’s H+T Index is built to show: when you combine housing and transportation costs into one number, you get a much more honest picture of true affordability. Notice in this figure that transportation alone eats up about a quarter of the combined budget, autos-per-household sits close to two, and average household vehicle miles traveled comes in around twenty-two thousand miles a year — annual transportation costs alone run nearly fourteen thousand dollars. And notice the punchline stat at the bottom: only about two percent of workers in this dataset use transit. Location genuinely matters here — compact, walkable neighborhoods with good access to jobs and transit are measurably more affordable once you stop looking at housing cost in isolation, which is exactly the mistake a lot of “affordable housing” policy still makes when it’s sited in car-dependent locations far from jobs and transit.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="car-centric-systems-are-unsafe" class="slide level2">
+<h2>Car-Centric Systems Are Unsafe</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/dangerous_by_design_2024.png" class="bordered-img" height="320"></p>
+<figcaption><em>Dangerous by Design</em>, 2024. Source: Smart Growth America</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/pedestrian_deaths_2010_2022.png" class="bordered-img" height="220"></p>
+<figcaption>U.S. pedestrian deaths, 2010–2022: a 75% increase. Source: Smart Growth America, <em>Dangerous by Design</em></figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/pedestrian_injuries_2021_2022.png" class="bordered-img" height="180"></p>
+<figcaption>Pedestrian injuries rose 11% from 2021 to 2022. Source: NHTSA</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Smart Growth America’s <em>Dangerous by Design</em> report is the definitive annual accounting of pedestrian safety in the U.S., and the trend line here should stop you in your tracks: pedestrian deaths have risen seventy-five percent since 2010, and injuries climbed another eleven percent just between 2021 and 2022 alone. This is happening <em>during</em> the sustainability era we just described — Complete Streets and Vision Zero policies have been spreading at the same time these numbers have been getting worse, which tells you plainly that policy adoption on paper and actual outcomes on the street are two very different things, and that the underlying street design in most American cities is still fundamentally built around vehicle speed, not pedestrian survival.</p>
+<p>I want to read you a passage from the report itself, because the authors make a point I think is easy to lose in the raw statistics: “Each one of these deaths was a person who left behind a grieving family and friends. The trauma of survivors is just one of three hidden costs of this crisis that deserves far more attention. There’s also the heavy direct and indirect costs — and trauma — from the hundreds of thousands of under-reported injuries during that time. And there’s the countless number of walking trips never taken, as millions choose not to risk their lives or livelihoods on dangerous streets where thousands of their neighbors have lost their lives or suffered injuries.” That third hidden cost — trips never taken at all — is the one that doesn’t show up in any crash statistic, but it’s arguably the largest cost of all, because it’s suppressing exactly the kind of walking behavior every policy in the sustainability era is trying to encourage.</p>
+<p>And remember Bullard from a few slides ago: these deaths and injuries are not evenly distributed. Older adults face the highest per-capita risk, and Black and Native American pedestrians are struck and killed at significantly higher rates than white pedestrians, even controlling for how much each group walks — a pattern this report and others tie directly back to which communities got the high-speed, multi-lane arterial roads in the first place.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="car-centric-systems-carry-high-environmental-costs" class="slide level2">
+<h2>Car-Centric Systems Carry High Environmental Costs</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/energy_density_cities.png" class="bordered-img" height="360"></p>
+<figcaption>Transport-related energy consumption vs.&nbsp;urban density, select world cities. Adapted from Newman &amp; Kenworthy.</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/us_transportation_energy_share.png" class="bordered-img" height="300"></p>
+<figcaption>Share of total U.S. energy used for transportation, 2018. Source: U.S. Energy Information Administration</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Last of our three “costs” slides: the environmental bill. This first chart is a classic and much-reproduced figure in transportation planning — transport-related energy consumption per capita, plotted against urban density, for cities around the world. Look at the pattern: low-density U.S. cities like Houston, Phoenix, and Denver sit way up in the seventy-gigajoule range, while dense East and Southeast Asian cities like Hong Kong sit down near five. That’s roughly a fifteen-fold difference in per-capita transportation energy use, driven almost entirely by urban density and the mode choices that density makes possible — not by wealth, not by climate, not by culture alone.</p>
+<p>On the right, nationally, transportation accounts for twenty-eight percent of all U.S. energy consumption — more than a quarter of the entire country’s energy budget goes to moving people and goods around, and the density chart on the left tells you why that number is so much higher here than in comparably wealthy nations: American cities were built, in the exact periods we covered today, to require far more driving per person than dense, walkable cities require. This is the throughline connecting today’s whole session — the urban form decisions made in the 1920s through the 1960s aren’t just a historical curiosity, they’re actively driving a substantial share of the country’s energy consumption and greenhouse gas emissions today, seventy or a hundred years later. Urban form is that durable.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="so-how-can-we-design-communities-that-are-safer-more-ecologically-sound-more-economically-efficient-and-more-socially-equitable" class="slide level2">
+<h2>So how can we design communities that are safer, more ecologically sound, more economically efficient, and more socially equitable?</h2>
+<aside class="notes">
+<p>Pause here for a second, because I want this to land as a genuine question, not a rhetorical one. We’ve just spent this session establishing that walkable, pedestrian-scaled cities aren’t some nostalgic ideal — they’re how cities worked for most of human history, they’re measurably safer and cheaper and more energy-efficient, and we have forty-plus years of rigorous evidence, from Appleyard to Bullard to Dangerous by Design, telling us exactly what’s gone wrong and for whom.</p>
+<p>So the question is genuinely open: given everything we now know, what would you actually change first? Take thirty seconds and think about one specific intervention — not a philosophy, an actual physical or policy change — before we look at a few frameworks that planners are already using to answer this question.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="revised-transportation-hierarchy" class="slide level2">
+<h2>Revised Transportation Hierarchy</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/koonce_transportation_hierarchy.jpeg" class="bordered-img" height="420"></p>
+<figcaption>Peter Koonce’s revised transportation hierarchy, as implemented in Portland, OR. Source: NACTO</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:55%;">
+<ul>
+<li>Reorders how cities prioritize travel modes: people and sustainability at the center, not vehicle throughput</li>
+<li>Portland’s order: pedestrians and cyclists first, then transit, then freight, with private automobiles last</li>
+<li>Implemented through signal timing, transit signal priority, and intersection redesign — not just plans on paper</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>One of the clearest applied frameworks for answering that question comes from Peter Koonce, a traffic engineer who helped implement Portland, Oregon’s “revised transportation hierarchy.” The idea is simple to state and genuinely radical to implement: instead of designing traffic operations around maximizing vehicle throughput, you explicitly reorder your priorities, putting people and sustainability goals at the center. In Portland’s version, pedestrians and cyclists come first, then transit vehicles, then freight and goods movement, and private automobiles are placed last.</p>
+<p>What I want you to notice is that this isn’t just a conceptual poster — it gets implemented through very specific, unglamorous operational decisions: signal timing that favors walking and biking phases, transit signal priority so buses and light rail don’t sit at red lights behind single-occupant cars, and intersection geometry redesigned for safety and comfort of the most vulnerable users first. Koonce himself describes a downtown Portland intersection where light rail, a buffered bike lane reallocated from what used to be auto travel lanes, on-street parking supporting the pedestrian environment and business deliveries, and just a single vehicle travel lane all coexist — where a comparable intersection in most American cities would still have three or four lanes purely for car traffic. This hierarchy ties directly back to Koonce’s own broader point: cities don’t have to wait for some distant future climate target to start reallocating street space differently. It’s an operational choice available right now, intersection by intersection.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="applied-example-slowing-traffic-saves-lives" class="slide level2">
+<h2>Applied Example: Slowing Traffic Saves Lives</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/vehicle_speed_survival.png" class="bordered-img" height="280"></p>
+<figcaption>Pedestrian survival chance by vehicle impact speed.</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/driver_field_of_view_by_speed.jpeg" class="bordered-img" height="160"></p>
+<figcaption>Driver’s field of view narrows sharply as speed increases: 15, 20, 25, and 30 mph.</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:45%;">
+<ul>
+<li>A Leading Pedestrian Interval (LPI) gives pedestrians a 3–7 second head start into the intersection</li>
+<li>LPIs reduce pedestrian-vehicle collisions by as much as 60% at treated intersections</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/pedestrian-scramble.jpg" class="bordered-img" height="180"></p>
+<figcaption>Pedestrian scramble at State and Jackson, Chicago — an aggressive, all-stop version of prioritizing pedestrian crossing time</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/bike-signal.jpeg" class="bordered-img" height="160"></p>
+<figcaption>A dedicated bicycle signal head paired with a “turning vehicles yield” sign — a similar low-cost treatment for cyclists</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Let’s make the safety case concrete with two related pieces of evidence, and then one specific low-cost intervention. First, speed: a pedestrian struck at 20 miles per hour survives about ninety-five percent of the time; at 30 miles per hour that drops to fifty-five percent; at 40 miles per hour it falls to just fifteen percent. That’s not a gradual curve, it’s a cliff — and it’s the single most important number in traffic safety engineering, because it means the difference between a 25 and a 35 mile-per-hour speed limit on a residential street is, quite literally, a difference in whether pedestrian collisions are usually survivable or usually fatal. Second, notice how dramatically a driver’s field of view narrows as speed increases — at 15 miles per hour a driver has wide peripheral awareness of the whole street scene; by 30 miles per hour that awareness has collapsed to a narrow tunnel straight ahead, which is exactly why higher speeds mean drivers see pedestrians later, if at all.</p>
+<p>Given both of those facts, here’s a genuinely low-cost engineering response: the Leading Pedestrian Interval, or LPI. It just gives pedestrians a three-to-seven-second head start into the crosswalk before parallel vehicle traffic gets its green light, so a person on foot is already visible and established in the intersection before any turning vehicle starts moving — no capital construction required, and it’s been shown to reduce pedestrian-vehicle collisions by as much as sixty percent at treated intersections. Chicago’s pedestrian scramble at State and Jackson, which some of you will remember from week one, is an even more aggressive version of the same underlying idea, stopping all vehicle traffic at once so pedestrians can cross in any direction, including diagonally. And here’s a parallel low-cost treatment for cyclists: a dedicated bicycle signal head paired with a sign reminding turning vehicles to yield — same underlying philosophy, just applied to the next mode up the hierarchy we just looked at. The throughline across all of these interventions: meaningful pedestrian safety gains often come from signal timing and small design details, not from expensive capital projects.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-general-theory-of-walkability" class="slide level2">
+<h2>The General Theory of Walkability</h2>
+<div class="columns">
+<div class="column" style="width:35%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/walkable_city_speck_cover.jpg" class="bordered-img"></p>
+<figcaption>Speck, J. <em>Walkable City</em> (2012)</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/walkable_city_rules_speck_cover.jpeg" class="bordered-img"></p>
+<figcaption>Speck, J. <em>Walkable City Rules</em> (2018)</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:65%;">
+<p>A walk has to satisfy four conditions — all four, none sufficient alone:</p>
+<ul>
+<li><strong>Useful</strong> — daily needs located close at hand</li>
+<li><strong>Safe</strong> — designed to actually protect pedestrians, and to <em>feel</em> safe</li>
+<li><strong>Comfortable</strong> — buildings and landscape form “outdoor living rooms”</li>
+<li><strong>Interesting</strong> — unique buildings, active frontages, signs of humanity</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>Jeff Speck’s <em>Walkable City</em> gives us a compact, practical framework to close out the theory portion of today’s session — what he calls the General Theory of Walkability. His claim is that for a walk to be genuinely favored over driving, it has to satisfy four conditions simultaneously, and — this is the important part — no single one of them is sufficient on its own.</p>
+<p>Useful means the aspects of daily life you actually need are located close enough that walking legitimately serves them — you can’t will your way past bad land-use separation with good sidewalks alone. Safe means the street is actually designed to protect pedestrians from being struck by a vehicle, but Speck is careful to note it also has to <em>feel</em> safe, which is a separate and honestly harder bar to clear — think about everything we just covered on speed and sightlines. Comfortable means buildings and landscape shape the street into what he calls an “outdoor living room,” in contrast to the wide-open, exposed spaces that reliably fail to attract pedestrians no matter how safe they technically are. And interesting means the walk has to hold your attention — unique buildings, active storefronts, actual signs of human presence, not blank walls and parking lots.</p>
+<p>Notice how neatly this maps back onto everything we’ve covered today: the medieval and industrial walking cities we looked at earlier in the session basically satisfied all four conditions by default, because there was no alternative. The auto-ascendancy period broke useful and safe first. And the sustainability era’s whole project — Complete Streets, Vision Zero, walkability indices — is really just an attempt to systematically re-engineer all four conditions back into places that lost them.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-evidence-base-built-environment-active-transportation" class="slide level2">
+<h2>The Evidence Base: Built Environment &amp; Active Transportation</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/reference_EwingCervero_TravelBuiltEnvironment.png" class="bordered-img" height="380"></p>
+<figcaption>Ewing &amp; Cervero (2010), <em>Journal of the American Planning Association</em> — meta-analysis of the built environment/travel literature</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/ref_Boarnet_CaliforniaSR2S.png" class="bordered-img" height="380"></p>
+<figcaption>Boarnet et al.&nbsp;(2005), <em>Journal of the American Planning Association</em> — evaluating California’s Safe Routes to School program</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Beyond Amato’s cultural history, this week’s literature — the NCHRP report on the benefits of active transportation — draws on a much more quantitative research tradition, and these two studies anchor it. Ewing and Cervero’s 2010 meta-analysis pools results across dozens of built-environment studies and computes standardized elasticities: how much does a given change in density, land-use mix, or street connectivity actually move travel behavior? Their headline finding is that walking is most strongly associated with measures of land-use diversity, intersection density, and the number of destinations within walking distance — in other words, almost exactly the “useful” and “interesting” conditions from Speck’s framework, now backed by pooled statistical evidence rather than observation alone.</p>
+<p>Boarnet and colleagues take a more applied, program-evaluation approach: they studied ten California Safe Routes to School traffic-improvement projects, measuring perceived safety and actual walking and biking behavior before and after construction. Five of the ten projects showed clear evidence of successfully increasing the number of children walking or biking to school — a genuinely encouraging result, because it shows the built-environment relationships Ewing and Cervero identify statistically can also be moved deliberately, through a specific, fundable, replicable program, not just observed passively across cities that already happen to differ.</p>
+<p>Together these two studies are exactly the kind of evidence base Exercise #1 is asking you to build for yourselves: quantify the relationship, then propose and justify a specific intervention.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="a-public-health-lens-on-walkability" class="slide level2">
+<h2>A Public Health Lens on Walkability</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/chicago_health_atlas.png" class="bordered-img" height="230"></p>
+<figcaption>Years of Potential Life Lost by community area. Source: Chicago Health Atlas</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/ccdph_health_atlas.png" class="bordered-img" height="230"></p>
+<figcaption>All-cause mortality rate by municipality, Cook County. Source: Cook County Health Atlas</figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/chicago_lead_lines.png" class="bordered-img" height="230"></p>
+<figcaption>Chicago’s lead water-service-line map, by community area. Source: WBEZ / Inside Climate News</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/covid-19_dashboard.png" class="bordered-img" height="230"></p>
+<figcaption>Chicago COVID-19 Community Health Equity Dashboard. Source: DePaul University</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>I mentioned in week one that alongside teaching here, I work as an epidemiologist with the Cook County Department of Public Health, so I want to close the theory portion of today’s session by bringing that lens in directly, because walkability is fundamentally a public health issue, not just a mobility one.</p>
+<p>These four maps are all tools I use or have helped build in that work. The top left is the Chicago Health Atlas showing Years of Potential Life Lost by community area — notice how closely the highest-burden areas track the same South and West Side communities that Dangerous by Design and the equity data from Bullard’s chapter earlier today identify as facing the highest pedestrian fatality risk; these are not separate problems, they’re the same underlying geography of disinvestment showing up across multiple health and safety indicators at once. Next to it, the Cook County Health Atlas shows all-cause mortality by municipality across the broader county, and again the pattern of concentrated risk in specific corridors should look familiar from today’s discussion of which neighborhoods got the high-speed arterial roads.</p>
+<p>The bottom two maps push the point further. Chicago’s lead water-service-line map — built from the city’s own 2025 inventory data — shows another environmental health burden concentrated in many of the same communities, a reminder that walkability, traffic safety, and environmental health are rarely separable problems in practice; they cluster together because they share root causes in how investment and infrastructure have historically been distributed. And the COVID-19 Community Health Equity Dashboard we built here at DePaul during the pandemic showed the same geographic pattern again for infection, mortality, and vaccination access.</p>
+<p>The takeaway I want you to leave with: when you propose a walkability intervention for your final project, you have an opportunity — and I’d argue a responsibility — to check it against these same public health datasets. A safer crossing or a new sidewalk is a transportation fix, but sited in the right place, it is simultaneously a public health intervention.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="discussion-urban-pedestrian-case-studies" class="slide level2 scrollable">
+<h2>Discussion: Urban Pedestrian Case Studies</h2>
+<p><span class="prompt-lead">Working in small groups, pick one example we covered today.</span></p>
+<ol type="1">
+<li>What specific decision — planning, engineering, or policy — shaped this place’s walkability, for better or worse?</li>
+<li>Which of Speck’s four conditions (useful, safe, comfortable, interesting) is strongest here? Which is weakest?</li>
+<li>If you had one intervention and a modest budget, what would you change first?</li>
+<li>How would Bullard ask you to check your answer for equity before finalizing it?</li>
+</ol>
+<aside class="notes">
+<p>Let’s put today’s frameworks to work. Break into small groups and pick one place we discussed today — it can be Pompeii, medieval Florence, industrial-era New York or Chicago, transitional San Francisco, auto-ascendant Detroit or Los Angeles, or a Complete Streets or Vision Zero example from the sustainability era. Doesn’t matter which, as long as your group can agree on one.</p>
+<p>Work through these four questions together. First, name the specific decision — not a vague trend, an actual identifiable planning, engineering, or policy choice — that shaped that place’s walkability. Second, run it through Speck’s four conditions and tell me which one is strongest and which is weakest there. Third, given a modest budget, what’s the one intervention your group would prioritize — and try to be as concrete as the Leading Pedestrian Interval example, not just “add more sidewalks.” And fourth, I want every group to explicitly apply Bullard’s equity lens before you finalize your answer: who benefits from your proposed intervention, and is there any chance it could displace or burden the community you’re trying to help?</p>
+<p>[Give groups eight to ten minutes, then have two or three report back to the full class.]</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="final-project-brainstorming" class="slide level2">
+<h2>Final Project Brainstorming</h2>
+<p><span class="prompt-lead">Individually or with a partner, sketch a rough direction.</span></p>
+<ul>
+<li>What place or system draws you in — a neighborhood, a corridor, a specific intersection, a policy?</li>
+<li>Which lens fits best: historical (today’s periods), safety (Dangerous by Design), equity (Bullard), or built-form (Speck, Jacobs, Appleyard)?</li>
+<li>What data would you need to evaluate it, and where might you find it?</li>
+</ul>
+<aside class="notes">
+<p>Now let’s turn toward your own final projects, since a rough proposal is due in a few weeks. Take a few minutes, either alone or with a partner, to sketch a rough direction — I’m not looking for a finished proposal today, just a starting point.</p>
+<p>Start with the place or system that actually draws your interest — it could be a neighborhood you know well, a specific corridor, even one dangerous intersection, or a policy question rather than a place at all. Then think about which lens from today fits best: are you drawn to the historical angle, tracing how a place’s walkability changed over time the way we did with Detroit or Florence today? The safety angle, using something like the Dangerous by Design data? The equity angle, following Bullard’s framework? Or the built-form angle, applying Jacobs, Appleyard, or Speck’s criteria to evaluate a specific street or neighborhood? None of these is more “correct” than another — they’re just different entry points, and the best projects usually end up drawing on two or three of them together.</p>
+<p>Finally, start thinking concretely about data: what would you actually need to evaluate your question, and where would you find it? We’ll talk more about data sources as we go, but Exercise #1, which many of you are already working on, is a good model for the kind of county-level commute and pedestrian-fatality data that’s readily available.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="exercise-1-qa" class="slide level2">
+<h2>Exercise #1 Q&amp;A</h2>
+<p><span class="prompt-lead">Open floor — bring your questions on Exercise #1.</span></p>
+<ul>
+<li>Due end of next week, alongside Exercise #2 being assigned</li>
+<li>Analyzing commute mode share and pedestrian fatality trends for a county of your choosing</li>
+</ul>
+<aside class="notes">
+<p>Let’s close today with open floor time for Exercise #1, which is due at the end of next week — the same week Exercise #2 gets assigned, so this is really your last dedicated Q&amp;A window before that deadline. As a reminder, the exercise has you analyze commute mode share and pedestrian fatality trends for a county of your choosing, and propose your own evidence-based intervention, in the same spirit as the Leading Pedestrian Interval example we walked through today.</p>
+<p>[Take questions.] Before we wrap up, one look ahead: next week we shift from walking to bicycling — another mode we’ll trace through its own distinct historical periods, from the earliest hobby-horse bicycles up through today’s e-bike boom. A lot of the same forces we discussed today — auto-ascendancy, the 1970s energy-crisis revival, the sustainability era — show up again in that history too, just on a different timeline. See you then.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p>© 2026 C. Scott Smith | DePaul University</p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="slides_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="slides_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': false,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'fade',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
