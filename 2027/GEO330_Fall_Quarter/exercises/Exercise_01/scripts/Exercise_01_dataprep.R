@@ -189,6 +189,16 @@ fx_plot_activetrans(geoid="all")
 fx_plot_modeshare <- function(geoid = "all") {
   modeBarButtonsList <- list("toImage")
   
+  # Note: mode share is computed as a workforce-weighted national percentage
+  # (total mode count across all selected counties, divided by total workers
+  # across those same counties) rather than an unweighted average of each
+  # county's own percentage. Averaging county-level percentages treats a
+  # small county the same as a large metro county, which can make a mode
+  # concentrated in a few big counties (like transit) look smaller than a
+  # mode spread thinly across many small counties (like "other") -- even
+  # though the opposite is true in raw commuter counts. Weighting by
+  # workers16pl keeps this plot's ranking of modes consistent with the
+  # counts shown in fx_plot_activetrans below.
   plot_data <- modeshare_county_latest_formatted %>%
     {
       if (geoid != "all")
@@ -198,29 +208,32 @@ fx_plot_modeshare <- function(geoid = "all") {
     } %>%
     select(
       year,
-      pct_fromhome,
-      pct_bicycle,
-      pct_transit,
-      pct_walk,
-      pct_drovealone,
-      pct_carpool,
-      pct_taxi,
-      pct_motorcycle,
-      pct_other
+      workers16pl,
+      fromhome,
+      bicycle,
+      transit,
+      walk,
+      drovealone,
+      carpool,
+      taxi,
+      motorcycle,
+      other
     ) %>%
-    mutate(pct_all_other = pct_taxi + pct_motorcycle + pct_other,
-           pct_drove_carpool = pct_drovealone + pct_carpool) %>%
+    mutate(all_other = taxi + motorcycle + other,
+           drove_carpool = drovealone + carpool) %>%
     drop_na() %>%
     group_by(year) %>%
     summarise(
-      `drove or carpool` = mean(pct_drove_carpool),
-      `from home` = mean(pct_fromhome),
-      `bicycle`   = mean(pct_bicycle),
-      `walk`      = mean(pct_walk),
-      `transit`   = mean(pct_transit),
-      `other`   = mean(pct_all_other)
-    )
-  
+      total_workers = sum(workers16pl),
+      `drove or carpool` = sum(drove_carpool) / total_workers * 100,
+      `from home` = sum(fromhome) / total_workers * 100,
+      `bicycle`   = sum(bicycle) / total_workers * 100,
+      `walk`      = sum(walk) / total_workers * 100,
+      `transit`   = sum(transit) / total_workers * 100,
+      `other`   = sum(all_other) / total_workers * 100
+    ) %>%
+    select(-total_workers)
+
   p <- plot_ly(data = plot_data) %>%
     add_trace(
       x = ~ year,
