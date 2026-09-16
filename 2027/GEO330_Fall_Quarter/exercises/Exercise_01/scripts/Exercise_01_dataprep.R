@@ -330,12 +330,12 @@ fx_plot_activetrans <- function(geoid = "all") {
     drop_na() %>%
     group_by(year) %>%
     summarise(
-      `drove or carpool` = sum(drove_carpool),
-      `from home` = sum(fromhome),
-      `bicycle`   = sum(bicycle),
-      `walk`      = sum(walk),
-      `transit`   = sum(transit),
-      `other`   = sum(all_other)
+      `drove or carpool` = round(sum(drove_carpool)),
+      `from home` = round(sum(fromhome)),
+      `bicycle`   = round(sum(bicycle)),
+      `walk`      = round(sum(walk)),
+      `transit`   = round(sum(transit)),
+      `other`   = round(sum(all_other))
     )
 
   plot_ly(data = plot_data) %>%
@@ -401,7 +401,7 @@ fx_plot_activetrans <- function(geoid = "all") {
     ) %>%
     layout(
       xaxis = list(title = ""),
-      yaxis = list(title = "Number of Commuters"),
+      yaxis = list(title = "Number of Commuters", tickformat = ",.0f"),
       legend = list(
         font = list(size = 10),
         orientation = "h",
