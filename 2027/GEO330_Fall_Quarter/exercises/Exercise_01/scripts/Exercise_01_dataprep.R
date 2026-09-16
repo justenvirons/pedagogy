@@ -221,7 +221,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       `other`   = mean(pct_all_other)
     )
   
-  plot_ly(data = plot_data) %>%
+  p <- plot_ly(data = plot_data) %>%
     add_trace(
       x = ~ year,
       y = ~ `drove or carpool`,
@@ -230,7 +230,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#4F011F"),
       line = list(color = "#4F011F"),
       name = 'drove or carpool',
-      hovertemplate = 'drove or carpool: %{y:.1f}<extra></extra>'
+      hovertemplate = 'drove or carpool: %{y:.1f}%<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -240,7 +240,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#2A4235"),
       line = list(color = "#2A4235"),
       name = 'other',
-      hovertemplate = 'other: %{y:.1f}<extra></extra>'
+      hovertemplate = 'other: %{y:.1f}%<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -250,7 +250,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#E0A100"),
       line = list(color = "#E0A100"),
       name = 'from home',
-      hovertemplate = 'from home: %{y:.1f}<extra></extra>'
+      hovertemplate = 'from home: %{y:.1f}%<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -260,7 +260,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#9F1928"),
       line = list(color = "#9F1928"),
       name = 'walk',
-      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+      hovertemplate = 'walk: %{y:.1f}%<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -270,7 +270,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#009BA6"),
       line = list(color = "#009BA6"),
       name = 'transit',
-      hovertemplate = 'transit: %{y:.1f}<extra></extra>'
+      hovertemplate = 'transit: %{y:.1f}%<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -280,7 +280,7 @@ fx_plot_modeshare <- function(geoid = "all") {
       marker = list(color = "#080967"),
       line = list(color = "#080967"),
       name = 'bicycle',
-      hovertemplate = 'bicycle: %{y:.1f}<extra></extra>'
+      hovertemplate = 'bicycle: %{y:.1f}%<extra></extra>'
     ) %>%
     layout(
       xaxis = list(title = ""),
@@ -299,6 +299,30 @@ fx_plot_modeshare <- function(geoid = "all") {
       modeBarButtons = list(modeBarButtonsList),
       toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
     )
+
+  # Give this widget a predictable elementId (keyed by geoid, so the "all"
+  # and custom-county versions rendered in the same document don't collide)
+  # and wire up a legend-click handler that mirrors the click onto the
+  # matching trace in the companion fx_plot_activetrans plot, so toggling a
+  # mode in either chart's legend toggles it in both at once.
+  p$elementId <- paste0("fx-modeshare-", geoid)
+  htmlwidgets::onRender(p, "
+    function(el, x) {
+      el.on('plotly_legendclick', function(d) {
+        var curveNumber = d.curveNumber;
+        var currentVis = d.data[curveNumber].visible;
+        var newVis = (currentVis === true || currentVis === undefined) ? 'legendonly' : true;
+        var otherId = el.id.indexOf('fx-modeshare') === 0
+          ? el.id.replace('fx-modeshare', 'fx-activetrans')
+          : el.id.replace('fx-activetrans', 'fx-modeshare');
+        var otherDiv = document.getElementById(otherId);
+        if (otherDiv) {
+          Plotly.restyle(otherDiv, {visible: [newVis]}, [curveNumber]);
+        }
+        return true;
+      });
+    }
+  ")
 }
 
 # function for creating commuter count plot (companion to fx_plot_modeshare, but
@@ -338,7 +362,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       `other`   = round(sum(all_other))
     )
 
-  plot_ly(data = plot_data) %>%
+  p <- plot_ly(data = plot_data) %>%
     add_trace(
       x = ~ year,
       y = ~ `drove or carpool`,
@@ -416,6 +440,27 @@ fx_plot_activetrans <- function(geoid = "all") {
       modeBarButtons = list(modeBarButtonsList),
       toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
     )
+
+  # Same elementId/legend-sync wiring as fx_plot_modeshare, so a legend
+  # click here toggles the matching trace over there too.
+  p$elementId <- paste0("fx-activetrans-", geoid)
+  htmlwidgets::onRender(p, "
+    function(el, x) {
+      el.on('plotly_legendclick', function(d) {
+        var curveNumber = d.curveNumber;
+        var currentVis = d.data[curveNumber].visible;
+        var newVis = (currentVis === true || currentVis === undefined) ? 'legendonly' : true;
+        var otherId = el.id.indexOf('fx-modeshare') === 0
+          ? el.id.replace('fx-modeshare', 'fx-activetrans')
+          : el.id.replace('fx-activetrans', 'fx-modeshare');
+        var otherDiv = document.getElementById(otherId);
+        if (otherDiv) {
+          Plotly.restyle(otherDiv, {visible: [newVis]}, [curveNumber]);
+        }
+        return true;
+      });
+    }
+  ")
 }
 
 # function for creating quintile bins for a requested transportation mode
