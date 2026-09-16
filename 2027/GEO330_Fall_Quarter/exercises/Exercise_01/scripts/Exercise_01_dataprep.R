@@ -247,16 +247,6 @@ fx_plot_modeshare <- function(geoid = "all") {
     ) %>%
     add_trace(
       x = ~ year,
-      y = ~ `other`,
-      type = 'scatter',
-      mode = 'lines+markers',
-      marker = list(color = "#2A4235"),
-      line = list(color = "#2A4235"),
-      name = 'other',
-      hovertemplate = 'other: %{y:.1f}%<extra></extra>'
-    ) %>%
-    add_trace(
-      x = ~ year,
       y = ~ `from home`,
       type = 'scatter',
       mode = 'lines+markers',
@@ -294,6 +284,16 @@ fx_plot_modeshare <- function(geoid = "all") {
       line = list(color = "#080967"),
       name = 'bicycle',
       hovertemplate = 'bicycle: %{y:.1f}%<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `other`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#2A4235"),
+      line = list(color = "#2A4235"),
+      name = 'other',
+      hovertemplate = 'other: %{y:.1f}%<extra></extra>'
     ) %>%
     layout(
       xaxis = list(title = ""),
@@ -388,16 +388,6 @@ fx_plot_activetrans <- function(geoid = "all") {
     ) %>%
     add_trace(
       x = ~ year,
-      y = ~ `other`,
-      type = 'scatter',
-      mode = 'lines+markers',
-      marker = list(color = "#2A4235"),
-      line = list(color = "#2A4235"),
-      name = 'other',
-      hovertemplate = 'other: %{y:,.0f}<extra></extra>'
-    ) %>%
-    add_trace(
-      x = ~ year,
       y = ~ `from home`,
       type = 'scatter',
       mode = 'lines+markers',
@@ -435,6 +425,16 @@ fx_plot_activetrans <- function(geoid = "all") {
       line = list(color = "#080967"),
       name = 'bicycle',
       hovertemplate = 'bicycle: %{y:,.0f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `other`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#2A4235"),
+      line = list(color = "#2A4235"),
+      name = 'other',
+      hovertemplate = 'other: %{y:,.0f}<extra></extra>'
     ) %>%
     layout(
       xaxis = list(title = ""),
