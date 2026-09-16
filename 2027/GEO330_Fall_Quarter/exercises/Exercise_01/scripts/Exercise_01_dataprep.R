@@ -181,54 +181,105 @@ utm_zones <- st_read("data/utm_zones.geojson") %>%
 
 # Define plotting and mapping functions used in Exercise_01.qmd -----------
 
+fx_plot_modeshare(geoid="all")
+
 # function for creating mode share plot
 fx_plot_modeshare <- function(geoid = "all") {
-
   modeBarButtonsList <- list("toImage")
-
+  
   plot_data <- modeshare_county_latest_formatted %>%
-    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
-    select(year, pct_fromhome, pct_bicycle, pct_transit, pct_walk) %>%
+    {
+      if (geoid != "all")
+        filter(., GEOID_county == geoid)
+      else
+        .
+    } %>%
+    select(
+      year,
+      pct_fromhome,
+      pct_bicycle,
+      pct_transit,
+      pct_walk,
+      pct_drovealone,
+      pct_carpool,
+      pct_taxi,
+      pct_motorcycle,
+      pct_other
+    ) %>%
+    mutate(pct_all_other = pct_taxi + pct_motorcycle + pct_other,
+           pct_drove_carpool = pct_drovealone + pct_carpool) %>%
     drop_na() %>%
     group_by(year) %>%
-    summarise(`from home` = mean(pct_fromhome),
-              `bicycle`   = mean(pct_bicycle),
-              `walk`      = mean(pct_walk),
-              `transit`   = mean(pct_transit))
-
-  plot_ly(data = plot_data,
-          x = ~year,
-          y = ~`from home`,
-          type = 'scatter',
-          mode = 'lines+markers',
-          marker = list(color = "#E0A100"),
-          line = list(color = "#E0A100"),
-          name = 'from home',
-          hovertemplate = 'from home: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`walk`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#9F1928"),
-              line = list(color = "#9F1928"),
-              name = 'walk',
-              hovertemplate = 'walk: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`transit`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#009BA6"),
-              line = list(color = "#009BA6"),
-              name = 'transit',
-              hovertemplate = 'transit: %{y:.1f}<extra></extra>') %>%
-    add_trace(x = ~year,
-              y = ~`bicycle`,
-              type = 'scatter',
-              mode = 'lines+markers',
-              marker = list(color = "#080967"),
-              line = list(color = "#080967"),
-              name = 'bicycle',
-              hovertemplate = 'bicycle: %{y:.1f}<extra></extra>') %>%
+    summarise(
+      `drove or carpool` = mean(pct_drove_carpool),
+      `from home` = mean(pct_fromhome),
+      `bicycle`   = mean(pct_bicycle),
+      `walk`      = mean(pct_walk),
+      `transit`   = mean(pct_transit),
+      `other`   = mean(pct_all_other)
+    )
+  
+  plot_ly(data = plot_data) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `drove or carpool`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#4F011F"),
+      line = list(color = "#4F011F"),
+      name = 'drove or carpool',
+      hovertemplate = 'drove or carpool: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `other`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#2A4235"),
+      line = list(color = "#2A4235"),
+      name = 'other',
+      hovertemplate = 'other: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `from home`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#E0A100"),
+      line = list(color = "#E0A100"),
+      name = 'from home',
+      hovertemplate = 'from home: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `walk`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#9F1928"),
+      line = list(color = "#9F1928"),
+      name = 'walk',
+      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `transit`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#009BA6"),
+      line = list(color = "#009BA6"),
+      name = 'transit',
+      hovertemplate = 'transit: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `bicycle`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#080967"),
+      line = list(color = "#080967"),
+      name = 'bicycle',
+      hovertemplate = 'bicycle: %{y:.1f}<extra></extra>'
+    ) %>%
     layout(
       xaxis = list(title = ""),
       yaxis = list(title = "Commute Mode Share (%)"),
@@ -236,28 +287,34 @@ fx_plot_modeshare <- function(geoid = "all") {
         font = list(size = 10),
         orientation = "h",
         xanchor = "center",
-        x = 0.5, y = -0.1),
-      hovermode = "x unified") %>%
-    config(displaylogo = FALSE,
-           modeBarButtons = list(modeBarButtonsList),
-           toImageButtonOptions = list(
-             format = "png",
-             filename = "mode_share_chart"
-           ))
+        x = 0.5,
+        y = -0.1
+      ),
+      hovermode = "x unified"
+    ) %>%
+    config(
+      displaylogo = FALSE,
+      modeBarButtons = list(modeBarButtonsList),
+      toImageButtonOptions = list(format = "png", filename = "mode_share_chart")
+    )
 }
 
 # function for creating pedestrian commuters plot
 fx_plot_activetrans <- function(geoid = "all") {
-
   modeBarButtonsList <- list("toImage")
-
+  
   plot_data <- modeshare_county_latest_formatted %>%
-    { if (geoid != "all") filter(., GEOID_county == geoid) else . } %>%
+    {
+      if (geoid != "all")
+        filter(., GEOID_county == geoid)
+      else
+        .
+    } %>%
     select(year, walk) %>%
     drop_na() %>%
     group_by(year) %>%
     summarise(`walk`      = sum(walk))
-
+  
   plot_ly(data = plot_data) %>%
     add_trace(
       x = ~ year,

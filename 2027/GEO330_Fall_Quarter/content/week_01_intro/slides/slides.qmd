@@ -87,7 +87,7 @@ Once you've submitted, get into groups of three, and spend about five minutes co
 
 - A system is an interconnected set of elements that is coherently organized in a way that achieves something. A system consists of three kinds of things: elements, interconnections, and a function or purpose. (Meadows, 2008)
 
-- In its simplest form, a transportation system consists of vehicles/modes, paths/networks and behaviors.
+- In its simplest, physical form, a transportation system consists of vehicles/modes, paths/networks and nodes/origins/destinations.
 
 - Like all systems, transportation systems are also situated in time (i.e., historical) and space/place and exhibit adaptive, dynamic, goal-seeking, self-preserving, and sometimes evolutionary behavior.
 
@@ -274,6 +274,18 @@ Here's the takeaway I want you to leave with: because people get blocked at diff
 :::
 
 ---
+
+## Planning Advisory Service (PAS) Reports
+
+[Several evolving and emerging factors continue to influence urban transportation systems]{.prompt-lead}
+
+![Sample of publications from the American Planning Association](images/psa_reports.png){.bordered-img fig-align="center" height="500"}
+
+::: notes
+Select publications from the American Planning Association.
+:::
+
+--- 
 
 ## Applied Example: The Leading Pedestrian Interval
 
