@@ -1,0 +1,94 @@
+/* Header bar */
+.reveal .slide-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 8px 20px;
+  background: #003DA5;  /* DePaul Blue */
+  color: white;
+  font-size: 14px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo in header */
+.reveal .slide-header .logo {
+  height: 30px;
+  margin-left: auto;
+}
+
+/* Footer bar */
+.reveal .slide-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 6px 20px;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 12px;
+  text-align: center;
+  border-top: 1px solid #ccc;
+}
+
+.reveal .medium-text {
+  font-size: 0.50em;
+  color: #999;
+  padding-left: 2em;
+}
+
+/* Slide content headings */
+.reveal h2 {
+  font-size: 24pt;
+  color: #222;          /* dark grey */
+  font-weight: 600;
+}
+
+.reveal h3 {
+  font-size: 18pt;
+  color: #555;          /* medium grey */
+  font-weight: 500;
+}
+
+/* Slide bullet points */
+.reveal ul,
+.reveal ol {
+  font-size: 16pt;
+  color: #777;          /* medium/dark grey */
+  font-weight: 400;
+}
+
+.reveal figure figcaption {
+  font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+  font-size: 12pt !important;
+  font-style: italic;
+  color: #999;
+  text-align: center;
+}
+
+.reveal .slide-background {
+  background-image: url("images/chicago_health_atlas_background.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;  /* prevents tiling */
+}
+
+.bordered-img {
+  border: 1px solid #444;
+  border-radius: 2px;
+  padding: 1px;
+}
+
+/* Lead-in prompt line above a numbered activity list */
+.prompt-lead {
+  font-size: 18pt;
+  color: #3A4A66;   /* milky dark blue - distinct from heading grey, doesn't compete */
+  font-weight: 700;
+}
+
+.reveal .slide-background { opacity: 0.1 !important; }         /* default for others */
+
+.reveal .slide-background.present { opacity: 0.1 !important; }/* the active slide */
