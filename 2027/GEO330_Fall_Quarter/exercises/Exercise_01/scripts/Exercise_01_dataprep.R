@@ -347,7 +347,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#4F011F"),
       line = list(color = "#4F011F"),
       name = 'drove or carpool',
-      hovertemplate = 'drove or carpool: %{y:.1f}<extra></extra>'
+      hovertemplate = 'drove or carpool: %{y:,.0f}<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -357,7 +357,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#2A4235"),
       line = list(color = "#2A4235"),
       name = 'other',
-      hovertemplate = 'other: %{y:.1f}<extra></extra>'
+      hovertemplate = 'other: %{y:,.0f}<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -367,7 +367,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#E0A100"),
       line = list(color = "#E0A100"),
       name = 'from home',
-      hovertemplate = 'from home: %{y:.1f}<extra></extra>'
+      hovertemplate = 'from home: %{y:,.0f}<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -377,7 +377,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#9F1928"),
       line = list(color = "#9F1928"),
       name = 'walk',
-      hovertemplate = 'walk: %{y:.1f}<extra></extra>'
+      hovertemplate = 'walk: %{y:,.0f}<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -387,7 +387,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#009BA6"),
       line = list(color = "#009BA6"),
       name = 'transit',
-      hovertemplate = 'transit: %{y:.1f}<extra></extra>'
+      hovertemplate = 'transit: %{y:,.0f}<extra></extra>'
     ) %>%
     add_trace(
       x = ~ year,
@@ -397,7 +397,7 @@ fx_plot_activetrans <- function(geoid = "all") {
       marker = list(color = "#080967"),
       line = list(color = "#080967"),
       name = 'bicycle',
-      hovertemplate = 'bicycle: %{y:.1f}<extra></extra>'
+      hovertemplate = 'bicycle: %{y:,.0f}<extra></extra>'
     ) %>%
     layout(
       xaxis = list(title = ""),
