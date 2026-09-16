@@ -128,6 +128,7 @@ modeshare_county_latest_formatted <- modeshare_county_raw %>%
          bicycle,
          walk,
          fromhome,
+         other,
          pct_drovealone:pct_other)
 
 # Latest year (2024) subset, contiguous US only, for county-level maps ----
@@ -182,6 +183,7 @@ utm_zones <- st_read("data/utm_zones.geojson") %>%
 # Define plotting and mapping functions used in Exercise_01.qmd -----------
 
 fx_plot_modeshare(geoid="all")
+fx_plot_activetrans(geoid="all")
 
 # function for creating mode share plot
 fx_plot_modeshare <- function(geoid = "all") {
