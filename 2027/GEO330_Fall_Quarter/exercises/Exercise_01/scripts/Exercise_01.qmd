@@ -482,7 +482,7 @@ fx_plot_activetrans <- function(geoid = "all") {
     ) %>%
     layout(
       xaxis = list(title = ""),
-      yaxis = list(title = "Number of Commuters", tickformat = ",.0f"),
+      yaxis = list(title = "Number of Commuters (millions)", tickformat = "~s"),
       legend = list(
         font = list(size = 10),
         orientation = "h",
