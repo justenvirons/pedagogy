@@ -299,10 +299,11 @@ fx_plot_modeshare <- function(geoid = "all") {
     )
 }
 
-# function for creating pedestrian commuters plot
+# function for creating commuter count plot (companion to fx_plot_modeshare, but
+# using mode-specific counts rather than percentages)
 fx_plot_activetrans <- function(geoid = "all") {
   modeBarButtonsList <- list("toImage")
-  
+
   plot_data <- modeshare_county_latest_formatted %>%
     {
       if (geoid != "all")
@@ -310,12 +311,62 @@ fx_plot_activetrans <- function(geoid = "all") {
       else
         .
     } %>%
-    select(year, walk) %>%
+    select(
+      year,
+      fromhome,
+      bicycle,
+      transit,
+      walk,
+      drovealone,
+      carpool,
+      taxi,
+      motorcycle,
+      other
+    ) %>%
+    mutate(all_other = taxi + motorcycle + other,
+           drove_carpool = drovealone + carpool) %>%
     drop_na() %>%
     group_by(year) %>%
-    summarise(`walk`      = sum(walk))
-  
+    summarise(
+      `drove or carpool` = sum(drove_carpool),
+      `from home` = sum(fromhome),
+      `bicycle`   = sum(bicycle),
+      `walk`      = sum(walk),
+      `transit`   = sum(transit),
+      `other`   = sum(all_other)
+    )
+
   plot_ly(data = plot_data) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `drove or carpool`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#4F011F"),
+      line = list(color = "#4F011F"),
+      name = 'drove or carpool',
+      hovertemplate = 'drove or carpool: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `other`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#2A4235"),
+      line = list(color = "#2A4235"),
+      name = 'other',
+      hovertemplate = 'other: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `from home`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#E0A100"),
+      line = list(color = "#E0A100"),
+      name = 'from home',
+      hovertemplate = 'from home: %{y:.1f}<extra></extra>'
+    ) %>%
     add_trace(
       x = ~ year,
       y = ~ `walk`,
@@ -325,10 +376,30 @@ fx_plot_activetrans <- function(geoid = "all") {
       line = list(color = "#9F1928"),
       name = 'walk',
       hovertemplate = 'walk: %{y:.1f}<extra></extra>'
-    )  %>%
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `transit`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#009BA6"),
+      line = list(color = "#009BA6"),
+      name = 'transit',
+      hovertemplate = 'transit: %{y:.1f}<extra></extra>'
+    ) %>%
+    add_trace(
+      x = ~ year,
+      y = ~ `bicycle`,
+      type = 'scatter',
+      mode = 'lines+markers',
+      marker = list(color = "#080967"),
+      line = list(color = "#080967"),
+      name = 'bicycle',
+      hovertemplate = 'bicycle: %{y:.1f}<extra></extra>'
+    ) %>%
     layout(
       xaxis = list(title = ""),
-      yaxis = list(title = "Walk Commuters"),
+      yaxis = list(title = "Number of Commuters"),
       legend = list(
         font = list(size = 10),
         orientation = "h",
