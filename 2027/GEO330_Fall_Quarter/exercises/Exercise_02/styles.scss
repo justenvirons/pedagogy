@@ -1,0 +1,22 @@
+/*-- scss:defaults --*/
+
+// Map legends
+.info.legend.leaflet-control i {
+  float: left;
+
+}
+
+
+/* Left-justify Leaflet legend text */
+.leaflet-control .legend {
+  text-align: left !important;
+}
+
+.leaflet-control .legend i {
+  float: left;
+  margin-right: 6px;
+}
+
+.leaflet-control .legend span {
+  display: block;
+}

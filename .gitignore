@@ -4,6 +4,9 @@
 
 # Files
 *.mp4
+*.csv
+*.RData
+*.zip
 
 # History files
 .Rhistory

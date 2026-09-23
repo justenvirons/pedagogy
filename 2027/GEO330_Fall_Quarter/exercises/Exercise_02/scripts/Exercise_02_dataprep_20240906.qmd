@@ -11,6 +11,7 @@ library(data.table)
 library(sf)
 library(lubridate)
 library(hms)
+library(leaflet)
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2026/GEO330_2026_WinterQuarter")
 ```
@@ -41,10 +42,12 @@ adivvy_trips_list <- c("202401-divvy-tripdata", "202402-divvy-tripdata", "202403
 # updated list
 adivvy_trips_list <- c("202512-divvy-tripdata", "202508-divvy-tripdata", "202505-divvy-tripdata", "202506-divvy-tripdata", "202507-divvy-tripdata", "202504-divvy-tripdata", "202503-divvy-tripdata", "202502-divvy-tripdata", "202410-divvy-tripdata", "202412-divvy-tripdata", "202411-divvy-tripdata", "202501-divvy-tripdata", "202409-divvy-tripdata", "202509-divvy-tripdata", "202510-divvy-tripdata", "202511-divvy-tripdata")
 
-# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2022
+adivvy_trips_list <- c("202601-divvy-tripdata","202602-divvy-tripdata","202603-divvy-tripdata", "202604-divvy-tripdata","202605-divvy-tripdata", "202606-divvy-tripdata", "202607-divvy-tripdata",  "202608-divvy-tripdata" )
+
+# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2026
 # https://divvy-tripdata.s3.amazonaws.com/index.html
 for (afile in adivvy_trips_list){
-  afilename <- paste0("F:/Downloads/Divvy/",afile,".zip")
+  afilename <- paste0("exercises/Exercise_02/data/",afile,".zip")
   unzip(zipfile = afilename, exdir = paste0("exercises/Exercise_02/data"))
 }
 
@@ -235,19 +238,19 @@ divvy_trips_latest_ca_all_updated <- divvy_trips_latest_start_ca %>%
                      end_comarea_name = comarea_name,
                      end_comarea_id = comarea_id))
 
-save(divvy_trips_latest_start_ca, divvy_trips_latest_end_ca, divvy_trips_latest_ca_all_updated, file = "exercises/Exercise_02/data/divvy_datatrips_start_end_202512.RData")
+save(divvy_trips_latest_start_ca, divvy_trips_latest_end_ca, divvy_trips_latest_ca_all_updated, file = "exercises/Exercise_02/data/divvy_datatrips_start_end_202608.RData")
 
 ```
 
 ## import and bind with archived data
 ```{r}
 ## import archived trips
-load("exercises/Exercise_02/data/divvy_datatrips_ca_all_2013_202408.RData")
+load("exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202512.RData")
 
-divvy_trips_latest_ca_all_2013_202512 <- divvy_trips_latest_ca_all_2013_202408 %>% 
+divvy_trips_latest_ca_all_2013_202608 <- divvy_trips_latest_ca_all_2013_202512 %>% 
   bind_rows(divvy_trips_latest_ca_all_updated)
 
-save(divvy_trips_latest_ca_all_2013_202512, file = "exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202512.RData")
+
 
 test = divvy_trips_latest_ca_all_2013_202512 %>% group_by(start_comarea_name) %>%
   summarise(trips = n())
@@ -257,7 +260,7 @@ test = divvy_trips_latest_ca_all_2013_202512 %>% group_by(start_comarea_name) %>
 ## save data
 ```{r}
 
-save(divvy_trips_latest_ca_all_2013_202408, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_all_2013_202408.RData")
+save(divvy_trips_latest_ca_all_2013_202608, file = "exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202608.RData")
 
 ```
 
@@ -267,25 +270,25 @@ save(divvy_trips_latest_ca_all_2013_202408, file = "GEO330_2023_WinterQuarter/ex
 
 # total trips by year and month
 
-load("exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202512.RData")
+load("exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202608.RData")
 
-assign("divvy_trips_2013_2025_ca_all", divvy_trips_latest_ca_all_2013_202512)
+assign("divvy_trips_2013_2026_ca_all", divvy_trips_latest_ca_all_2013_202608)
 
 # trips by yearmonth tables
 # total trips by year and month
-trips_year_month <- divvy_trips_2013_2025_ca_all %>%
+trips_year_month <- divvy_trips_2013_2026_ca_all %>%
   group_by(yearmonth) %>%
   summarize(trips = n(),
             trip_duration = sum(trip_duration))
 
 # total trips by year, month and community area
-trips_year_month_fr_ca <- divvy_trips_2013_2025_ca_all %>%
+trips_year_month_fr_ca <- divvy_trips_2013_2026_ca_all %>%
   mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(start_comarea_id))) %>%
   group_by(yearmonth_ca) %>%
   summarize(fr_trips = n(),
             fr_trip_duration = sum(trip_duration))
 
-trips_year_month_to_ca <- divvy_trips_2013_2025_ca_all %>%
+trips_year_month_to_ca <- divvy_trips_2013_2026_ca_all %>%
   mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(end_comarea_id))) %>%
   group_by(yearmonth_ca) %>%
   summarize(to_trips = n(),
@@ -301,19 +304,19 @@ trips_yearmonth_ca_all_noduration <- trips_year_month_ca_all %>%
   select(-c(ends_with("duration")))
 
 # total trips by date
-trips_date <- divvy_trips_2013_2025_ca_all %>%
+trips_date <- divvy_trips_2013_2026_ca_all %>%
   group_by(date) %>%
   summarize(trips = n(),
             trip_duration = sum(trip_duration))
 
 #total trips by date and community area
-trips_date_fr_ca <- divvy_trips_2013_2025_ca_all %>%
+trips_date_fr_ca <- divvy_trips_2013_2026_ca_all %>%
   mutate(date_ca = paste0(as.character(date),":",as.character(start_comarea_id))) %>%
   group_by(date_ca) %>%
   summarize(fr_trips = n(),
             fr_trip_duration = sum(trip_duration))
 
-trips_date_to_ca <- divvy_trips_2013_2025_ca_all %>%
+trips_date_to_ca <- divvy_trips_2013_2026_ca_all %>%
   mutate(date_ca = paste0(as.character(date),":",as.character(end_comarea_id))) %>%
   group_by(date_ca) %>%
   summarize(to_trips = n(),
@@ -328,7 +331,7 @@ trips_date_ca_all <- expand_grid(date = trips_date$date,comarea_id = community_a
 trips_date_ca_all_noduration <- trips_date_ca_all %>%
   select(-c(ends_with("duration")))
 
-save(trips_date_ca_all_noduration, trips_yearmonth_ca_all_noduration, divvy_trips_2013_2025_ca_all, file="exercises/Exercise_02/data/divvy_datatrips_ca_sum_latest_2013_202512.RData")
+save(trips_date_ca_all_noduration, trips_yearmonth_ca_all_noduration, divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_datatrips_ca_sum_latest_2013_202608.RData")
 ```
 
 ## Create CCVI by Chicago Community Area dataset
@@ -457,7 +460,7 @@ community_areas_ccvi %>%
          `Community Area` = comarea_name) %>%
   st_drop_geometry() %>%
   arrange(ID) %>%
-  datatable(class = 'cell-border stripe',
+  data.table(class = 'cell-border stripe',
             rownames = FALSE,
             options = list(pageLength = 5))
 
