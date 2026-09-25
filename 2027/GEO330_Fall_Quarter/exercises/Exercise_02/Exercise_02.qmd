@@ -17,7 +17,7 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: false
-date: "2026-01-22"
+date: "2026-09-29"
 editor_options:
     chunk_output_type: console
 ---
@@ -41,7 +41,7 @@ load(file="data/divvy_trips_summary_tables_latest.RData")
 ```
 
 # Purpose
-This project examines trends in Divvy bike sharing ridership over time (i.e., between 2013 and 2025) and by community area within the city of Chicago. Students will develop custom R scripts to explore how ridership varies across communities with respect to demographic and socioeconomic characteristics. The exercise uses custom summary tables produced from a comprehensive dataset of over 52 million Divvy bike trips logged between the official launch of the program on June 27, 2013 through December 31, 2025.
+This project examines trends in Divvy bike sharing ridership over time (i.e., between 2013 and 2026) and by community area within the city of Chicago. Students will explore how ridership varies across communities with respect to demographic and socioeconomic characteristics. The exercise uses custom summary tables produced from a comprehensive dataset of over 56 million Divvy bike trips logged between the official launch of the program on June 27, 2013 through August 31, 2026.
 
 ::: {.callout-note collapse="false"}
 ## Optional readings
@@ -51,21 +51,10 @@ Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesh
 :::
 
 # Step 1. Open Exercise #2 in Posit Cloud course workspace
-Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #3 announcement. Open the Exercise #2 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
-
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Create a new R project -->
-<!-- {{< video videos/exercise_03_new_R_project.mp4 >}} -->
-<!-- ::: -->
-
-::: {.callout-note collapse="false"}
-
-## What is R?
-R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS and is available via a cloud version, *Posit Cloud*. RStudio is an integrated development environment (IDE) for R. It has a set of tools built to help R users be more productive with R (and other languages including Python)). It includes a console, syntax-highlighting editor that supports direct code execution. It also features tools for plotting, viewing history, debugging and managing your workspace.
-:::
+Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #2 announcement. Open the Exercise #2 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
 
 ## Open R script and activate R packages
-In your default exercise #2 project you will find an R script named *exercise02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Students will use several R packages to complete the exercise, including "dplyr" and  "tidyverse" for data formatting and wrangling, "sf" (simple feature) for importing, transforming geographic data, "plotly" for creating interactive figures, and "leaflet" for producing interactive maps.
+In your default exercise #2 project you will find an R script named *exercise02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel.
 
 ```{r}
 # Activate R packages

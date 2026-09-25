@@ -11,6 +11,9 @@ library(data.table)
 library(sf)
 library(lubridate)
 library(hms)
+library(leaflet)
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
 ```
 
 # Purpose
@@ -33,16 +36,24 @@ divvy_trips_orig <- read.csv("GEO330_2023_WinterQuarter/exercises/Exercise_03/da
 # create list of divvy trip data from individual files on system data website
 adivvy_trips_list <- c("202005-divvy-tripdata","202006-divvy-tripdata","202007-divvy-tripdata","202008-divvy-tripdata","202009-divvy-tripdata","202010-divvy-tripdata","202011-divvy-tripdata","202012-divvy-tripdata","202101-divvy-tripdata","202102-divvy-tripdata","202103-divvy-tripdata","202104-divvy-tripdata","202105-divvy-tripdata","202106-divvy-tripdata","202107-divvy-tripdata","202108-divvy-tripdata","202109-divvy-tripdata","202110-divvy-tripdata","202111-divvy-tripdata","202112-divvy-tripdata","202201-divvy-tripdata","202202-divvy-tripdata","202203-divvy-tripdata","202204-divvy-tripdata","202205-divvy-tripdata","202206-divvy-tripdata","202207-divvy-tripdata","202208-divvy-tripdata","202209-divvy-tripdata","202210-divvy-tripdata","202211-divvy-tripdata","202212-divvy-tripdata","202301-divvy-tripdata","202302-divvy-tripdata", "202303-divvy-tripdata", "Divvy_Trips_2020_Q1")
 
-# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2022
+# updated list
+adivvy_trips_list <- c("202401-divvy-tripdata", "202402-divvy-tripdata", "202403-divvy-tripdata", "202404-divvy-tripdata", "202405-divvy-tripdata", "202406-divvy-tripdata", "202407-divvy-tripdata", "202408-divvy-tripdata")
+
+# updated list
+adivvy_trips_list <- c("202512-divvy-tripdata", "202508-divvy-tripdata", "202505-divvy-tripdata", "202506-divvy-tripdata", "202507-divvy-tripdata", "202504-divvy-tripdata", "202503-divvy-tripdata", "202502-divvy-tripdata", "202410-divvy-tripdata", "202412-divvy-tripdata", "202411-divvy-tripdata", "202501-divvy-tripdata", "202409-divvy-tripdata", "202509-divvy-tripdata", "202510-divvy-tripdata", "202511-divvy-tripdata")
+
+adivvy_trips_list <- c("202601-divvy-tripdata","202602-divvy-tripdata","202603-divvy-tripdata", "202604-divvy-tripdata","202605-divvy-tripdata", "202606-divvy-tripdata", "202607-divvy-tripdata",  "202608-divvy-tripdata" )
+
+# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2026
 # https://divvy-tripdata.s3.amazonaws.com/index.html
 for (afile in adivvy_trips_list){
-  afilename <- paste0("E:/Downloads/divvy/",afile,".zip")
-  unzip(zipfile = afilename, exdir = paste0("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/"))
+  afilename <- paste0("exercises/Exercise_02/data/",afile,".zip")
+  unzip(zipfile = afilename, exdir = paste0("exercises/Exercise_02/data"))
 }
 
 # import monthly and quarterly divvy trip data files from csv format
 for (afile in adivvy_trips_list){
-  aimportfile <- read_csv(paste0("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/trips_processing/",afile,".csv"))
+  aimportfile <- read_csv(paste0("exercises/Exercise_02/data/",afile,".csv"))
   assign(afile, aimportfile)
   rm(aimportfile)
 }
@@ -65,16 +76,17 @@ apattern <- "-divvy-tripdata"
 alist_dfs <- mget(ls(pattern = apattern))
 divvy_tripdata <- rbindlist(alist_dfs)
 
+# remove raw data from environment
+rm(alist_dfs)
+apattern <- "-divvy-tripdata"
+rm(mget(ls(pattern = apattern)))
+
+# convert values to numeric
 divvy_tripdata <- divvy_tripdata %>%
   mutate_at(vars(start_station_id,end_station_id:end_lng), function(x)(as.numeric(x)))
 
-divvy_tripdata <- divvy_tripdata %>%
-  bind_rows(Divvy_Trips_2020_Q1)
-
-alist_df <- mget(ls(pattern = "-divvy-tripdata"))
-rm(alist_df)
-
-divvy_trips_2020_2023 <- divvy_tripdata %>%
+# format latest trip data
+divvy_trips_latest <- divvy_tripdata %>%
   mutate(rideable_type,
          hour_start = hour(started_at),
          hour_end = hour(ended_at),
@@ -97,58 +109,13 @@ divvy_trips_2020_2023 <- divvy_tripdata %>%
          end_lng,
          member_casual)  
 
-divvy_trips_2013_2019 <- divvy_trips_orig %>% 
-  mutate(rideable_type = "classic_bike",
-         started_at = as.POSIXct(START.TIME, format = "%m/%d/%Y %H:%M:%S"),
-         ended_at = as.POSIXct(STOP.TIME, format = "%m/%d/%Y %H:%M:%S"),
-         hour_start = hour(started_at),
-         hour_end = hour(ended_at),
-         year = year(started_at),
-         date = format(started_at, "%m/%d/%Y"),
-         yearmonth = format(started_at, "%Y-%m"),
-         weekday = weekdays(started_at),
-         trip_duration = ended_at - started_at,
-         rider_age = 2023-BIRTH.YEAR) %>%
-  rename(start_lat = FROM.LATITUDE,
-         start_lng = FROM.LONGITUDE,
-         end_lat = TO.LATITUDE,
-         end_lng = TO.LONGITUDE,
-         member_casual = USER.TYPE,
-         rider_gender = GENDER) %>%
-  select(rideable_type,
-         hour_start,
-         hour_end,
-         date,
-         year,
-         yearmonth,
-         weekday,
-         trip_duration,
-         start_lat,
-         start_lng,
-         end_lat,
-         end_lng,
-         member_casual,
-         rider_gender,
-         rider_age)
-
-divvy_trips_2013_2023 <- divvy_trips_2013_2019 %>%
-  bind_rows(divvy_trips_2020_2023)
-
-rm(divvy_trips_2013_2019,divvy_trips_2020_2023, divvy_trips_orig, divvy_tripdata)
-rm(divvy_trips_orig, divvy_tripdata)
-
-rm(mget(ls(pattern = apattern)))
-
-# save joined reformatted files
-save(divvy_trips_2013_2023, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_trips_2013_2023_20230409.RData")
-
-divvy_trips_2013_2023_start <- divvy_trips_2013_2023 %>%
+divvy_trips_latest_start <- divvy_trips_latest %>%
   drop_na(start_lat,start_lng,end_lat,end_lng) %>%
   st_as_sf(coords = c("start_lng", "start_lat")) %>%
   st_set_crs(4326) %>%
   st_transform(3435)
 
-divvy_trips_2013_2023_end <- divvy_trips_2013_2023 %>%
+divvy_trips_latest_end <- divvy_trips_latest %>%
   drop_na(start_lat,start_lng,end_lat,end_lng) %>%
   st_as_sf(coords = c("end_lng", "end_lat")) %>%
   st_set_crs(4326) %>%
@@ -157,105 +124,195 @@ divvy_trips_2013_2023_end <- divvy_trips_2013_2023 %>%
          
 ```
 
-
 ```{r}
 #| label: save divvy data
 
-save(divvy_trips_2013_2023_start, divvy_trips_2013_2023_end, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_start_end_20230410.RData")
+save(divvy_trips_latest_start, divvy_trips_latest_end, file = "exercises/Exercise_02/data/divvy_datatrips_start_end_20251231.RData")
 ```
 
+
+# update dataset with latest records
+
+## import latest trips
+```{r}
+
+# updated list
+adivvy_trips_list <- c("202401-divvy-tripdata", "202402-divvy-tripdata", "202403-divvy-tripdata", "202404-divvy-tripdata", "202405-divvy-tripdata", "202406-divvy-tripdata", "202407-divvy-tripdata", "202408-divvy-tripdata")
+
+# unzip monthly and quarterly divvy trip data files downloaded from divvy system website 2020-2022
+# https://divvy-tripdata.s3.amazonaws.com/index.html
+for (afile in adivvy_trips_list){
+  afilename <- paste0("E:/Downloads/divvy/",afile,".zip")
+  unzip(zipfile = afilename, exdir = paste0("GEO330_2024_FallQuarter/exercises/Exercise_02/data/"))
+}
+
+# import monthly and quarterly divvy trip data files from csv format
+for (afile in adivvy_trips_list){
+  aimportfile <- read_csv(paste0("GEO330_2024_FallQuarter/exercises/Exercise_02/data/",afile,".csv"))
+  assign(afile, aimportfile)
+  rm(aimportfile)
+}
+
+```
+
+## format latest trips
+```{r}
+# bind monthly and quarterly divvy trip data
+apattern <- "-divvy-tripdata"
+alist_dfs <- mget(ls(pattern = apattern))
+divvy_tripdata <- rbindlist(alist_dfs)
+
+# remove raw data from environment
+rm(alist_dfs)
+apattern <- "-divvy-tripdata"
+rm(list = ls(pattern = apattern))
+
+# convert values to numeric
+divvy_tripdata <- divvy_tripdata %>%
+  mutate_at(vars(start_station_id,end_station_id:end_lng), function(x)(as.numeric(x)))
+
+# format latest trip data
+divvy_trips_latest <- divvy_tripdata %>%
+  mutate(rideable_type,
+         hour_start = hour(started_at),
+         hour_end = hour(ended_at),
+         year = year(started_at),
+         date = format(started_at, "%m/%d/%Y"),
+         yearmonth = format(started_at, "%Y-%m"),
+         weekday = weekdays(started_at),
+         trip_duration = ended_at - started_at) %>%
+  select(rideable_type,
+         hour_start,
+         hour_end,
+         year,
+         date,
+         yearmonth,
+         weekday,
+         trip_duration,
+         start_lat,
+         start_lng,
+         end_lat,
+         end_lng,
+         member_casual)  
+
+divvy_trips_latest_start <- divvy_trips_latest %>%
+  drop_na(start_lat,start_lng,end_lat,end_lng) %>%
+  st_as_sf(coords = c("start_lng", "start_lat")) %>%
+  st_set_crs(4326) %>%
+  st_transform(3435)
+
+divvy_trips_latest_end <- divvy_trips_latest %>%
+  drop_na(start_lat,start_lng,end_lat,end_lng) %>%
+  st_as_sf(coords = c("end_lng", "end_lat")) %>%
+  st_set_crs(4326) %>%
+  st_transform(3435)
+
+```
+
+## Join with community areas
 ```{r}
 #| label: Download geographies from the city of Chicago's data portal
 #| output: false
 
 # import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform into standard geographic projection (epsg:3435)
-community_areas <- st_read("https://data.cityofchicago.org/api/geospatial/cauq-8yn6?method=export&format=GeoJSON") %>% 
+community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>% 
   st_transform(3435) %>%
   mutate(`comarea_id` = as.numeric(area_numbe),
          comarea_name = str_to_title(community)) %>%
   select(comarea_id, comarea_name)
 
-divvy_trips_2013_2023_start_ca <- divvy_trips_2013_2023_start %>% 
+divvy_trips_latest_start_ca <- divvy_trips_latest_start %>% 
   st_join(community_areas)
 
-divvy_trips_2013_2023_end_ca <- divvy_trips_2013_2023_end %>% 
-  select(start_lat,
-         start_lng,
-         comarea_name,
-         comarea_id) %>%
+divvy_trips_latest_end_ca <- divvy_trips_latest_end %>% 
   st_join(community_areas)
 
-divvy_trips_2013_2022_ca_all <- divvy_trips_2013_2022_start_ca %>% 
+divvy_trips_latest_ca_all_updated <- divvy_trips_latest_start_ca %>% 
   st_drop_geometry %>%
   rename(start_comarea_name = comarea_name,
          start_comarea_id = comarea_id) %>%
-  bind_cols(divvy_trips_2013_2022_end_ca %>%
+  bind_cols(divvy_trips_latest_end_ca %>%
               st_drop_geometry %>%
               select(start_lat,
                      start_lng,
                      end_comarea_name = comarea_name,
                      end_comarea_id = comarea_id))
 
-head(divvy_trips_2013_2022_end_ca)
-
-test = divvy_trips_2013_2022_ca_all %>% group_by(fr_comarea_name) %>%
-  summarise(trips = n())
-
-save(divvy_trips_2013_2022_ca_all, file = "GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_all.RData")
+save(divvy_trips_latest_start_ca, divvy_trips_latest_end_ca, divvy_trips_latest_ca_all_updated, file = "exercises/Exercise_02/data/divvy_datatrips_start_end_202608.RData")
 
 ```
 
+## import and bind with archived data
 ```{r}
-#| label: create summary tables
+## import archived trips
+load("exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202512.RData")
+
+divvy_trips_latest_ca_all_2013_202608 <- divvy_trips_latest_ca_all_2013_202512 %>% 
+  bind_rows(divvy_trips_latest_ca_all_updated)
+
+```
+
+## save data
+```{r}
+
+save(divvy_trips_latest_ca_all_2013_202608, file = "exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202608.RData")
+
+```
+
+
+```{r}
+#| label: create summary tables for exercise
 
 # total trips by year and month
 
-load("GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_all.RData")
+load("exercises/Exercise_02/data/divvy_trips_latest_ca_all_2013_202608.RData")
+
+assign("divvy_trips_2013_2026_ca_all", divvy_trips_latest_ca_all_2013_202608)
 
 # trips by yearmonth tables
 # total trips by year and month
-trips_yearmonth <- divvy_trips_2013_2022_ca_all %>%
+trips_year_month <- divvy_trips_2013_2026_ca_all %>%
   group_by(yearmonth) %>%
   summarize(trips = n(),
             trip_duration = sum(trip_duration))
 
 # total trips by year, month and community area
-trips_year_month_fr_ca <- divvy_trips_2013_2022_ca_all %>%
-  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(fr_comarea_id))) %>%
+trips_year_month_fr_ca <- divvy_trips_2013_2026_ca_all %>%
+  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(start_comarea_id))) %>%
   group_by(yearmonth_ca) %>%
   summarize(fr_trips = n(),
             fr_trip_duration = sum(trip_duration))
 
-trips_year_month_to_ca <- divvy_trips_2013_2022_ca_all %>%
-  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(to_comarea_id))) %>%
+trips_year_month_to_ca <- divvy_trips_2013_2026_ca_all %>%
+  mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(end_comarea_id))) %>%
   group_by(yearmonth_ca) %>%
   summarize(to_trips = n(),
             to_trip_duration = sum(trip_duration))
 
-trips_yearmonth_ca_all <- expand_grid(yearmonth = trips_year_month$yearmonth,comarea_id = community_areas$comarea_id) %>%
+trips_year_month_ca_all <- expand_grid(yearmonth = trips_year_month$yearmonth,comarea_id = community_areas$comarea_id) %>%
   mutate(yearmonth_ca = paste0(as.character(yearmonth),":",as.character(comarea_id))) %>%
   left_join(trips_year_month_fr_ca, by="yearmonth_ca") %>%
   left_join(trips_year_month_to_ca, by="yearmonth_ca") %>%
   mutate_at(c(4,6), ~replace_na(.,0))
 
-trips_yearmonth_ca_all_noduration <- trips_yearmonth_ca_all %>%
+trips_yearmonth_ca_all_noduration <- trips_year_month_ca_all %>%
   select(-c(ends_with("duration")))
 
 # total trips by date
-trips_date <- divvy_trips_2013_2022_ca_all %>%
+trips_date <- divvy_trips_2013_2026_ca_all %>%
   group_by(date) %>%
   summarize(trips = n(),
             trip_duration = sum(trip_duration))
 
 #total trips by date and community area
-trips_date_fr_ca <- divvy_trips_2013_2022_ca_all %>%
-  mutate(date_ca = paste0(as.character(date),":",as.character(fr_comarea_id))) %>%
+trips_date_fr_ca <- divvy_trips_2013_2026_ca_all %>%
+  mutate(date_ca = paste0(as.character(date),":",as.character(start_comarea_id))) %>%
   group_by(date_ca) %>%
   summarize(fr_trips = n(),
             fr_trip_duration = sum(trip_duration))
 
-trips_date_to_ca <- divvy_trips_2013_2022_ca_all %>%
-  mutate(date_ca = paste0(as.character(date),":",as.character(to_comarea_id))) %>%
+trips_date_to_ca <- divvy_trips_2013_2026_ca_all %>%
+  mutate(date_ca = paste0(as.character(date),":",as.character(end_comarea_id))) %>%
   group_by(date_ca) %>%
   summarize(to_trips = n(),
             to_trip_duration = sum(trip_duration))
@@ -269,13 +326,13 @@ trips_date_ca_all <- expand_grid(date = trips_date$date,comarea_id = community_a
 trips_date_ca_all_noduration <- trips_date_ca_all %>%
   select(-c(ends_with("duration")))
 
-save(trips_date_ca_all_noduration, trips_yearmonth_ca_all_noduration, divvy_trips_2013_2022_ca_all, file="GEO330_2023_WinterQuarter/exercises/Exercise_03/data/divvy_datatrips_ca_sum.RData")
+save(trips_date_ca_all_noduration, trips_yearmonth_ca_all_noduration, divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_datatrips_ca_sum_latest_2013_202608.RData")
 ```
 
 ## Create CCVI by Chicago Community Area dataset
 We will be evaluating L ridership based on a variety of community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted and modified from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., both community areas and zip codes) in Chicago that have been disproportionately impacted by COVID-19. Vulnerability is defined as a combination of:  sociodemographic factors; epidemiological factors; occupational factors and other factors related to cumulative COVID burden. These factors were then combined to create a single composite weighted CCVI score. The higher the score, the more vulnerable the geographic area or, in this case, community area. Copy and paste the following code into your exercise R script to import the datasets.
 
-## Exercise #3 Final Datasets
+## Exercise #2 Final Datasets
 ```{r}
 #| label: prep for final datasets
 
@@ -299,6 +356,8 @@ trips_by_yearmonth_ca <- trips_yearmonth_ca_all_noduration %>%
   mutate(yearmonth = ym(yearmonth),
          fr_trips_cumul = cumsum(fr_trips),
          to_trips_cumul = cumsum(to_trips))
+
+save(trips_by_date, trips_by_yearmonth,trips_by_yearmonth_ca, CARTO_API_KEY, file = "exercises/Exercise_02/data/divvy_trips_summary_tables_latest.RData")
 
 ```
 
@@ -396,7 +455,7 @@ community_areas_ccvi %>%
          `Community Area` = comarea_name) %>%
   st_drop_geometry() %>%
   arrange(ID) %>%
-  datatable(class = 'cell-border stripe',
+  data.table(class = 'cell-border stripe',
             rownames = FALSE,
             options = list(pageLength = 5))
 

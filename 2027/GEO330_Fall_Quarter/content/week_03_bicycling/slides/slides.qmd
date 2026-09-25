@@ -391,7 +391,6 @@ How many Danes own a bike? How often and how far do they bike? And why? What are
 ![This national report identifyied financial, cultural, and geographic barriers to bikeshare use and outlined strategies to expand access for low-income communities and communities of color through pricing, outreach, and system design reforms.](images/2017_inequities_in_us_bikeshare_systems.png)
 
 :::
-
 ::::
 
 
