@@ -76,9 +76,9 @@ options(scipen=999, digits = 2)
 :::
 
 # Step 2. Download presentation template and process data
-*As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx) on the course GitHub.*
+*As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx).*
 
-This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2024 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
+This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
 
 ::: {.callout-note collapse="false"}
 ## Chicago Health Atlas
@@ -126,12 +126,13 @@ community_areas_ses <- community_areas %>%
 :::
 
 # Step 3. Explore systemwide trends in Divvy trips over time
-Over the past decade the Divvy system has logged over 45 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2024. 
+Over the past decade the Divvy system has logged over 45 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. 
 
 *In slide 1 of your presentation, describe the cumulative growth of Divvy's systemwide ridership over the past decade. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take before Divvy logged the next 10 million trips?*
 
 ```{r}
 #| label: fig-cumulativetrips
+#| eval: true
 #| echo: false
 #| fig-cap: Cumulative Divvy Trips, June 2013 through August 2026
  
