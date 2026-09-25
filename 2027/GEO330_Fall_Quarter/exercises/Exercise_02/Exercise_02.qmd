@@ -90,7 +90,7 @@ The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hun
 #| output: false
 
 # import Divvy summary trip data frames from web page
-load(url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/divvy_trips_summary_tables_latest.RData"))
+# load(url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/divvy_trips_summary_tables_latest.RData"))
 
 # import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform to geographic projection for mapping (epsg:4326)
 community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>% 
