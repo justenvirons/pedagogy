@@ -357,7 +357,39 @@ trips_by_yearmonth_ca <- trips_yearmonth_ca_all_noduration %>%
          fr_trips_cumul = cumsum(fr_trips),
          to_trips_cumul = cumsum(to_trips))
 
-save(trips_by_date, trips_by_yearmonth,trips_by_yearmonth_ca, CARTO_API_KEY, file = "exercises/Exercise_02/data/divvy_trips_summary_tables_latest.RData")
+# average trip duration (minutes per trip) by yearmonth
+duration_by_yearmonth <- trips_year_month %>%
+  drop_na(yearmonth) %>%
+  arrange(yearmonth) %>%
+  mutate(yearmonth = ym(yearmonth),
+         trip_duration_mins = as.numeric(trip_duration, units = "mins"),
+         mins_per_trip = trip_duration_mins / trips) %>%
+  select(yearmonth, trips, trip_duration_mins, mins_per_trip)
+
+# average trip duration (minutes per trip) by date
+duration_by_date <- trips_date %>%
+  drop_na(date) %>%
+  mutate(date = as.Date(date, format = "%m/%d/%Y"),
+         trip_duration_mins = as.numeric(trip_duration, units = "mins"),
+         mins_per_trip = trip_duration_mins / trips) %>%
+  arrange(date) %>%
+  select(date, trips, trip_duration_mins, mins_per_trip)
+
+# average trip duration (minutes per trip) by yearmonth and community area
+# trips from (fr_) and to (to_) each community area; NA where no trips occurred
+duration_by_yearmonth_ca <- trips_year_month_ca_all %>%
+  drop_na(yearmonth) %>%
+  mutate(yearmonth = ym(yearmonth),
+         fr_trip_duration_mins = as.numeric(fr_trip_duration, units = "mins"),
+         to_trip_duration_mins = as.numeric(to_trip_duration, units = "mins"),
+         fr_mins_per_trip = if_else(fr_trips > 0, fr_trip_duration_mins / fr_trips, NA_real_),
+         to_mins_per_trip = if_else(to_trips > 0, to_trip_duration_mins / to_trips, NA_real_)) %>%
+  arrange(yearmonth, comarea_id) %>%
+  select(yearmonth, comarea_id,
+         fr_trips, fr_trip_duration_mins, fr_mins_per_trip,
+         to_trips, to_trip_duration_mins, to_mins_per_trip)
+
+save(trips_by_date, trips_by_yearmonth,trips_by_yearmonth_ca, duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca, CARTO_API_KEY, file = "exercises/Exercise_02/data/divvy_trips_summary_tables_latest.RData")
 
 ```
 
