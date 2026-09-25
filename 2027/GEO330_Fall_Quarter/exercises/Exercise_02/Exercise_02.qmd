@@ -5,11 +5,10 @@ author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
 format: 
   html:
-    css: styles.scss
     warning: false
     code-tools: true
     code-fold: false
-    theme: flatly
+    theme: [flatly, styles.scss]
     toc: true
     toc-depth: 3
     toc-location: left
@@ -31,6 +30,7 @@ library(tidyverse) # data wrangling
 library(sf) # simple features geometry data
 library(plotly) # interactive plots
 library(leaflet) # interactive maps
+library(leaflet.extras) # map reset and full screen buttons
 library(data.table) # interactive tables
 library(DT) # data table format
 
@@ -63,6 +63,8 @@ library(tidyverse) # data wrangling
 library(sf) # simple features geometry data
 library(plotly) # interactive plots
 library(leaflet) # interactive maps
+library(leaflet.extras) # map reset and full screen buttons
+library(DT) # interactive tables
 library(openxlsx) # write tables as Excel spreadsheets
 
 # Set default options for numerical display
@@ -217,6 +219,42 @@ plot_ly(data = trips_by_date,
 
 ```
 
+Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the average trip duration (in minutes per trip) for every day in a given month. The whiskers extend to the minimum and maximum daily averages, and the line shows each month's overall average. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
+
+```{r}
+#| label: fig-tripdurationbyyearmonth
+#| echo: false
+#| fig-cap: Average Divvy Trip Duration (Minutes per Trip) by Year and Month, June 2013 through August 2026
+
+plot_ly() %>%
+  add_trace(data = duration_by_date %>%
+              mutate(yearmonth = floor_date(date, "month")),
+            x = ~yearmonth,
+            y = ~mins_per_trip,
+            type = 'box',
+            boxpoints = FALSE, # whiskers extend to min and max
+            name = 'Daily average',
+            fillcolor = 'lightblue',
+            line = list(color = 'steelblue', width = 1)) %>%
+  add_trace(data = duration_by_yearmonth,
+            x = ~yearmonth,
+            y = ~mins_per_trip,
+            type = 'scatter',
+            mode = 'lines',
+            name = 'Monthly average',
+            line = list(color = 'darkred', width = 1.5),
+            hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
+  layout(
+    xaxis = list(title = ""),
+    yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+    legend = list(
+      font = list(size = 10),
+      orientation = "h",
+      xanchor = "center",
+      x = 0.5, y = -0.1))
+
+```
+
 # Step 4. Explore total and average trips by community area
 In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2024 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated.
 
@@ -232,9 +270,16 @@ trips_by_communityarea <- trips_by_yearmonth_ca %>%
   drop_na(yearmonth) %>%
   filter(yearmonth == max(yearmonth))
 
+# average trip duration (minutes per trip) by community area over study period
+duration_by_communityarea <- duration_by_yearmonth_ca %>%
+  group_by(comarea_id) %>%
+  summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
+            to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
+
 # join trips to community areas
 trips_by_communityarea_ses <- community_areas_ses %>%
   left_join(trips_by_communityarea, by="comarea_id") %>%
+  left_join(duration_by_communityarea, by="comarea_id") %>%
   select(-starts_with("yearmonth"))
 
 # total days in dataset
@@ -255,14 +300,18 @@ communityarea_labels <- sprintf(
   <i>Avg daily trips (from):</i> %0.1f<br/>
   <i>Avg daily trips (to):</i> %0.1f<br/>
   <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
-  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>",
+  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
+  <i>Avg trip duration (from):</i> %0.1f min<br/>
+  <i>Avg trip duration (to):</i> %0.1f min<br/>",
   trips_by_communityarea_ses$comarea_name,
   prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
   prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
   trips_by_communityarea_ses$fr_trips_cumul/total_days,
   trips_by_communityarea_ses$to_trips_cumul/total_days,
   trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
-  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000) %>%
+  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$fr_mins_per_trip,
+  trips_by_communityarea_ses$to_mins_per_trip) %>%
 lapply(htmltools::HTML)
 
 # interactive map
@@ -271,6 +320,8 @@ leaflet(data = trips_by_communityarea_ses) %>%
         "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
         CARTO_API_KEY
       )) %>% 
+  addResetMapButton() %>%
+  addFullscreenControl() %>%
   addPolygons(
     fillColor = ~map_pal(fr_trips_cumul),
     label = communityarea_labels,
@@ -303,9 +354,16 @@ trips_by_communityarea <- trips_by_yearmonth_ca %>%
   drop_na(yearmonth) %>%
   filter(yearmonth == max(yearmonth))
 
+# average trip duration (minutes per trip) by community area over study period
+duration_by_communityarea <- duration_by_yearmonth_ca %>%
+  group_by(comarea_id) %>%
+  summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
+            to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
+
 # join trips to community areas with ses attributes
 trips_by_communityarea_ses <- community_areas_ses %>%
   left_join(trips_by_communityarea, by="comarea_id") %>%
+  left_join(duration_by_communityarea, by="comarea_id") %>%
   select(-starts_with("yearmonth"))
 
 # return total days included in dataset
@@ -331,8 +389,10 @@ communityarea_labels <- sprintf(
   <i>Trips (to):</i> %s<br/>
   <i>Avg daily trips (from):</i> %0.1f<br/>
   <i>Avg daily trips (to):</i> %0.1f<br/>
-  <i>Avg daily trips (from) per 10K pop:</i> %0.1f<br/>
-  <i>Avg daily trips (to) per 10K pop:</i> %0.1f<br/><i>",
+  <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
+  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
+  <i>Avg trip duration (from):</i> %0.1f min<br/>
+  <i>Avg trip duration (to):</i> %0.1f min<br/><i>",
   ses_name,":</i> %0.1f<br/>"),
   trips_by_communityarea_ses$comarea_name,
   prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
@@ -341,6 +401,8 @@ communityarea_labels <- sprintf(
   trips_by_communityarea_ses$to_trips_cumul/total_days,
   trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
   trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$fr_mins_per_trip,
+  trips_by_communityarea_ses$to_mins_per_trip,
   trips_by_communityarea_ses$ses_value) %>%
 lapply(htmltools::HTML)
 
@@ -350,6 +412,8 @@ leaflet(data = trips_by_communityarea_ses) %>%
         "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
         CARTO_API_KEY
       )) %>% 
+  addResetMapButton() %>%
+  addFullscreenControl() %>%
   addPolygons(
     fillColor = ~map_pal(ses_value),
     label = communityarea_labels,
@@ -490,3 +554,113 @@ write.xlsx(trips_by_ses_quintile,
 ## VIDEO: Create custom table
 {{< video videos/exercise_02_create_custom_table.mp4 >}}
 :::
+
+# Step 6. Compare community areas across socioeconomic categories
+In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use your map from Step 5 (@fig-mapsesquintile) or the table below to choose them.
+
+```{r}
+#| label: tbl-sesquintilecommunityareas
+#| tbl-cap: Community Areas by Socioeconomic Quintile Category
+
+# list community areas by quintile category of the selected indicator
+community_areas_ses %>%
+  st_drop_geometry() %>%
+  select(comarea_id, comarea_name, ses_ntile) %>%
+  arrange(factor(ses_ntile, levels = c("Lowest", "Low", "Moderate", "High", "Highest")), comarea_name) %>%
+  datatable(class = 'cell-border stripe',
+            rownames = FALSE,
+            colnames = c("ID", "Community Area", "Quintile Category"),
+            options = list(pageLength = 5))
+
+```
+
+*Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the printed table to make sure each quintile category appears once.*
+
+```{r}
+#| label: select community areas
+
+# EDIT HERE: replace with five community areas, one from each quintile category
+selected_communityareas <- c("Edison Park",
+                             "Lincoln Square",
+                             "Portage Park",
+                             "Humboldt Park",
+                             "Englewood")
+
+# look up selected community areas and their quintile categories
+selected_ca <- community_areas_ses %>%
+  st_drop_geometry() %>%
+  filter(comarea_name %in% selected_communityareas) %>%
+  select(comarea_id, comarea_name, ses_ntile) %>%
+  mutate(ses_label = factor(ses_ntile, levels = c("Highest", "High", "Moderate", "Low", "Lowest")),
+         ca_label = paste0(comarea_name, " (", ses_ntile, ")")) %>%
+  arrange(ses_label)
+
+# check selection: should list five community areas, one per quintile category
+selected_ca
+
+# trips by yearmonth for selected community areas
+trips_by_yearmonth_selected <- trips_by_yearmonth_ca %>%
+  inner_join(selected_ca, by = "comarea_id") %>%
+  mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+# average trip duration by yearmonth for selected community areas
+duration_by_yearmonth_selected <- duration_by_yearmonth_ca %>%
+  inner_join(selected_ca, by = "comarea_id") %>%
+  mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+# assign quintile colors to selected community areas (Highest to Lowest)
+pal_selected_colors <- setNames(pal_quintile_colors, c("Highest", "High", "Moderate", "Low", "Lowest"))[as.character(selected_ca$ses_ntile)] %>%
+  setNames(selected_ca$ca_label)
+
+```
+
+## Trips by year and month for selected community areas
+*Run the code below to plot monthly trips starting in each of your selected community areas (@fig-tripsbyyearmonthselected). Copy the plot into slide 7 of your presentation and describe how ridership has changed over time in each community area. Do the trends differ across socioeconomic categories?*
+
+```{r}
+#| label: fig-tripsbyyearmonthselected
+#| fig-cap: Divvy Trips by Year and Month for Selected Community Areas
+
+plot_ly(data = trips_by_yearmonth_selected,
+        x = ~yearmonth,
+        y = ~fr_trips,
+        type = 'scatter',
+        mode = 'lines',
+        color = ~ca_label,
+        colors = pal_selected_colors,
+        text = ~ca_label,
+        hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+  config(displaylogo = FALSE) %>%
+  layout(
+    xaxis = list(title = ""),
+    yaxis = list(title = "Monthly Divvy Trips (from)"),
+    legend = list(
+      font = list(size = 10),
+      orientation = "h",
+      xanchor = "center",
+      x = 0.5, y = -0.1),
+    hovermode = "x unified")
+
+```
+
+## Average trip duration for selected community areas
+*Run the code below to create a box plot of average trip duration (minutes per trip) for trips starting in each of your selected community areas (@fig-tripdurationselected). Each box summarizes the monthly averages over the study period; the whiskers extend to the minimum and maximum monthly averages. Copy the plot into slide 8 of your presentation. How do trip durations compare across the five community areas? What might explain the differences?*
+
+```{r}
+#| label: fig-tripdurationselected
+#| fig-cap: Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas
+
+plot_ly(data = duration_by_yearmonth_selected,
+        x = ~ca_label,
+        y = ~fr_mins_per_trip,
+        type = 'box',
+        boxpoints = FALSE, # whiskers extend to min and max
+        color = ~ca_label,
+        colors = pal_selected_colors) %>%
+  config(displaylogo = FALSE) %>%
+  layout(
+    xaxis = list(title = ""),
+    yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+    showlegend = FALSE)
+
+```

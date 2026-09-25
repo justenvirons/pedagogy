@@ -1,22 +1,15 @@
 /*-- scss:defaults --*/
 
-// Map legends
-.info.legend.leaflet-control i {
-  float: left;
+/*-- scss:rules --*/
 
+// Map legends: Leaflet legends are placed inside Quarto's centered figure
+// container and inherit text-align: center, so left-justify them explicitly.
+// The legend element itself carries the classes "info legend leaflet-control".
+.leaflet .info.legend {
+  text-align: left;
 }
 
-
-/* Left-justify Leaflet legend text */
-.leaflet-control .legend {
-  text-align: left !important;
-}
-
-.leaflet-control .legend i {
+.leaflet .info.legend i {
   float: left;
   margin-right: 6px;
-}
-
-.leaflet-control .legend span {
-  display: block;
 }
