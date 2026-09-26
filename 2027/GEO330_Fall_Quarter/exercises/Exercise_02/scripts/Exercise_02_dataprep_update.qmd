@@ -1,0 +1,376 @@
+---
+title: "Exercise #2 data prep: incremental Divvy trip updates"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#| label: activate packages and set working directory
+
+library(tidyverse)
+library(sf)
+library(lubridate)
+library(xml2)
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
+```
+
+# Purpose
+This script keeps the comprehensive Divvy trips dataset (June 2013 onward) current. Run it whenever Divvy posts new monthly files to the [system data bucket](https://divvy-tripdata.s3.amazonaws.com/index.html). Each run:
+
+1. Loads the comprehensive trip-level data frames from their own RData file.
+2. Lists the monthly files in the Divvy S3 bucket and keeps only those not yet added.
+3. Downloads, formats and joins each new month to Chicago community areas, then appends it to the comprehensive data frames.
+4. Saves the updated comprehensive data frames to their RData file.
+5. Rebuilds the summary tables and saves them to `divvy_trips_summary_tables_latest.RData`, the file loaded when rendering `Exercise_02.qmd`.
+
+The comprehensive RData file holds two trip-level data frames:
+
+- `divvy_trips_2013_2026_ca_all`: every trip with valid start and end coordinates. It has no duration field and is used for trip counts.
+- `divvy_trips_2013_2026_ca_all_duration`: the subset of trips with a plausible duration, with the trip length in minutes in `trip_minutes`. It is used for all duration (minutes per trip) summaries.
+
+The file also holds `divvy_files_processed`, the log of monthly files already appended. It keeps a file from being added twice.
+
+# Settings
+```{r}
+#| label: settings
+
+data_dir <- "exercises/Exercise_02/data"
+raw_dir <- file.path(data_dir, "divvy_raw") # downloaded zip files are kept here
+
+# comprehensive trip-level data frames (not loaded by Exercise_02.qmd)
+comprehensive_file <- file.path(data_dir, "divvy_trips_2013_2026_ca_all.RData")
+
+# summary tables loaded by Exercise_02.qmd
+summary_file <- file.path(data_dir, "divvy_trips_summary_tables_latest.RData")
+
+# legacy comprehensive file, used only the first time this script runs
+legacy_file <- file.path(data_dir, "divvy_trips_latest_ca_all_2013_202608.RData")
+legacy_object <- "divvy_trips_latest_ca_all_2013_202608"
+
+divvy_bucket <- "https://divvy-tripdata.s3.amazonaws.com"
+
+# trips shorter or longer than these limits are left out of the duration data frame
+# (false starts, re-docks and bikes kept out overnight or lost)
+min_trip_minutes <- 1
+max_trip_minutes <- 24 * 60
+
+# columns kept in the duration data frame for new trips
+duration_cols <- c("rideable_type", "member_casual", "year", "yearmonth", "date",
+                   "weekday", "hour_start", "hour_end",
+                   "start_comarea_id", "start_comarea_name",
+                   "end_comarea_id", "end_comarea_name",
+                   "trip_minutes")
+
+dir.create(raw_dir, showWarnings = FALSE, recursive = TRUE)
+options(timeout = max(600, getOption("timeout"))) # monthly zip files are large
+```
+
+# Functions
+```{r}
+#| label: functions
+
+# list monthly trip files (YYYYMM-divvy-tripdata.zip) in the Divvy S3 bucket
+list_divvy_files <- function(bucket = divvy_bucket) {
+  listing <- read_xml(bucket) %>% xml_ns_strip()
+  tibble(file = xml_text(xml_find_all(listing, "//Contents/Key")),
+         last_modified = ymd_hms(xml_text(xml_find_all(listing, "//Contents/LastModified")))) %>%
+    filter(str_detect(file, "^\\d{6}-divvy-tripdata\\.zip$")) %>%
+    mutate(file_month = str_sub(file, 1, 6)) %>%
+    arrange(file_month)
+}
+
+# download (if needed), unzip and read one monthly file
+read_divvy_file <- function(afile) {
+  azip <- file.path(raw_dir, afile)
+  if (!file.exists(azip)) {
+    download.file(paste0(divvy_bucket, "/", afile), azip, mode = "wb")
+  }
+  acsv <- unzip(azip, list = TRUE)$Name %>%
+    str_subset("^(?!__MACOSX).*\\.csv$")
+  unzip(azip, files = acsv, exdir = raw_dir)
+  # read times as text and parse below: some months (e.g., 202106, 202303) use
+  # formats that readr's default guesser mishandles
+  trips <- read_csv(file.path(raw_dir, acsv),
+                    col_types = cols(started_at = col_character(),
+                                     ended_at = col_character(),
+                                     start_lat = col_double(),
+                                     start_lng = col_double(),
+                                     end_lat = col_double(),
+                                     end_lng = col_double(),
+                                     .default = col_character()))
+  file.remove(file.path(raw_dir, acsv))
+  trips
+}
+
+# derive the fields used throughout the exercise; keep trip_minutes for now
+format_divvy_trips <- function(trips) {
+  trips %>%
+    mutate(started_at = ymd_hms(started_at, truncated = 1, quiet = TRUE),
+           ended_at = ymd_hms(ended_at, truncated = 1, quiet = TRUE)) %>%
+    drop_na(started_at, start_lat, start_lng, end_lat, end_lng) %>%
+    transmute(rideable_type,
+              hour_start = hour(started_at),
+              hour_end = hour(ended_at),
+              year = year(started_at),
+              date = format(started_at, "%m/%d/%Y"),
+              yearmonth = format(started_at, "%Y-%m"),
+              weekday = weekdays(started_at),
+              trip_minutes = as.numeric(difftime(ended_at, started_at, units = "mins")),
+              start_lat,
+              start_lng,
+              end_lat,
+              end_lng,
+              member_casual)
+}
+
+# community area id of each point (NA outside Chicago); takes the first match so
+# points on a shared boundary are not duplicated
+point_comarea <- function(lng, lat, areas) {
+  pts <- st_as_sf(tibble(lng, lat), coords = c("lng", "lat"), crs = 4326) %>%
+    st_transform(st_crs(areas))
+  areas$comarea_id[vapply(st_intersects(pts, areas), `[`, integer(1), 1)]
+}
+
+# add start and end community areas to formatted trips
+join_comareas <- function(trips, areas) {
+  trips %>%
+    mutate(start_comarea_id = point_comarea(start_lng, start_lat, areas),
+           end_comarea_id = point_comarea(end_lng, end_lat, areas)) %>%
+    left_join(st_drop_geometry(areas) %>%
+                select(start_comarea_id = comarea_id, start_comarea_name = comarea_name),
+              by = "start_comarea_id") %>%
+    left_join(st_drop_geometry(areas) %>%
+                select(end_comarea_id = comarea_id, end_comarea_name = comarea_name),
+              by = "end_comarea_id")
+}
+
+# keep trips with plausible durations for the duration data frame
+filter_duration <- function(trips) {
+  trips %>%
+    filter(between(trip_minutes, min_trip_minutes, max_trip_minutes))
+}
+```
+
+# Community areas
+```{r}
+#| label: import community areas
+#| output: false
+
+# import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform into standard geographic projection (epsg:3435)
+community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>%
+  st_transform(3435) %>%
+  mutate(comarea_id = as.numeric(area_numbe),
+         comarea_name = str_to_title(community)) %>%
+  select(comarea_id, comarea_name)
+```
+
+# Load comprehensive data frames
+The first time this script runs, the comprehensive RData file does not exist yet. The script then builds both data frames from the legacy comprehensive data frame. That data frame stores durations as `trip_duration` (a difftime), which is converted to `trip_minutes`.
+
+```{r}
+#| label: load comprehensive data frames
+
+if (file.exists(comprehensive_file)) {
+  load(comprehensive_file)
+} else {
+  load(legacy_file)
+  legacy <- get(legacy_object)
+  rm(list = legacy_object)
+
+  if (!"trip_minutes" %in% names(legacy)) {
+    stopifnot(inherits(legacy$trip_duration, "difftime"))
+    legacy <- legacy %>%
+      mutate(trip_minutes = as.numeric(trip_duration, units = "mins")) %>%
+      select(-trip_duration)
+  }
+
+  divvy_trips_2013_2026_ca_all_duration <- legacy %>%
+    filter_duration() %>%
+    select(any_of(duration_cols))
+  divvy_trips_2013_2026_ca_all <- legacy %>%
+    select(-trip_minutes)
+  rm(legacy)
+  gc()
+}
+
+# log of monthly files already appended; if missing, infer it from the months
+# present in the data (monthly files begin April 2020)
+if (!exists("divvy_files_processed")) {
+  divvy_files_processed <- divvy_trips_2013_2026_ca_all %>%
+    distinct(yearmonth) %>%
+    drop_na() %>%
+    filter(yearmonth >= "2020-04") %>%
+    mutate(file = paste0(str_remove(yearmonth, "-"), "-divvy-tripdata.zip")) %>%
+    pull(file) %>%
+    sort()
+}
+```
+
+# Find new monthly files
+Only files for months after the latest file already processed are added. Earlier files that are not in the log (e.g., months covered by a quarterly file) are never re-added.
+
+```{r}
+#| label: find new monthly files
+
+divvy_files <- list_divvy_files()
+last_file_month <- max(str_sub(divvy_files_processed, 1, 6))
+
+new_files <- divvy_files %>%
+  filter(file_month > last_file_month,
+         !file %in% divvy_files_processed) %>%
+  pull(file)
+
+new_files
+```
+
+# Append new months
+Each file is processed on its own to keep memory use down. Both data frames are then appended in a single step.
+
+```{r}
+#| label: append new months
+
+if (length(new_files) > 0) {
+  new_trips <- map(new_files, function(afile) {
+    message("Processing ", afile)
+    read_divvy_file(afile) %>%
+      format_divvy_trips() %>%
+      join_comareas(community_areas)
+  }) %>%
+    list_rbind()
+
+  # match each data frame's existing columns
+  divvy_trips_2013_2026_ca_all <- divvy_trips_2013_2026_ca_all %>%
+    bind_rows(new_trips %>%
+                select(any_of(names(divvy_trips_2013_2026_ca_all))))
+
+  divvy_trips_2013_2026_ca_all_duration <- divvy_trips_2013_2026_ca_all_duration %>%
+    bind_rows(new_trips %>%
+                filter_duration() %>%
+                select(any_of(names(divvy_trips_2013_2026_ca_all_duration))))
+
+  divvy_files_processed <- sort(c(divvy_files_processed, new_files))
+  rm(new_trips)
+  gc()
+}
+
+# latest month in the data, used to label figures in Exercise_02.qmd
+divvy_data_through <- max(divvy_trips_2013_2026_ca_all$yearmonth, na.rm = TRUE)
+```
+
+# Save comprehensive data frames
+This file is separate from the summary tables file that `Exercise_02.qmd` loads.
+
+```{r}
+#| label: save comprehensive data frames
+
+if (length(new_files) > 0 || !file.exists(comprehensive_file)) {
+  save(divvy_trips_2013_2026_ca_all,
+       divvy_trips_2013_2026_ca_all_duration,
+       divvy_files_processed,
+       divvy_data_through,
+       file = comprehensive_file)
+}
+```
+
+# Summary tables
+Trip counts come from `divvy_trips_2013_2026_ca_all`. Duration measures come from `divvy_trips_2013_2026_ca_all_duration`, so `trips` in the duration tables counts only trips with a valid duration.
+
+```{r}
+#| label: create summary tables
+
+comarea_ids <- sort(community_areas$comarea_id)
+
+# count trips (and, for the duration data frame, sum minutes) within groups
+summarise_trips <- function(grouped, duration) {
+  if (duration) {
+    summarise(grouped, trips = n(), trip_duration_mins = sum(trip_minutes), .groups = "drop")
+  } else {
+    summarise(grouped, trips = n(), .groups = "drop")
+  }
+}
+
+# trips by a time period ("yearmonth" or "date")
+sum_by_period <- function(trips, period, duration = FALSE) {
+  trips %>%
+    drop_na(all_of(period)) %>%
+    group_by(across(all_of(period))) %>%
+    summarise_trips(duration)
+}
+
+# trips from (fr_) and to (to_) each community area by a time period;
+# community area / period combinations without trips are filled with 0
+sum_by_period_ca <- function(trips, period, duration = FALSE) {
+  by_end <- function(end, prefix) {
+    trips %>%
+      drop_na(all_of(c(period, end))) %>%
+      group_by(across(all_of(period)), comarea_id = .data[[end]]) %>%
+      summarise_trips(duration) %>%
+      rename_with(~ paste0(prefix, .x), -all_of(c(period, "comarea_id")))
+  }
+  zeros <- list(fr_trips = 0L, to_trips = 0L)
+  if (duration) zeros <- c(zeros, list(fr_trip_duration_mins = 0, to_trip_duration_mins = 0))
+  
+  full_join(by_end("start_comarea_id", "fr_"),
+            by_end("end_comarea_id", "to_"),
+            by = c(period, "comarea_id")) %>%
+    filter(comarea_id %in% comarea_ids) %>%
+    complete(!!sym(period), comarea_id = comarea_ids, fill = zeros)
+}
+
+# trip counts
+trips_by_yearmonth <- sum_by_period(divvy_trips_2013_2026_ca_all, "yearmonth") %>%
+  transmute(yearmonth = ym(yearmonth), trips) %>%
+  arrange(yearmonth) %>%
+  mutate(trips_cumul = cumsum(trips))
+
+trips_by_date <- sum_by_period(divvy_trips_2013_2026_ca_all, "date") %>%
+  transmute(date = mdy(date), trips) %>%
+  arrange(date) %>%
+  mutate(trips_cumul = cumsum(trips))
+
+trips_by_yearmonth_ca <- sum_by_period_ca(divvy_trips_2013_2026_ca_all, "yearmonth") %>%
+  transmute(yearmonth = ym(yearmonth), comarea_id, fr_trips, to_trips) %>%
+  arrange(yearmonth, comarea_id) %>%
+  group_by(comarea_id) %>%
+  mutate(fr_trips_cumul = cumsum(fr_trips),
+         to_trips_cumul = cumsum(to_trips)) %>%
+  ungroup()
+
+# average trip duration (minutes per trip)
+duration_by_yearmonth <- sum_by_period(divvy_trips_2013_2026_ca_all_duration, "yearmonth", duration = TRUE) %>%
+  mutate(yearmonth = ym(yearmonth),
+         mins_per_trip = trip_duration_mins / trips) %>%
+  arrange(yearmonth)
+
+duration_by_date <- sum_by_period(divvy_trips_2013_2026_ca_all_duration, "date", duration = TRUE) %>%
+  mutate(date = mdy(date),
+         mins_per_trip = trip_duration_mins / trips) %>%
+  arrange(date)
+
+# trips from (fr_) and to (to_) each community area; NA where no trips occurred
+duration_by_yearmonth_ca <- sum_by_period_ca(divvy_trips_2013_2026_ca_all_duration, "yearmonth", duration = TRUE) %>%
+  mutate(yearmonth = ym(yearmonth),
+         fr_mins_per_trip = if_else(fr_trips > 0, fr_trip_duration_mins / fr_trips, NA_real_),
+         to_mins_per_trip = if_else(to_trips > 0, to_trip_duration_mins / to_trips, NA_real_)) %>%
+  arrange(yearmonth, comarea_id) %>%
+  select(yearmonth, comarea_id,
+         fr_trips, fr_trip_duration_mins, fr_mins_per_trip,
+         to_trips, to_trip_duration_mins, to_mins_per_trip)
+```
+
+# Save summary tables
+`Exercise_02.qmd` loads this file. The CARTO API key comes from the `CARTO_API_KEY` environment variable (e.g., set in `.Renviron`) unless it is already defined in the session.
+
+```{r}
+#| label: save summary tables
+
+if (!exists("CARTO_API_KEY")) CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
+if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_02.qmd need it")
+
+save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
+     duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
+     divvy_data_through, CARTO_API_KEY,
+     file = summary_file)
+```
