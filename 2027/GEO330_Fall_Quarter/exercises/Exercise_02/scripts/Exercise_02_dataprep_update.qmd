@@ -277,23 +277,53 @@ if (length(new_files) > 0 || !file.exists(comprehensive_file)) {
 # Summary tables
 Trip counts come from `divvy_trips_2013_2026_ca_all`. Duration measures come from `divvy_trips_2013_2026_ca_all_duration`, so `trips` in the duration tables counts only trips with a valid duration.
 
+Grouping the ~60 million trip-level rows is the slow step (the `transmute()` and `mutate()` calls below run on the small grouped results and cost little). Each trip-level data frame is therefore collapsed once with `data.table` to trip counts (and minutes) per month, date and start or end community area, which is a few hundred thousand rows. Every summary table is then built from these collapsed tables with `dplyr`. Groups with missing values are kept while collapsing, so the totals match grouping the trip-level rows directly.
+
+```{r}
+#| label: collapse trip-level data frames
+
+# trips (and minutes) per yearmonth, date and start or end community area, as a tibble;
+# only the needed columns are passed to data.table, so the data frame is not copied.
+# data.table is not attached, so it does not mask lubridate's hour() and year()
+# or dplyr's between()
+collapse_trips <- function(trips, end, duration = FALSE) {
+  keys <- c("yearmonth", "date", end)
+  dt <- data.table::setDT(unclass(trips)[c(keys, if (duration) "trip_minutes")])
+  collapsed <- if (duration) {
+    dt[, .(trips = .N, trip_duration_mins = sum(trip_minutes)), by = keys]
+  } else {
+    dt[, .(trips = .N), by = keys]
+  }
+  as_tibble(collapsed) %>%
+    rename(comarea_id = all_of(end))
+}
+
+collapse_both_ends <- function(trips, duration = FALSE) {
+  list(start = collapse_trips(trips, "start_comarea_id", duration),
+       end = collapse_trips(trips, "end_comarea_id", duration))
+}
+
+trips_collapsed <- collapse_both_ends(divvy_trips_2013_2026_ca_all)
+duration_collapsed <- collapse_both_ends(divvy_trips_2013_2026_ca_all_duration, duration = TRUE)
+```
+
 ```{r}
 #| label: create summary tables
 
 comarea_ids <- sort(community_areas$comarea_id)
 
-# count trips (and, for the duration data frame, sum minutes) within groups
+# add up trips (and, for the duration tables, minutes) within groups of collapsed rows
 summarise_trips <- function(grouped, duration) {
   if (duration) {
-    summarise(grouped, trips = n(), trip_duration_mins = sum(trip_minutes), .groups = "drop")
+    summarise(grouped, trips = sum(trips), trip_duration_mins = sum(trip_duration_mins), .groups = "drop")
   } else {
-    summarise(grouped, trips = n(), .groups = "drop")
+    summarise(grouped, trips = sum(trips), .groups = "drop")
   }
 }
 
-# trips by a time period ("yearmonth" or "date")
-sum_by_period <- function(trips, period, duration = FALSE) {
-  trips %>%
+# trips by a time period ("yearmonth" or "date"); either end holds every trip
+sum_by_period <- function(collapsed, period, duration = FALSE) {
+  collapsed$start %>%
     drop_na(all_of(period)) %>%
     group_by(across(all_of(period))) %>%
     summarise_trips(duration)
@@ -301,36 +331,36 @@ sum_by_period <- function(trips, period, duration = FALSE) {
 
 # trips from (fr_) and to (to_) each community area by a time period;
 # community area / period combinations without trips are filled with 0
-sum_by_period_ca <- function(trips, period, duration = FALSE) {
+sum_by_period_ca <- function(collapsed, period, duration = FALSE) {
   by_end <- function(end, prefix) {
-    trips %>%
-      drop_na(all_of(c(period, end))) %>%
-      group_by(across(all_of(period)), comarea_id = .data[[end]]) %>%
+    collapsed[[end]] %>%
+      drop_na(all_of(c(period, "comarea_id"))) %>%
+      group_by(across(all_of(c(period, "comarea_id")))) %>%
       summarise_trips(duration) %>%
       rename_with(~ paste0(prefix, .x), -all_of(c(period, "comarea_id")))
   }
   zeros <- list(fr_trips = 0L, to_trips = 0L)
   if (duration) zeros <- c(zeros, list(fr_trip_duration_mins = 0, to_trip_duration_mins = 0))
   
-  full_join(by_end("start_comarea_id", "fr_"),
-            by_end("end_comarea_id", "to_"),
+  full_join(by_end("start", "fr_"),
+            by_end("end", "to_"),
             by = c(period, "comarea_id")) %>%
     filter(comarea_id %in% comarea_ids) %>%
     complete(!!sym(period), comarea_id = comarea_ids, fill = zeros)
 }
 
 # trip counts
-trips_by_yearmonth <- sum_by_period(divvy_trips_2013_2026_ca_all, "yearmonth") %>%
+trips_by_yearmonth <- sum_by_period(trips_collapsed, "yearmonth") %>%
   transmute(yearmonth = ym(yearmonth), trips) %>%
   arrange(yearmonth) %>%
   mutate(trips_cumul = cumsum(trips))
 
-trips_by_date <- sum_by_period(divvy_trips_2013_2026_ca_all, "date") %>%
+trips_by_date <- sum_by_period(trips_collapsed, "date") %>%
   transmute(date = mdy(date), trips) %>%
   arrange(date) %>%
   mutate(trips_cumul = cumsum(trips))
 
-trips_by_yearmonth_ca <- sum_by_period_ca(divvy_trips_2013_2026_ca_all, "yearmonth") %>%
+trips_by_yearmonth_ca <- sum_by_period_ca(trips_collapsed, "yearmonth") %>%
   transmute(yearmonth = ym(yearmonth), comarea_id, fr_trips, to_trips) %>%
   arrange(yearmonth, comarea_id) %>%
   group_by(comarea_id) %>%
@@ -339,18 +369,18 @@ trips_by_yearmonth_ca <- sum_by_period_ca(divvy_trips_2013_2026_ca_all, "yearmon
   ungroup()
 
 # average trip duration (minutes per trip)
-duration_by_yearmonth <- sum_by_period(divvy_trips_2013_2026_ca_all_duration, "yearmonth", duration = TRUE) %>%
+duration_by_yearmonth <- sum_by_period(duration_collapsed, "yearmonth", duration = TRUE) %>%
   mutate(yearmonth = ym(yearmonth),
          mins_per_trip = trip_duration_mins / trips) %>%
   arrange(yearmonth)
 
-duration_by_date <- sum_by_period(divvy_trips_2013_2026_ca_all_duration, "date", duration = TRUE) %>%
+duration_by_date <- sum_by_period(duration_collapsed, "date", duration = TRUE) %>%
   mutate(date = mdy(date),
          mins_per_trip = trip_duration_mins / trips) %>%
   arrange(date)
 
 # trips from (fr_) and to (to_) each community area; NA where no trips occurred
-duration_by_yearmonth_ca <- sum_by_period_ca(divvy_trips_2013_2026_ca_all_duration, "yearmonth", duration = TRUE) %>%
+duration_by_yearmonth_ca <- sum_by_period_ca(duration_collapsed, "yearmonth", duration = TRUE) %>%
   mutate(yearmonth = ym(yearmonth),
          fr_mins_per_trip = if_else(fr_trips > 0, fr_trip_duration_mins / fr_trips, NA_real_),
          to_mins_per_trip = if_else(to_trips > 0, to_trip_duration_mins / to_trips, NA_real_)) %>%
