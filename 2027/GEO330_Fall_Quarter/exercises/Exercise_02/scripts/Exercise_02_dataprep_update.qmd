@@ -294,23 +294,47 @@ if (length(new_files) > 0 || !file.exists(comprehensive_file)) {
 # Summary tables
 Trip counts come from `divvy_trips_2013_2026_ca_all`. Duration measures come from `divvy_trips_2013_2026_ca_all_duration`, so `trips` in the duration tables counts only trips with a valid duration.
 
-Grouping the ~60 million trip-level rows is the slow step (the `transmute()` and `mutate()` calls below run on the small grouped results and cost little). Each trip-level data frame is therefore collapsed once with `data.table` to trip counts (and minutes) per month, date and start or end community area, which is a few hundred thousand rows. Every summary table is then built from these collapsed tables with `dplyr`. Groups with missing values are kept while collapsing, so the totals match grouping the trip-level rows directly.
+Grouping the ~60 million trip-level rows is the slow step (the `transmute()` and `mutate()` calls below run on the small grouped results and cost little). Each trip-level data frame is therefore collapsed once with `data.table`, a few million rows at a time to limit memory use, to trip counts (and minutes) per month, date and start or end community area, which is a few hundred thousand rows. Every summary table is then built from these collapsed tables with `dplyr`. Groups with missing values are kept while collapsing, so the totals match grouping the trip-level rows directly.
 
 ```{r}
 #| label: collapse trip-level data frames
 
-# trips (and minutes) per yearmonth, date and start or end community area, as a tibble;
-# only the needed columns are passed to data.table, so the data frame is not copied.
-# data.table is not attached, so it does not mask lubridate's hour() and year()
-# or dplyr's between()
-collapse_trips <- function(trips, end, duration = FALSE) {
-  keys <- c("yearmonth", "date", end)
-  dt <- data.table::setDT(unclass(trips)[c(keys, if (duration) "trip_minutes")])
-  collapsed <- if (duration) {
+# rows grouped at a time; data.table needs working memory in proportion to the rows
+# it groups, so lower this if it reports "Unable to allocate" errors
+chunk_rows <- 5e6
+
+# trips (and minutes) per group of key columns, as a data.table
+count_trips <- function(dt, keys, duration) {
+  if (duration) {
     dt[, .(trips = .N, trip_duration_mins = sum(trip_minutes)), by = keys]
   } else {
     dt[, .(trips = .N), by = keys]
   }
+}
+
+# trips (and minutes) per yearmonth, date and start or end community area, as a tibble.
+# Rows are grouped chunk_rows at a time, and the chunk results are then added up,
+# since a group can span chunks. Only the needed columns of each chunk are copied.
+# data.table is not attached, so it does not mask lubridate's hour() and year()
+# or dplyr's between()
+collapse_trips <- function(trips, end, duration = FALSE) {
+  keys <- c("yearmonth", "date", end)
+  cols <- unclass(trips)[c(keys, if (duration) "trip_minutes")]
+  n <- nrow(trips)
+  chunks <- lapply(seq(1, n, by = chunk_rows), function(first) {
+    rows <- first:min(first + chunk_rows - 1, n)
+    counts <- count_trips(data.table::setDT(lapply(cols, `[`, rows)), keys, duration)
+    gc() # release the chunk's copied columns before the next chunk
+    counts
+  })
+  collapsed <- data.table::rbindlist(chunks)
+  rm(chunks)
+  collapsed <- if (duration) {
+    collapsed[, .(trips = sum(trips), trip_duration_mins = sum(trip_duration_mins)), by = keys]
+  } else {
+    collapsed[, .(trips = sum(trips)), by = keys]
+  }
+  gc()
   as_tibble(collapsed) %>%
     rename(comarea_id = all_of(end))
 }
