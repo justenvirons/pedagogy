@@ -146,6 +146,14 @@ join_comareas <- function(trips, areas) {
               by = "end_comarea_id")
 }
 
+# trip durations as plain numeric minutes; a difftime (in any units) or lubridate
+# duration is converted using its own units, so values stored in seconds become minutes
+as_minutes <- function(x) {
+  if (inherits(x, "difftime")) as.numeric(x, units = "mins")
+  else if (inherits(x, "Duration")) as.numeric(x, "minutes")
+  else as.numeric(x)
+}
+
 # keep trips with plausible durations for the duration data frame
 filter_duration <- function(trips) {
   trips %>%
@@ -182,8 +190,10 @@ if (file.exists(comprehensive_file)) {
   if (!"trip_minutes" %in% names(legacy)) {
     stopifnot(inherits(legacy$trip_duration, "difftime"))
     legacy <- legacy %>%
-      mutate(trip_minutes = as.numeric(trip_duration, units = "mins")) %>%
+      mutate(trip_minutes = as_minutes(trip_duration)) %>%
       select(-trip_duration)
+  } else {
+    legacy$trip_minutes <- as_minutes(legacy$trip_minutes)
   }
 
   divvy_trips_2013_2026_ca_all_duration <- legacy %>%
@@ -193,6 +203,13 @@ if (file.exists(comprehensive_file)) {
     select(-trip_minutes)
   rm(legacy)
   gc()
+}
+
+# trip_minutes must be plain numeric minutes: a difftime or duration column keeps
+# its class when summed, and the summary tables then cannot fill in 0 or NA
+if (is.object(divvy_trips_2013_2026_ca_all_duration$trip_minutes)) {
+  divvy_trips_2013_2026_ca_all_duration$trip_minutes <-
+    as_minutes(divvy_trips_2013_2026_ca_all_duration$trip_minutes)
 }
 
 # log of monthly files already appended; if missing, infer it from the months
