@@ -208,7 +208,7 @@ plot_ly(data = trips_by_date,
 
 ```
 
-Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the average trip duration (in minutes per trip) for every day in a given month. The whiskers extend to the minimum and maximum daily averages, and the line shows each month's overall average. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
+Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the daily average trip durations (in minutes per trip) in one month, so each box is based on one observation per day: about 30 observations in a full month (June 2013 has only four, since Divvy launched on June 27). The box spans the middle half of those daily averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge), so it holds about 15 of a month's days. This range is called the interquartile range (IQR). The line inside the box marks the median: half of the month's days had a shorter average trip and half a longer one. In this figure the whiskers extend to the shortest and longest daily averages in each month, and the red line shows each month's overall average (all minutes divided by all trips). Hover over a box to see its values. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
 
 ```{r}
 #| label: fig-tripdurationbyyearmonth
@@ -683,7 +683,16 @@ plot_ly(data = trips_by_yearmonth_selected,
 ```
 
 ## Average trip duration for selected community areas
-*Run the code below to create a box plot of average trip duration (minutes per trip) for trips starting in each of your selected community areas (@fig-tripdurationselected). Each box summarizes the monthly averages over the study period; the whiskers extend to the minimum and maximum monthly averages. Copy the plot into slide 8 of your presentation. How do trip durations compare across the five community areas? What might explain the differences?*
+@fig-tripdurationselected summarizes the average trip duration (minutes per trip) of trips starting in each of your selected community areas. Each observation is one month's average for one community area, and each box includes every month in which at least one trip started in that community area: up to 159 months (June 2013 through August 2026). Community areas that received Divvy stations after 2013 have fewer months.
+
+- **Box:** spans the middle half of a community area's monthly averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge). With 159 months, about 80 months fall inside the box. This range is called the interquartile range (IQR); a taller box means trip durations varied more from month to month.
+- **Line inside the box:** the median monthly average. Half of the months had a shorter average trip and half a longer one.
+- **Whiskers:** extend to the shortest and longest monthly averages that lie within 1.5 × IQR of the box. Unlike in @fig-tripdurationbyyearmonth, they do not necessarily reach the minimum and maximum values.
+- **Outliers:** months beyond the whiskers, plotted as individual points. An outlier is a month whose average trip duration was unusually short or long compared with that community area's typical months. Outliers often come from months with only a few trips, when one or two very long or very short trips can move the average a lot (e.g., winter months or the first months after stations opened). They can also reflect special events, service changes or unusual trips, such as bikes kept out for many hours.
+
+Hover over a box to see its minimum, quartiles, median and maximum, and over a point to see an outlier's value.
+
+*Run the code below to create the box plot. Copy the plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Which community areas have the most outliers, and what might explain them? What might explain the differences between community areas?*
 
 ```{r}
 #| label: fig-tripdurationselected
@@ -693,7 +702,7 @@ plot_ly(data = duration_by_yearmonth_selected,
         x = ~ca_label,
         y = ~fr_mins_per_trip,
         type = 'box',
-        boxpoints = TRUE, # whiskers do not extend to min and max
+        boxpoints = "outliers", # whiskers extend to 1.5 x IQR; months beyond them are plotted as points
         color = ~ca_label,
         colors = pal_selected_colors) %>%
   config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
