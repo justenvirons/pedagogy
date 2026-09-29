@@ -296,6 +296,28 @@ Trip counts come from `divvy_trips_2013_2026_ca_all`. Duration measures come fro
 
 Grouping the ~60 million trip-level rows is the slow step (the `transmute()` and `mutate()` calls below run on the small grouped results and cost little). Each trip-level data frame is therefore collapsed once with `data.table`, a few million rows at a time to limit memory use, to trip counts (and minutes) per month, date and start or end community area, which is a few hundred thousand rows. Every summary table is then built from these collapsed tables with `dplyr`. Groups with missing values are kept while collapsing, so the totals match grouping the trip-level rows directly.
 
+
+```{r}
+#| label: load latest comprehensive data frames
+
+# if changes/updates
+load(file = comprehensive_file)
+
+# if no changes/updates
+# load(file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
+
+# divvy_trips_2013_2026_ca_all_duration <- divvy_trips_2013_2026_ca_all %>%
+#   select(any_of(c("rideable_type", "member_casual", "year", "yearmonth", "date",
+#                   "weekday", "hour_start", "hour_end",
+#                   "start_comarea_id", "start_comarea_name",
+#                   "end_comarea_id", "end_comarea_name")),
+#          trip_duration) %>%
+#   mutate(trip_minutes = as.numeric(trip_duration, units = "mins")) %>%
+#   select(-trip_duration) %>%
+#   filter(trip_minutes >= 1, trip_minutes <= 24 * 60)
+```
+
+
 ```{r}
 #| label: collapse trip-level data frames
 
@@ -437,6 +459,8 @@ duration_by_yearmonth_ca <- sum_by_period_ca(duration_collapsed, "yearmonth", du
 ```{r}
 #| label: save summary tables
 
+CARTO_API_KEY  <- Sys.getenv("CARTO_API_KEY",  unset = "cb1_31xh_1_06fb99adb466f0f5a0392d7d")
+
 if (!exists("CARTO_API_KEY")) CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
 if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_02.qmd need it")
 
@@ -444,4 +468,6 @@ save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
      duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
      divvy_data_through, CARTO_API_KEY,
      file = summary_file)
+
+# save(divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
 ```
