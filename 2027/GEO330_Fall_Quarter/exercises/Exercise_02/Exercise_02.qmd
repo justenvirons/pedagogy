@@ -158,7 +158,7 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
 fx_plot_cumulative_trips(trips_by_date)
 ```
 
-Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, copy the below figure and note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
+Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Winter months (December, January and February) are shown in a darker blue. Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, copy the below figure and note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot trips by year and month
@@ -166,19 +166,33 @@ Now examine monthly patterns of Divvy ridership over the same period (@fig-trips
 #| code-fold: true
 #| code-summary: "Show the trips by year and month plotting function"
 
-# function for plotting trips by year and month
+# function for plotting trips by year and month, with winter months (December,
+# January and February) in a darker blue than other months
 fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
-  plot_ly(data = trips_by_yearmonth,
-          x = ~yearmonth,
-          y = ~trips,
-          type = 'bar',
-          name = 'Monthly trips',
-          marker = list(color = 'lightblue'),
-          hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
+  trips_by_yearmonth <- trips_by_yearmonth %>%
+    # lubridate:: keeps data.table's month() from being used when data.table is loaded
+    mutate(season = if_else(lubridate::month(yearmonth) %in% c(12, 1, 2), "Winter", "Other"))
+
+  plot_ly() %>%
+    add_trace(data = filter(trips_by_yearmonth, season == "Other"),
+              x = ~yearmonth,
+              y = ~trips,
+              type = 'bar',
+              name = 'Monthly trips',
+              marker = list(color = 'lightblue'),
+              hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
+    add_trace(data = filter(trips_by_yearmonth, season == "Winter"),
+              x = ~yearmonth,
+              y = ~trips,
+              type = 'bar',
+              name = 'Monthly trips, winter (December to February)',
+              marker = list(color = '#08519c'),
+              hovertemplate = 'Monthly trips (winter): %{y:,}<extra></extra>') %>%
     config(displaylogo = FALSE,
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth")) %>%
     layout(
+      barmode = "stack", # winter and other months never share a bar, so bars keep their full width
       xaxis = list(title = "Year and Month"),
       yaxis = list(title = "Monthly Divvy Trips"),
       legend = list(
@@ -216,16 +230,6 @@ fx_plot_trips_by_date <- function(trips_by_date) {
            day_name = as.character(lubridate::wday(date, label = TRUE, abbr = FALSE)))
 
   plot_ly() %>%
-    # thin line connecting all days, for context
-    add_trace(data = trips_by_date,
-              x = ~date,
-              y = ~trips,
-              type = 'scatter',
-              mode = 'lines',
-              line = list(color = "lightblue",
-                          width = 0.5),
-              hoverinfo = 'skip',
-              showlegend = FALSE) %>%
     add_trace(data = filter(trips_by_date, day_type == "Weekday"),
               x = ~date,
               y = ~trips,
