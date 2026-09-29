@@ -449,7 +449,17 @@ leaflet(data = trips_by_communityarea_ses) %>%
     fillColor = "steelblue",
     fillOpacity = 0.9,
     label = station_labels,
-    clusterOptions = markerClusterOptions(),
+    # clusters drawn as steelblue circles showing the number of stations,
+    # replacing the default green, yellow and orange size classes
+    clusterOptions = markerClusterOptions(
+      iconCreateFunction = htmlwidgets::JS("
+        function(cluster) {
+          return new L.DivIcon({
+            html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: 36px; height: 36px; line-height: 32px; text-align: center;\">' + cluster.getChildCount() + '</div>',
+            className: '',
+            iconSize: new L.Point(36, 36)
+          });
+        }")),
     group = "Divvy Stations") %>%
   addLegend("bottomleft", 
             pal = map_pal, 
