@@ -55,7 +55,7 @@ Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesh
 Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #2 announcement. Open the Exercise #2 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
 
 ## Open R script and activate R packages
-In your default exercise #2 project you will find an R script named *exercise02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel.
+In your default exercise #2 project you will find an R script named *Exercise_02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel.
 
 ```{r}
 # Activate R packages
@@ -96,6 +96,7 @@ The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hun
 # load(url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/divvy_trips_summary_tables_latest.RData"))
 
 # import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform to geographic projection for mapping (epsg:4326)
+
 community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>% 
   st_transform(4326) %>%
   mutate(`comarea_id` = as.numeric(area_numbe),
