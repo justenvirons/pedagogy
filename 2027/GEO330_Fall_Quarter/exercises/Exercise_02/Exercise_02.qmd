@@ -1,5 +1,5 @@
 ---
-title: "GEO 330 Exercise #2"
+title: "Sustainable Urban Transportation: Exercise #2"
 subtitle: "Evaluate Trends in Divvy Bikesharing Trips, 2013-2026"
 author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
@@ -22,7 +22,7 @@ editor_options:
 ---
 
 ```{r}
-#| label: activate packages for prep
+#| label: activate packages for rendering
 #| echo: false
 
 library(dplyr) # data wrangling with pipe syntax
@@ -32,8 +32,8 @@ library(plotly) # interactive plots
 library(leaflet) # interactive maps
 library(leaflet.extras) # map reset and full screen buttons
 library(data.table) # interactive tables
-library(DT) # data table format
-library(openxlsx)
+library(DT) # interactive tables
+library(openxlsx) # write tables as Excel spreadsheets
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_02")
 
@@ -58,7 +58,10 @@ Log into the course Posit Cloud “Sustainable Urban Transportation" workspace u
 In your default exercise #2 project you will find an R script named *Exercise_02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel.
 
 ```{r}
-# Activate R packages
+#| label: activate libraries for exercise
+#| eval: false
+
+# Activate R packages and load data
 library(dplyr) # data wrangling with pipe syntax
 library(tidyverse) # data wrangling
 library(sf) # simple features geometry data
@@ -71,14 +74,17 @@ library(openxlsx) # write tables as Excel spreadsheets
 # Set default options for numerical display
 options(scipen=999, digits = 2)
 
+# Load project data
+load("data/Exercise_02.RData")
+
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #1
-{{< video videos/exercise_02_01.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #1 -->
+<!-- {{< video videos/exercise_02_01.mp4 >}} -->
+<!-- ::: -->
 
-# Step 2. Download presentation template and process data
+# Step 2. Download presentation template
 *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx).*
 
 This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
@@ -88,40 +94,21 @@ This exercise makes use of data from a variety of sources. Custom summary tables
 The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hundreds of sociodemographic and public health indicators for communities throughout the city. The website  allows for searching and exploring various metrics via maps, charts and tables. Indicator data can also be downloaded by community area, census tract and zip code. Refer to the Atlas' [how to use](https://chicagohealthatlas.org/how-to) page for more information.  
 :::
 
-```{r}
-#| label: import data from course data web page and the city of Chicago data portal
-#| output: false
-
-# import Divvy summary trip data frames from web page
-# load(url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/divvy_trips_summary_tables_latest.RData"))
-
-# import City of Chicago community areas (N=77) GEOJSON from Chicago data portal and transform to geographic projection for mapping (epsg:4326)
-
-community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.geojson") %>% 
-  st_transform(4326) %>%
-  mutate(`comarea_id` = as.numeric(area_numbe),
-         comarea_name = str_to_title(community)) %>%
-  select(comarea_id, comarea_name)
-
-# socioeconomic indicators by community area (community_areas_ses), adapted from the
-# Chicago Health Atlas, and Divvy stations (divvy_stations) are included in the
-# Divvy summary tables file loaded above
-
-```
-
-::: {.callout-tip collapse="true"}
-## VIDEO: Step #2
-{{< video videos/exercise_02_02.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Step #2 -->
+<!-- {{< video videos/exercise_02_02.mp4 >}} -->
+<!-- ::: -->
 
 # Step 3. Explore systemwide trends in Divvy trips over time
-The R functions below create the four figures in this step. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how each figure is built. Click "Show the systemwide trip plotting functions" below to expand it. To recreate the figures in your own script, copy and run the functions in your Exercise_02.R script, then run the line of code below each figure.
+Over the past decade the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. 
+
+*In slide 1 of your presentation, copy and paste the plot below and describe the cumulative growth of Divvy's systemwide ridership over the past 14 years. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take for the Divvy system to log 20, 30, 40 and 50 million trips?*
 
 ```{r}
-#| label: define systemwide trip plotting functions
+#| label: plot cumulative trips by date
 #| echo: true
 #| code-fold: true
-#| code-summary: "Show the systemwide trip plotting functions"
+#| code-summary: "Show the cumulative plotting function"
 
 # function for plotting cumulative trips by date
 fx_plot_cumulative_trips <- function(trips_by_date) {
@@ -138,50 +125,6 @@ fx_plot_cumulative_trips <- function(trips_by_date) {
     layout(
       xaxis = list(title = "Date"),
       yaxis = list(title = "Cumulative Divvy Trips"),
-      legend = list(
-        font = list(size = 10),
-        orientation = "h",
-        xanchor = "center",
-        x = 0.5, y = -0.1),
-      hovermode = "x unified")
-}
-
-# function for plotting trips by year and month
-fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
-  plot_ly(data = trips_by_yearmonth,
-          x = ~yearmonth,
-          y = ~trips,
-          type = 'bar',
-          name = 'trips',
-          marker = list(color = 'lightblue'),
-          hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-    layout(
-      xaxis = list(title = ""),
-      yaxis = list(title = "Monthly Divvy Trips"),
-      legend = list(
-        font = list(size = 10),
-        orientation = "h",
-        xanchor = "center",
-        x = 0.5, y = -0.1),
-      hovermode = "x unified")
-}
-
-# function for plotting trips by day
-fx_plot_trips_by_date <- function(trips_by_date) {
-  plot_ly(data = trips_by_date,
-          x = ~date,
-          y = ~trips,
-          type = 'scatter',
-          mode = 'lines',
-          line = list(color = "lightblue",
-                      width = 0.5),
-          name = 'trips',
-          hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-    layout(
-      xaxis = list(title = ""),
-      yaxis = list(title = "Daily Divvy Trips"),
       legend = list(
         font = list(size = 10),
         orientation = "h",
@@ -223,10 +166,6 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
 }
 ```
 
-Over the past decade the Divvy system has logged over 45 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. 
-
-*In slide 1 of your presentation, describe the cumulative growth of Divvy's systemwide ridership over the past decade. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take before Divvy logged the next 10 million trips?*
-
 ```{r}
 #| label: fig-cumulativetrips
 #| echo: true
@@ -237,6 +176,34 @@ fx_plot_cumulative_trips(trips_by_date)
 ```
 
 Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
+
+```{r}
+#| label: plot trips by year and month
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the trips by year and month plotting function"
+
+# function for plotting trips by year and month
+fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
+  plot_ly(data = trips_by_yearmonth,
+          x = ~yearmonth,
+          y = ~trips,
+          type = 'bar',
+          name = 'trips',
+          marker = list(color = 'lightblue'),
+          hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Monthly Divvy Trips"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+```
 
 ```{r}
 #| label: fig-tripsbyyearmonth
@@ -250,6 +217,36 @@ fx_plot_trips_by_yearmonth(trips_by_yearmonth)
 Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
 
 ```{r}
+#| label: plot trips by date
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the trips by date plotting function"
+
+# function for plotting trips by date
+fx_plot_trips_by_date <- function(trips_by_date) {
+  plot_ly(data = trips_by_date,
+          x = ~date,
+          y = ~trips,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "lightblue",
+                      width = 0.5),
+          name = 'trips',
+          hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Daily Divvy Trips"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+```
+
+```{r}
 #| label: fig-tripsbydate
 #| echo: true
 #| fig-cap: Divvy Trips by Day, June 2013 through August 2026
@@ -261,6 +258,45 @@ fx_plot_trips_by_date(trips_by_date)
 Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the daily average trip durations (in minutes per trip) in one month, so each box is based on one observation per day: about 30 observations in a full month (June 2013 has only four, since Divvy launched on June 27). The box spans the middle half of those daily averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge), so it holds about 15 of a month's days. This range is called the interquartile range (IQR). The line inside the box marks the median: half of the month's days had a shorter average trip and half a longer one. In this figure the whiskers extend to the shortest and longest daily averages in each month, and the red line shows each month's overall average (all minutes divided by all trips). Hover over a box to see its values. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
 
 ```{r}
+#| label: plot average trip duration by year and month
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the trip duration plotting function"
+
+# function for plotting average trip duration by year and month: a box of daily
+# averages for each month and a line of each month's overall average
+fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmonth) {
+  plot_ly() %>%
+    add_trace(data = duration_by_date %>%
+                mutate(yearmonth = floor_date(date, "month")),
+              x = ~yearmonth,
+              y = ~mins_per_trip,
+              type = 'box',
+              boxpoints = FALSE, # whiskers extend to min and max
+              name = 'Daily average',
+              fillcolor = 'lightblue',
+              line = list(color = 'steelblue', width = 1)) %>%
+    add_trace(data = duration_by_yearmonth,
+              x = ~yearmonth,
+              y = ~mins_per_trip,
+              type = 'scatter',
+              mode = 'lines',
+              name = 'Monthly average',
+              line = list(color = 'darkred', width = 1.5),
+              hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1))
+}
+```
+
+```{r}
 #| label: fig-tripdurationbyyearmonth
 #| echo: true
 #| fig-cap: Average Divvy Trip Duration (Minutes per Trip) by Year and Month, June 2013 through August 2026
@@ -268,6 +304,11 @@ Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationby
 # plot average trip duration by year and month
 fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 ```
+
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Create custom map -->
+<!-- {{< video videos/exercise_02_03.mp4 >}} -->
+<!-- ::: -->
 
 # Step 4. Explore total and average trips by community area
 In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2024 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated.
@@ -394,6 +435,11 @@ trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_s
 fx_map_trips_by_communityarea(trips_by_communityarea_ses, total_days = nrow(trips_by_date))
 ```
 
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Create custom map -->
+<!-- {{< video videos/exercise_02_04.mp4 >}} -->
+<!-- ::: -->
+
 # Step 5. Explore trends by socioeconomic status
 In this step we examine trends in Divvy usage across communities with different socioeconomic characteristics. For this step you will need to modify the below R code to create a custom map, plot and table to inform your analysis. An example analysis is summarized here. 
 
@@ -516,11 +562,6 @@ fx_map_ses_quintiles(trips_by_communityarea_ses, divvy_stations, ses_name,
                      total_days = nrow(trips_by_date))
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Create custom map
-{{< video videos/exercise_02_create_custom_map.mp4 >}}
-:::
-
 ## Examine Divvy ridership trends by socioeconomic indicator over time
 Now you will evaluate Divvy ridership over the past decade for communities with different socioeconomic characteristics. The R functions below carry out the steps behind @fig-tripsbyses: they summarize trips by year, month and quintile category of your indicator and plot them. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the plot is built. Click "Show the indicator trend functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
@@ -601,11 +642,6 @@ trips_by_yearmonth_by_ses <- fx_summarise_trips_by_ses(trips_by_yearmonth_ca,
 fx_plot_trips_by_ses(trips_by_yearmonth_by_ses)
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Create custom plot
-{{< video videos/exercise_02_create_custom_plot.mp4 >}}
-:::
-
 ## Summary of ridership by socioeconomic indicator 
 Here you create a final custom table with your summary information by socioeconomic category. The R functions below summarize trips and population by quintile category and format the table (@fig-tripsbysestable). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the table is built. Click "Show the summary table functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
@@ -668,10 +704,10 @@ write.xlsx(trips_by_ses_quintile,
            overwrite = TRUE)
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Create custom table
-{{< video videos/exercise_02_create_custom_table.mp4 >}}
-:::
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Create custom map -->
+<!-- {{< video videos/exercise_02_05.mp4 >}} -->
+<!-- ::: -->
 
 # Step 6. Compare community areas across socioeconomic categories
 In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them.
@@ -762,7 +798,6 @@ selected_communityareas <- c("Near South Side",
 
 # look up selected community areas and their quintile categories
 selected_ca <- fx_select_communityareas(community_areas_ses, selected_communityareas)
-selected_ca %>% select(comarea_name, ses_ntile)
 ```
 
 ## Trips by year and month for selected community areas
@@ -797,3 +832,8 @@ Hover over a box to see its minimum, quartiles, median and maximum, and over a p
 # plot a box plot of average trip duration for the selected community areas
 fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
 ```
+
+<!-- ::: {.callout-tip collapse="true"} -->
+<!-- ## VIDEO: Create custom map -->
+<!-- {{< video videos/exercise_02_06.mp4 >}} -->
+<!-- ::: -->
