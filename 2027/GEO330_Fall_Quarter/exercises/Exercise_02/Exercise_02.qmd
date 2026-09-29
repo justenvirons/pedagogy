@@ -470,9 +470,9 @@ First, identify one of the seven community indicators downloaded from the [Chica
 | `population` | Total population | [POP](https://chicagohealthatlas.org/indicators/POP) | 2020-2024 |
 | `SVI` | Social Vulnerability Index | [SVI](https://chicagohealthatlas.org/indicators/SVI) | 2022 |
 | `poverty` | Poverty rate | [POV](https://chicagohealthatlas.org/indicators/POV) | 2020-2024 |
-| `inactivity` | Physical inactivity | [HCSPAP](https://chicagohealthatlas.org/indicators/HCSPAP) | 2016-2018 |
+| `inactivity` | Adult physical inactivity rate | [HCSPAP](https://chicagohealthatlas.org/indicators/HCSPAP) | 2016-2018 |
 | `mortality` | All-cause mortality rate | [VRDTHR](https://chicagohealthatlas.org/indicators/VRDTHR) | 2020-2024 |
-| `transit` | Transit | [HCSWTSP](https://chicagohealthatlas.org/indicators/HCSWTSP) | 2023-2024 |
+| `transit` | Ease of walking to transit stop rate | [HCSWTSP](https://chicagohealthatlas.org/indicators/HCSWTSP) | 2023-2024 |
 | `violence` | Perceived neighborhood violence rate | [HCSNVP](https://chicagohealthatlas.org/indicators/HCSNVP) | 2023-2024 |
 
 ::: {.callout-note collapse="false"}
