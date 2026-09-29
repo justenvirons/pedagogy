@@ -674,7 +674,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
       dashArray = "3",
       fillOpacity = 0.7,
       group = ses_name) %>%
-    addLegend("bottomleft",
+    addLegend("topright",
               pal = map_pal,
               values = ~ses_value,
               title = paste0(ses_name, "<br>Quintiles"),
