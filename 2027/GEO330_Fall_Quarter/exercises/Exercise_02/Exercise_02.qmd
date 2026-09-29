@@ -308,8 +308,8 @@ communityarea_labels <- sprintf(
   prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
   trips_by_communityarea_ses$fr_trips_cumul/total_days,
   trips_by_communityarea_ses$to_trips_cumul/total_days,
-  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
-  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
+  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
   trips_by_communityarea_ses$fr_mins_per_trip,
   trips_by_communityarea_ses$to_mins_per_trip) %>%
 lapply(htmltools::HTML)
@@ -340,8 +340,8 @@ leaflet(data = trips_by_communityarea_ses) %>%
 # Step 5. Explore trends by socioeconomic status
 In this step we examine trends in Divvy usage across communities with different socioeconomic characteristics. For this step you will need to modify the below R code to create a custom map, plot and table to inform your analysis. An example analysis is summarized here. 
 
-## Identify and map a socioeconomic indicator
-First, identify one of the five socioeconomic measures that was downloaded from the Chicago Health Atlas. that you would like to use to explore the equity dimensions of Divvy ridership, namely: (1) [social vulnerability index](https://chicagohealthatlas.org/indicators/SVI?topic=social-vulnerability-index) (svi_2020); (2) [neighborhood safety](https://chicagohealthatlas.org/indicators/HCSNS?topic=neighborhood-safety) (safety_2018); (3) [median household income](https://chicagohealthatlas.org/indicators/INC?topic=median-household-income) (hhinc_2021); (4) [hardship index](https://chicagohealthatlas.org/indicators/HDX?topic=hardship-index) (hardship_2021); or (5) [household poverty](https://chicagohealthatlas.org/indicators/POV?topic=poverty-rate) (poverty_2021). (Follow the indicator links above for a more thorough description of each indicator via the health atlas.)
+## Identify and map a community indicator
+First, identify one of the seven community measures that was downloaded from the Chicago Health Atlas. that you would like to use to explore the equity dimensions of Divvy ridership, namely: (1) [social vulnerability index](https://chicagohealthatlas.org/indicators/SVI) (SVI). (Follow the indicator links above for a more thorough description of each indicator via the health atlas.)
 
 *After selecting one of the indicators, copy and paste the following code into your R script and follow the instructions in the video to create a custom map. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership and the socioeconomic indicator you selected.* 
 
@@ -371,9 +371,9 @@ total_days <- as.integer(count(trips_by_date))
 
 # Edit the following four lines with selected indicator name/title, value and ntile variables
 ses_name <- "Poverty Rate" # EDIT HERE
-trips_by_communityarea_ses$ses_value <- trips_by_communityarea_ses$poverty_2021 # EDIT HERE
-trips_by_communityarea_ses$ses_ntile <- trips_by_communityarea_ses$poverty_2021_ntile_label # EDIT HERE
-community_areas_ses$ses_ntile <- community_areas_ses$poverty_2021_ntile_label # EDIT HERE
+trips_by_communityarea_ses$ses_value <- trips_by_communityarea_ses$poverty # EDIT HERE
+trips_by_communityarea_ses$ses_ntile <- trips_by_communityarea_ses$poverty_ntile_label # EDIT HERE
+community_areas_ses$ses_ntile <- community_areas_ses$poverty_ntile_label # EDIT HERE
 
 # create interactive map using leaflet
 # color palette
@@ -399,8 +399,8 @@ communityarea_labels <- sprintf(
   prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
   trips_by_communityarea_ses$fr_trips_cumul/total_days,
   trips_by_communityarea_ses$to_trips_cumul/total_days,
-  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
-  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$pop_2021*1000,
+  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
+  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
   trips_by_communityarea_ses$fr_mins_per_trip,
   trips_by_communityarea_ses$to_mins_per_trip,
   trips_by_communityarea_ses$ses_value) %>%
@@ -594,9 +594,6 @@ selected_ca <- community_areas_ses %>%
   mutate(ses_label = factor(ses_ntile, levels = c("Highest", "High", "Moderate", "Low", "Lowest")),
          ca_label = paste0(comarea_name, " (", ses_ntile, ")")) %>%
   arrange(ses_label)
-
-# check selection: should list five community areas, one per quintile category
-selected_ca
 
 # trips by yearmonth for selected community areas
 trips_by_yearmonth_selected <- trips_by_yearmonth_ca %>%

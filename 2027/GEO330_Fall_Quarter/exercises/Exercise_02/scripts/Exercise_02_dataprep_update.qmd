@@ -12,6 +12,7 @@ library(tidyverse)
 library(sf)
 library(lubridate)
 library(xml2)
+library(jsonlite)
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
 ```
@@ -292,6 +293,8 @@ if (length(new_files) > 0 || !file.exists(comprehensive_file)) {
 ```
 
 # Summary tables
+
+## Divvy Trips
 Trip counts come from `divvy_trips_2013_2026_ca_all`. Duration measures come from `divvy_trips_2013_2026_ca_all_duration`, so `trips` in the duration tables counts only trips with a valid duration.
 
 Grouping the ~60 million trip-level rows is the slow step (the `transmute()` and `mutate()` calls below run on the small grouped results and cost little). Each trip-level data frame is therefore collapsed once with `data.table`, a few million rows at a time to limit memory use, to trip counts (and minutes) per month, date and start or end community area, which is a few hundred thousand rows. Every summary table is then built from these collapsed tables with `dplyr`. Groups with missing values are kept while collapsing, so the totals match grouping the trip-level rows directly.
@@ -453,6 +456,60 @@ duration_by_yearmonth_ca <- sum_by_period_ca(duration_collapsed, "yearmonth", du
          to_trips, to_trip_duration_mins, to_mins_per_trip)
 ```
 
+## Socioeconomic Status
+```{r}
+a_topic_list <- c("population", "SVI","poverty", "inactivity", "mortality", "transit", "violence") # edit here
+a_chicago_topic_keys <- c("POP", "SVI", "POV","HCSPAP","VRDTHR","HCSWTSP","HCSNVP") # edit here
+a_period_list <- c("2020-2024", "2022", "2020-2024","2016-2018","2020-2024","2023-2024","2023-2024") # edit here
+
+# download Chicago health survey indicators
+for (i in 1:length(a_chicago_topic_keys)){
+
+  atopic_key <- a_chicago_topic_keys[i]
+  atopic_name <- a_topic_list[i]
+  aperiod <- a_period_list[i]
+  
+  #print(atopic_name)
+  
+  a_table_name <- paste0("chicago_indicator_",atopic_name)
+
+  a_topic_url <- paste0("https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&period=",aperiod,"&population=&topic=",atopic_key)
+  
+  a_topic_json <- fromJSON(a_topic_url)
+
+  a_topic_df <- a_topic_json$results %>% 
+    as.data.frame() %>% 
+  select(estimate = v,
+         se = se,
+         geoid = g,
+         layer = l) %>%
+    mutate(topic = atopic_name,
+           geoid= as.integer(str_replace(geoid,"1714000-",""))) %>% 
+    drop_na(geoid)
+
+  assign(a_table_name, a_topic_df)
+  
+}
+
+# bind SCC and Chicago indicators together
+apattern <- "chicago_indicator_"
+alist_indicators <- mget(ls(pattern=apattern))
+indicators_all <- rbindlist(alist_indicators) 
+community_areas_ses <- indicators_all %>% 
+  select(-c(se,layer),
+         comarea_id = geoid) %>% 
+  pivot_wider(names_from = topic, values_from = estimate) %>% 
+  right_join(community_areas, by="comarea_id") %>% 
+  st_as_sf() %>% 
+  st_transform(crs=4326)
+
+# remove unneeded tables
+rm(list=ls(pattern=apattern))
+
+```
+
+
+
 # Save summary tables
 `Exercise_02.qmd` loads this file. The CARTO API key comes from the `CARTO_API_KEY` environment variable (e.g., set in `.Renviron`) unless it is already defined in the session.
 
@@ -466,7 +523,7 @@ if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_0
 
 save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
      duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
-     divvy_data_through, CARTO_API_KEY,
+     divvy_data_through, CARTO_API_KEY, community_areas_ses,
      file = summary_file)
 
 # save(divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
