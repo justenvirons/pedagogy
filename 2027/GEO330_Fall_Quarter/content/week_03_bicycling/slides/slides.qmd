@@ -17,7 +17,7 @@ editor_options:
 ---
 
 ::: {.img-center}
-![](images/amsterdam_cycles.jpg){height=100%}
+![](images/amsterdam_cycles.jpg){.bordered-img fig-align="center" height=100%}
 :::
 
 ::: notes
@@ -51,11 +51,11 @@ Keep that framing in mind as we move through the periods—you’ll see that the
 
 ### Sources
 
-!['Cycling 1839-1939' book issued by John Player & Sons (1939).<br>I purchased it at an outdoor flea market while on a UK trip in summer 2025.](images/players_cycling_book_1816_1939.jpg)
+!['Cycling 1839-1939' book issued by John Player & Sons (1939).<br>I purchased it at an outdoor flea market while on a UK trip in summer 2025.](images/players_cycling_book_1816_1939.jpg){.bordered-img fig-align="center"}
 
-![The Mechanical Hourse: How the Bicycle Reshaped American Life (2016)](images/the_mechanical_horse_margaret_guroff.png)
+![The Mechanical Hourse: How the Bicycle Reshaped American Life (2016)](images/the_mechanical_horse_margaret_guroff.png){.bordered-img fig-align="center"}
 
-![Planning for Shared Mobility (2016)](images/pas_planning_for_shared_mobility.png)
+![Planning for Shared Mobility (2016)](images/pas_planning_for_shared_mobility.png){.bordered-img fig-align="center"}
 
 :::
 
@@ -92,19 +92,19 @@ From the mid-20th century onward, bicycling re-enters planning conversations thr
 
 ::: {.column width="45%"}
 
-![Pedestrian hobby horse. (1816)](images/1816_pedestrian_hobby_horse.png)
+![Pedestrian hobby horse. (1816)](images/1816_pedestrian_hobby_horse.png){.bordered-img fig-align="center"}
 
-![Lady's hobby horse. (1818)](images/1818_lady_hobby_horse.png)
+![Lady's hobby horse. (1818)](images/1818_lady_hobby_horse.png){.bordered-img fig-align="center"}
 
-![Lever-driven bicycle. (1818)](images/1865_lever_driven_bicycle.png)
+![Lever-driven bicycle. (1818)](images/1865_lever_driven_bicycle.png){.bordered-img fig-align="center"}
 
-![Jardin du Luxembourg. Gentry Publishers. (1818)](images/1818_draisine_style_bike.webp)
+![Jardin du Luxembourg. Gentry Publishers. (1818)](images/1818_draisine_style_bike.webp){.bordered-img fig-align="center"}
 
-![Johnson's Pedestrian Hobby Horse Riding School (1819)](images/1819_draisine_riding_school.webp)
+![Johnson's Pedestrian Hobby Horse Riding School (1819)](images/1819_draisine_riding_school.webp){.bordered-img fig-align="center"}
 
-!["The Horse Dealer" (1819). British Museum](images/1819_cycle_horse_dealer.webp)
+!["The Horse Dealer" (1819). British Museum](images/1819_cycle_horse_dealer.webp){.bordered-img fig-align="center"}
 
-![The "boneshaker" bicycle (1867)](images/1865_michaux_boneshaker.png)
+![The "boneshaker" bicycle (1867)](images/1865_michaux_boneshaker.png){.bordered-img fig-align="center"}
 :::
 ::::
 
@@ -139,15 +139,15 @@ From an urban perspective, these early cycles had limited everyday use. They wer
 
 ::: {.column width="45%"}
 
-![The "Ordinary" bicycle (1880)](images/1882_the_ordinary.png)
+![The "Ordinary" bicycle (1880)](images/1882_the_ordinary.png){.bordered-img fig-align="center"}
 
-![The "Safety" bicycle (1885)](images/1885_safety_bicycle.png)
+![The "Safety" bicycle (1885)](images/1885_safety_bicycle.png){.bordered-img fig-align="center"}
 
-![Good Roads Illinois (1892)](images/good_roads_illinois.jpg)
+![Good Roads Illinois (1892)](images/good_roads_illinois.jpg){.bordered-img fig-align="center"}
 
-![Good Roads Illinois Article #1 (1892)](images/good_roads_illinois_example_01.jpg)
+![Good Roads Illinois Article #1 (1892)](images/good_roads_illinois_example_01.jpg){.bordered-img fig-align="center"}
 
-![Good Roads Illinois Article #2 (1892)](images/good_roads_illinois_example_02.jpg)
+![Good Roads Illinois Article #2 (1892)](images/good_roads_illinois_example_02.jpg){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -183,13 +183,13 @@ As bicycles spread through cities, they became tools for daily travel and cataly
 
 ::: {.column width="45%"}
 
-![World champion bicycle racer Marshall "Major" Taylor (1899)](images/1899_major_taylor_documentary.png)
+![World champion bicycle racer Marshall "Major" Taylor (1899)](images/1899_major_taylor_documentary.png){.bordered-img fig-align="center"}
 
-![Six-day bicycle racing (1903)](images/1903_six_day_bicycle_racing.png)
+![Six-day bicycle racing (1903)](images/1903_six_day_bicycle_racing.png){.bordered-img fig-align="center"}
 
-![Multimodal scene down Market Street in San Francisco (1906)](images/1906_market_street_sf_bicycle.png)
+![Multimodal scene down Market Street in San Francisco (1906)](images/1906_market_street_sf_bicycle.png){.bordered-img fig-align="center"}
 
-![Women, children engaged in rural cycling](images/rural_cycling.png)
+![Women, children engaged in rural cycling](images/rural_cycling.png){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -225,17 +225,17 @@ In this same period, bicycle racing also played an important cultural role in no
 
 ::: {.column width="45%"}
 
-![Italian Velocino bicycle (1935)](images/1935_novelty_italian_cycle_smoking_rider.png)
+![Italian Velocino bicycle (1935)](images/1935_novelty_italian_cycle_smoking_rider.png){.bordered-img fig-align="center"}
 
-![Horizontal bicycle (1933)](images/1933_horizontal_recumbant_bicycle.png)
+![Horizontal bicycle (1933)](images/1933_horizontal_recumbant_bicycle.png){.bordered-img fig-align="center"}
 
-![Touring tandem (1930s)](images/1939_touring_tandem.png)
+![Touring tandem (1930s)](images/1939_touring_tandem.png){.bordered-img fig-align="center"}
 
-![International cycle touring (1938)](images/1938_international_cycling_tour.png)
+![International cycle touring (1938)](images/1938_international_cycling_tour.png){.bordered-img fig-align="center"}
 
-![American "motorbike" (1939)](images/1939_american_motor_bicycle.png)
+![American "motorbike" (1939)](images/1939_american_motor_bicycle.png){.bordered-img fig-align="center"}
 
-![Detailed diorama from Futurama exhibit at New York City's World's Fair (1939)](images/1939_futurama_diorama_detail.jpg)
+![Detailed diorama from Futurama exhibit at New York City's World's Fair (1939)](images/1939_futurama_diorama_detail.jpg){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -272,13 +272,13 @@ As a result, cycling lost political influence and was reframed as unsafe or obso
 
 ::: {.column width="45%"}
 
-![The inaugural issue of Bicycling! magazine in 1971 marked the emergence of cycling as a modern lifestyle and transportation movement in the U.S., blending advocacy, equipment guidance, and practical riding advice at the dawn of the bike boom and early environmental era.](images/1971_bicycle_magazine.jpg)
+![The inaugural issue of Bicycling! magazine in 1971 marked the emergence of cycling as a modern lifestyle and transportation movement in the U.S., blending advocacy, equipment guidance, and practical riding advice at the dawn of the bike boom and early environmental era.](images/1971_bicycle_magazine.jpg){.bordered-img fig-align="center"}
 
-![In 1971, Bicycling! magazine ran an early feature on Major Taylor, helping reintroduce his legacy to a new generation of riders and advocates.](images/1971_bicycle_magazine_major_taylor_article.jpg)
+![In 1971, Bicycling! magazine ran an early feature on Major Taylor, helping reintroduce his legacy to a new generation of riders and advocates.](images/1971_bicycle_magazine_major_taylor_article.jpg){.bordered-img fig-align="center"}
 
-![The Raleigh Twenty was a compact, 20-inch–wheel folding bicycle gained popularity in the early 1970s, designed for practicality and easy storage while maintaining the ride quality of a full-sized utility bike.](images/1974_raleigh_twenty_folding_bike.jpg)
+![The Raleigh Twenty was a compact, 20-inch–wheel folding bicycle gained popularity in the early 1970s, designed for practicality and easy storage while maintaining the ride quality of a full-sized utility bike.](images/1974_raleigh_twenty_folding_bike.jpg){.bordered-img fig-align="center"}
 
-![During the 1970s and 80s, the Danish Cyclists’ Federation organised a number of demonstrations. Photo: Bo Hansen, Danish Cyclists’ Federation’s archive](images/1970s_danish_bicycle_protests.png)
+![During the 1970s and 80s, the Danish Cyclists’ Federation organised a number of demonstrations. Photo: Bo Hansen, Danish Cyclists’ Federation’s archive](images/1970s_danish_bicycle_protests.png){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -317,17 +317,17 @@ The resulting "Great American Bicycle Boom" effectively reframed the bicycle as 
 
 ::: {.column width="45%"}
 
-![The CROW Design Manual for Bicycle Traffic was first formally published in 1993, building on Dutch cycling research and practice developed throughout the 1970s and 1980s. The guide is now widely used and referenced across Europe and internationally.](images/1993_crow_design_guide.jpg)
+![The CROW Design Manual for Bicycle Traffic was first formally published in 1993, building on Dutch cycling research and practice developed throughout the 1970s and 1980s. The guide is now widely used and referenced across Europe and internationally.](images/1993_crow_design_guide.jpg){.bordered-img fig-align="center"}
 
-![Beginning in the 1970s and accelerating through the 1990s, the Netherlands developed a national intercity cycling network by systematically connecting towns with direct, protected routes—later formalized as high-quality bicycle highways—integrating cycling into regional travel rather than limiting it to local trips. Travel route by C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_01.png)
+![Beginning in the 1970s and accelerating through the 1990s, the Netherlands developed a national intercity cycling network by systematically connecting towns with direct, protected routes—later formalized as high-quality bicycle highways—integrating cycling into regional travel rather than limiting it to local trips. Travel route by C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_01.png){.bordered-img fig-align="center"}
 
-![Bike path outside of Utrecht, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_02.jpg)
+![Bike path outside of Utrecht, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_02.jpg){.bordered-img fig-align="center"}
 
-![Bike path outside of Gouda, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure.jpg)
+![Bike path outside of Gouda, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure.jpg){.bordered-img fig-align="center"}
 
-![Bike path along North Sea, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_03.jpg)
+![Bike path along North Sea, Netherlands. Photo: C. Scott Smith (2024)](images/1990s_netherlands_intercity_bike_infrastructure_03.jpg){.bordered-img fig-align="center"}
 
-![The Illinois Prairie Path, established beginning in 1963 on a former Chicago, Aurora & Elgin interurban rail corridor, was one of the nation’s earliest rail-to-trail projects and helped pioneer off-street bicycling in the Chicago region. Photo: C. Scott Smith (2024)](images/1990s_rails_to_trails_prairie_path_illinois.jpg)
+![The Illinois Prairie Path, established beginning in 1963 on a former Chicago, Aurora & Elgin interurban rail corridor, was one of the nation’s earliest rail-to-trail projects and helped pioneer off-street bicycling in the Chicago region. Photo: C. Scott Smith (2024)](images/1990s_rails_to_trails_prairie_path_illinois.jpg){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -346,11 +346,11 @@ The sustainability significance of this period lies in the accumulation of empir
 
 :::: {.columns}
 ::: {.column width="50%"}
-![](images/2010s_danish_cycling_statistics_01.png){height=50%}
+![](images/2010s_danish_cycling_statistics_01.png){.bordered-img fig-align="center" height=50%}
 :::
 
 ::: {.column width="50%"}
-![](images/2010s_danish_cycling_statistics_02.png){height=50%}
+![](images/2010s_danish_cycling_statistics_02.png){.bordered-img fig-align="center" height=50%}
 :::
 
 ::::
@@ -382,13 +382,13 @@ How many Danes own a bike? How often and how far do they bike? And why? What are
 
 ::: {.column width="45%"}
 
-![A [2017 bicycle tour hosted by DePaul University's Chaddick Institute](https://depaul-edu.maps.arcgis.com/apps/mapviewer/index.html?webmap=b295e513e97a43699ebc8e09530ffc74) guided participants through Chicago to showcase emerging bicycle infrastructure innovations, including protected bike lanes, Divvy bikesharing stations, intersection safety treatments, and transit-integrated facilities, demonstrating how recent design and policy changes were reshaping everyday urban mobility and street safety across the city.](images/2017_depaul_bicycle_tour.png)
+![A [2017 bicycle tour hosted by DePaul University's Chaddick Institute](https://depaul-edu.maps.arcgis.com/apps/mapviewer/index.html?webmap=b295e513e97a43699ebc8e09530ffc74) guided participants through Chicago to showcase emerging bicycle infrastructure innovations, including protected bike lanes, Divvy bikesharing stations, intersection safety treatments, and transit-integrated facilities, demonstrating how recent design and policy changes were reshaping everyday urban mobility and street safety across the city.](images/2017_depaul_bicycle_tour.png){.bordered-img fig-align="center"}
 
-![DePaul University's Chaddick Institute published "Dimensions of Divvy" report. A data-driven report examining Chicago’s Divvy bike-share system through equity, access, usage patterns, and neighborhood connectivity, highlighting how bikesharing functions as both transportation infrastructure and an urban policy tool. (2018)](images/2018_dimensions_of_divvy.png)
+![DePaul University's Chaddick Institute published "Dimensions of Divvy" report. A data-driven report examining Chicago’s Divvy bike-share system through equity, access, usage patterns, and neighborhood connectivity, highlighting how bikesharing functions as both transportation infrastructure and an urban policy tool. (2018)](images/2018_dimensions_of_divvy.png){.bordered-img fig-align="center"}
 
-![In the late 2010s, U.S. bikesharing systems expanded rapidly in both scale and scope, evolving from small, docked pilot programs into large, citywide mobility networks integrated with transit, smartphone apps, and payment systems.)](images/2018_large_us_bike_sharing_systems.png)
+![In the late 2010s, U.S. bikesharing systems expanded rapidly in both scale and scope, evolving from small, docked pilot programs into large, citywide mobility networks integrated with transit, smartphone apps, and payment systems.)](images/2018_large_us_bike_sharing_systems.png){.bordered-img fig-align="center"}
 
-![This national report identifyied financial, cultural, and geographic barriers to bikeshare use and outlined strategies to expand access for low-income communities and communities of color through pricing, outreach, and system design reforms.](images/2017_inequities_in_us_bikeshare_systems.png)
+![This national report identifyied financial, cultural, and geographic barriers to bikeshare use and outlined strategies to expand access for low-income communities and communities of color through pricing, outreach, and system design reforms.](images/2017_inequities_in_us_bikeshare_systems.png){.bordered-img fig-align="center"}
 
 :::
 ::::
@@ -426,15 +426,15 @@ At the same time, bike-sharing systems expanded globally, lowering barriers to a
 
 ::: {.column width="45%"}
 
-![City of Chicago and Lyft introduce e-bikes to the city's bikeshare system in 2022. "With speeds up to 20 MPH, these custom pedal-assist ebikes give you the power to tackle bridges, shave time off your commute, and experience more neighborhoods in less time. Just start pedaling and the power kicks in."](images/2020_divvy_ebike.webp)
+![City of Chicago and Lyft introduce e-bikes to the city's bikeshare system in 2022. "With speeds up to 20 MPH, these custom pedal-assist ebikes give you the power to tackle bridges, shave time off your commute, and experience more neighborhoods in less time. Just start pedaling and the power kicks in."](images/2020_divvy_ebike.webp){.bordered-img fig-align="center"}
 
-![NACTO analysis finds americans have taken half a billion bikeshare and e-scooter trips between 2010 and 2021.](images/2021_nacto_micromobility_report.png)
+![NACTO analysis finds americans have taken half a billion bikeshare and e-scooter trips between 2010 and 2021.](images/2021_nacto_micromobility_report.png){.bordered-img fig-align="center"}
 
-![Trips taken on bike share and scooter share systems in the U.S. and Canada reached an all-time high in 2023.](images/2023_nacto_shared_micromobility_ridership.png)
+![Trips taken on bike share and scooter share systems in the U.S. and Canada reached an all-time high in 2023.](images/2023_nacto_shared_micromobility_ridership.png){.bordered-img fig-align="center"}
 
-![This article found that e-bikes are the dominant commute mode choice in the small Chinese city of Ganyu due to short travel distances the and a limited public transit system. (2022)](images/2022_electric_bicycle_journal_article.png)
+![This article found that e-bikes are the dominant commute mode choice in the small Chinese city of Ganyu due to short travel distances the and a limited public transit system. (2022)](images/2022_electric_bicycle_journal_article.png){.bordered-img fig-align="center"}
 
-![The article examines how trip distance explains the "modal split" or the threshold at which one transportation mode such as e-bikes becomes more desirable than another.](images/2022_electric_bicycle_journal_article_mode_share.png)
+![The article examines how trip distance explains the "modal split" or the threshold at which one transportation mode such as e-bikes becomes more desirable than another.](images/2022_electric_bicycle_journal_article_mode_share.png){.bordered-img fig-align="center"}
 
 :::
 ::::
