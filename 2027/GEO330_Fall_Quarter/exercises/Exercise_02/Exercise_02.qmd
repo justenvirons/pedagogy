@@ -138,7 +138,7 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
            toImageButtonOptions = list(filename = "divvy_cumulative_trips_by_date")) %>%
     layout(
       shapes = milestone_lines,
-      xaxis = list(title = "Date"),
+      xaxis = list(title = ""),
       yaxis = list(title = "Cumulative Divvy Trips"),
       legend = list(
         font = list(size = 10),
@@ -193,7 +193,7 @@ fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
            toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth")) %>%
     layout(
       barmode = "stack", # winter and other months never share a bar, so bars keep their full width
-      xaxis = list(title = "Year and Month"),
+      xaxis = list(title = ""),
       yaxis = list(title = "Monthly Divvy Trips"),
       legend = list(
         font = list(size = 10),
@@ -265,7 +265,7 @@ fx_plot_trips_by_date <- function(trips_by_date) {
 
 ```{r}
 #| label: fig-tripsbydate
-#| echo: true
+#| echo: false
 #| fig-cap: Divvy Trips by Day, June 2013 through August 2026
 
 # plot trips by day
@@ -305,7 +305,7 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_trip_duration_by_yearmonth")) %>%
     layout(
-      xaxis = list(title = "Year and Month"),
+      xaxis = list(title = ""),
       yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
       legend = list(
         font = list(size = 10),
@@ -317,7 +317,7 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
 
 ```{r}
 #| label: fig-tripdurationbyyearmonth
-#| echo: true
+#| echo: false
 #| fig-cap: Average Divvy Trip Duration (Minutes per Trip) by Year and Month, June 2013 through August 2026
 
 # plot average trip duration by year and month
@@ -445,7 +445,7 @@ fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days
 ```{r}
 #| label: fig-frtripsbycommunityarea
 #| fig-cap: Total Divvy Trips (from) by Community Area (Quintile Categorization), June 2013 through August 2026
-#| echo: true
+#| echo: false
 
 # summarize trips by community area and map total trips
 trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_ses,
