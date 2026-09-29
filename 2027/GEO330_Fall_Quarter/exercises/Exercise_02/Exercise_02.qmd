@@ -566,7 +566,7 @@ Follow the topic links for a full description of each indicator, including its u
 
 The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs], grouped into numbered clusters when zoomed out. Use the layer control in the top left corner to switch between clustered and individual stations or turn them off, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. Use the layer control in the top left corner to turn the stations off or to show Divvy docks grouped into clusters, where each cluster shows the total number of docks at the stations it contains, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 
 ```{r}
@@ -584,9 +584,11 @@ fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
            ses_ntile = quintile_labels[ntile(ses_value, 5)])
 }
 
-# function for adding Divvy stations as two layers: grouped into numbered clusters
-# when zoomed out (shown when the map opens) and as individual stations (hidden);
-# stations are drawn in their own pane, above the community areas
+# function for adding Divvy stations as two layers: every station as a single point
+# (shown when the map opens) and docks grouped into clusters that show the total
+# number of docks they contain (hidden). Points without a reported capacity are
+# likely single, free-floating bikes rather than stations, so they are left out of
+# the dock clusters. Stations are drawn in their own pane, above the community areas
 fx_add_station_layers <- function(map, divvy_stations) {
 
   # station hover labels
@@ -595,9 +597,45 @@ fx_add_station_layers <- function(map, divvy_stations) {
     <i>Docks:</i> %s<br/>
     <i>Community area:</i> %s",
     divvy_stations$name,
-    divvy_stations$capacity,
+    if_else(is.na(divvy_stations$capacity),
+            "not reported (likely a free-floating bike)",
+            as.character(divvy_stations$capacity)),
     coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
     lapply(htmltools::HTML)
+
+  # stations with a reported number of docks
+  docked <- !is.na(divvy_stations$capacity)
+  docked_stations <- divvy_stations[docked, ]
+
+  # dock counts passed to the cluster icons, keyed by each station's coordinates;
+  # stations that share coordinates split their combined docks equally, so the
+  # cluster totals add up
+  coords <- st_coordinates(docked_stations)
+  coord_key <- sprintf("%.6f,%.6f", coords[, "Y"], coords[, "X"])
+  dock_share <- tapply(docked_stations$capacity, coord_key, sum) /
+    tapply(docked_stations$capacity, coord_key, length)
+  dock_lookup <- jsonlite::toJSON(as.list(dock_share), auto_unbox = TRUE, digits = NA)
+
+  # cluster icons: steelblue circles showing the total docks of the stations in each
+  # cluster (single stations included), sized to fit the number
+  dock_icon <- htmlwidgets::JS(paste0("
+    (function() {
+      var docks = ", dock_lookup, ";
+      return function(cluster) {
+        var total = 0;
+        cluster.getAllChildMarkers().forEach(function(m) {
+          var ll = m.getLatLng();
+          total += docks[ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6)] || 0;
+        });
+        var text = Math.round(total).toLocaleString('en-US');
+        var size = Math.max(32, 14 + 8 * text.length);
+        return new L.DivIcon({
+          html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: ' + size + 'px; height: ' + size + 'px; line-height: ' + (size - 4) + 'px; text-align: center;\">' + text + '</div>',
+          className: '',
+          iconSize: new L.Point(size, size)
+        });
+      };
+    })()"))
 
   map %>%
     addMapPane("stations", zIndex = 450) %>%
@@ -610,35 +648,21 @@ fx_add_station_layers <- function(map, divvy_stations) {
       fillOpacity = 0.9,
       label = station_labels,
       options = pathOptions(pane = "stations"),
-      # clusters drawn as steelblue circles showing the number of stations,
-      # replacing the default green, yellow and orange size classes
+      group = "Divvy Stations") %>%
+    addMarkers(
+      data = docked_stations,
+      label = station_labels[docked],
       clusterOptions = markerClusterOptions(
         showCoverageOnHover = FALSE, # no outline of the cluster's area on hover
-        iconCreateFunction = htmlwidgets::JS("
-          function(cluster) {
-            return new L.DivIcon({
-              html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: 36px; height: 36px; line-height: 32px; text-align: center;\">' + cluster.getChildCount() + '</div>',
-              className: '',
-              iconSize: new L.Point(36, 36)
-            });
-          }")),
-      group = "Divvy Stations (clustered)") %>%
-    addCircleMarkers(
-      data = divvy_stations,
-      radius = 5,
-      color = "#fff",
-      weight = 1,
-      fillColor = "steelblue",
-      fillOpacity = 0.9,
-      label = station_labels,
-      options = pathOptions(pane = "stations"),
-      group = "Divvy Stations (individual)") %>%
-    hideGroup("Divvy Stations (individual)")
+        singleMarkerMode = TRUE, # single stations also show their docks
+        iconCreateFunction = dock_icon),
+      group = "Divvy Docks (clustered)") %>%
+    hideGroup("Divvy Docks (clustered)")
 }
 
 # function for mapping the selected indicator by community area (quintiles) with
 # Divvy stations; the dropdown list switches to any measure in the hover labels,
-# and the layer control turns the clustered and individual stations on and off
+# and the layer control turns the stations and dock clusters on and off
 fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
   measures <- c(setNames(list(trips_by_communityarea_ses$ses_value), ses_name),
                 fx_communityarea_measures(trips_by_communityarea_ses, total_days))
@@ -649,7 +673,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
                           labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name)) %>%
     fx_add_station_layers(divvy_stations) %>%
     addLayersControl(
-      overlayGroups = c("Divvy Stations (clustered)", "Divvy Stations (individual)"),
+      overlayGroups = c("Divvy Stations", "Divvy Docks (clustered)"),
       options = layersControlOptions(collapsed = FALSE, position = "topleft"))
 }
 ```
