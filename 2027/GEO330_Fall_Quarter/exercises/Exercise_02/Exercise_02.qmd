@@ -707,10 +707,8 @@ fx_map_ses_quintiles(trips_by_communityarea_ses, divvy_stations, ses_name,
                      total_days = nrow(trips_by_date))
 ```
 
-## Examine Divvy ridership trends by socioeconomic indicator over time
-Now you will evaluate Divvy ridership over the past decade for communities with different socioeconomic characteristics. The R functions below carry out the steps behind @fig-tripsbyses: they summarize trips by year, month and quintile category of your indicator and plot them. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the plot is built. Click "Show the indicator trend functions" below to expand it, then copy and run it in your Exercise_02.R script.
-
-*Using the same indicator you selected above, copy and paste the following code chunk into your R script and follow the instructions in the video to create a custom plot. Copy the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the socioeconomic indicator you selected over the past ten years. Have variations in ridership changed differently over time with respect to community socioeconomic condition?*
+## Examine Divvy ridership trends by community indicator
+Now you will evaluate Divvy ridership across communities with different characteristics. *Using the same indicator you selected above, copy and paste the following code chunk into your R script and run the new code to create a custom plot. Copy the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the community indicator you selected. Do ridership trends differ across these stratified communities?*
 
 ```{r}
 #| label: define indicator trend functions
@@ -791,10 +789,8 @@ trips_by_yearmonth_by_ses <- fx_summarise_trips_by_ses(trips_by_yearmonth_ca,
 fx_plot_trips_by_ses(trips_by_yearmonth_by_ses, ses_name)
 ```
 
-## Summary of ridership by socioeconomic indicator 
-Here you create a final custom table with your summary information by socioeconomic category. The R functions below summarize trips and population by quintile category and format the table (@tbl-tripsbysestable). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the table is built. Click "Show the summary table functions" below to expand it, then copy and run it in your Exercise_02.R script.
-
-*Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
+## Summary table showing ridership by community indicator 
+Here you create a custom table that summarizes ridership information with respect to the indicator you selected. *Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
 
 ```{r}
 #| label: define summary table functions
@@ -859,12 +855,8 @@ write.xlsx(trips_by_ses_quintile,
 <!-- {{< video videos/exercise_02_05.mp4 >}} -->
 <!-- ::: -->
 
-# Step 6. Compare community areas across socioeconomic categories
-In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them.
-
-The R functions below look up your selected community areas and create @fig-tripsbyyearmonthselected and @fig-tripdurationselected. They use the quintile categories and colors from Step 5, so run those functions first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the figures are built. Click "Show the selected community area functions" below to expand it, then copy and run it in your Exercise_02.R script.
-
-*Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the table (@tbl-selectedcommunityareas) to make sure each quintile category appears once.*
+# Step 6. Compare select community areas by community indicator
+In this final step you will take a closer look at five individual community areas, one from each of the indicator quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them. *Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the table (@tbl-selectedcommunityareas) to make sure each quintile category appears once.*
 
 ```{r}
 #| label: define selected community area functions
@@ -959,8 +951,22 @@ selected_ca %>%
   knitr::kable()
 ```
 
+## Average trip duration for selected community areas
+@fig-tripdurationselected uses the same kind of box plot as @fig-tripdurationbyyearmonth, but here each observation is one month's average trip duration (minutes per trip) for trips starting in a community area. Each box includes every month in which at least one trip started there, up to 159 months (June 2013 through August 2026), so community areas that received Divvy stations after 2013 have fewer months. Unlike the earlier figure, the whiskers extend only to the shortest and longest monthly averages within 1.5 times the interquartile range of the box. Months beyond the whiskers are plotted as individual points called outliers: months whose average trip duration was unusually short or long for that community area, often because only a few trips were taken (e.g., in winter or soon after stations opened).
+
+*Copy, paste and run the code below in your R script to create the box plot for the community areas you selected. Copy the output plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Which community areas have the most outliers, and what might explain them?*
+
+```{r}
+#| label: fig-tripdurationselected
+#| fig-cap: Monthly Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas, June 2013 through August 2026
+#| echo: true
+
+# plot a box plot of average trip duration for the selected community areas
+fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
+```
+
 ## Trips by year and month for selected community areas
-*Run the code below to plot monthly trips starting in each of your selected community areas (@fig-tripsbyyearmonthselected). Copy the plot into slide 7 of your presentation and describe how ridership has changed over time in each community area. Do the trends differ across socioeconomic categories?*
+*Run the code below to plot monthly trips starting in each of your selected community areas (@fig-tripsbyyearmonthselected). Copy the plot into slide 7 of your presentation and describe how ridership has changed over time in each community area. Do the trends differ across community indicator quintiles? Lastly, how might you improve Divvy usage across lower ridership communities and the city of Chicago as a whole?*
 
 ```{r}
 #| label: fig-tripsbyyearmonthselected
@@ -971,19 +977,18 @@ selected_ca %>%
 fx_plot_trips_selected(trips_by_yearmonth_ca, selected_ca)
 ```
 
-## Average trip duration for selected community areas
-@fig-tripdurationselected uses the same kind of box plot as @fig-tripdurationbyyearmonth, but here each observation is one month's average trip duration (minutes per trip) for trips starting in a community area. Each box includes every month in which at least one trip started there, up to 159 months (June 2013 through August 2026), so community areas that received Divvy stations after 2013 have fewer months. Unlike the earlier figure, the whiskers extend only to the shortest and longest monthly averages within 1.5 times the interquartile range of the box. Months beyond the whiskers are plotted as individual points called outliers: months whose average trip duration was unusually short or long for that community area, often because only a few trips were taken (e.g., in winter or soon after stations opened).
+::: {.callout-note collapse="false"}
+## Bike Infrastructure Planning
 
-*Run the code below to create the box plot. Copy the plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Which community areas have the most outliers, and what might explain them? What might explain the differences between community areas?*
+https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/bike-program/existing-bike-network.html
 
-```{r}
-#| label: fig-tripdurationselected
-#| fig-cap: Monthly Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas, June 2013 through August 2026
-#| echo: true
+https://bicycleinfrastructuremanuals.com/
 
-# plot a box plot of average trip duration for the selected community areas
-fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
-```
+https://nacto.org/publication/urban-bikeway-design-guide/
+
+https://aashtojournal.transportation.org/aashto-releases-5th-edition-of-comprehensive-bicycle-guide/
+
+:::
 
 <!-- ::: {.callout-tip collapse="true"} -->
 <!-- ## VIDEO: Create custom map -->
