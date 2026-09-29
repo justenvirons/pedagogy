@@ -819,10 +819,13 @@ fx_summarise_ses_quintiles <- function(trips_by_yearmonth_by_ses) {
 fx_table_ses_quintiles <- function(trips_by_ses_quintile, ses_name = "Indicator") {
   trips_by_ses_quintile %>%
     datatable(class = 'cell-border stripe',
+              selection = "none", 
               rownames = FALSE,
               colnames = c(paste(ses_name, "Quintile"), "Total Population", "Trips (from)", "Trips (to)",
                            "Percent of Population", "Percent of Trips (from)", "Percent of Trips (to)"),
-              options = list(pageLength = 5)) %>%
+              options = list(searching = FALSE,
+                             lengthChange = FALSE,
+                             paging = FALSE)) %>%
     formatPercentage(c("tot_pop_pct", "fr_trips_pct", "to_trips_pct"), digits = 1) %>%
     formatRound(c("tot_pop", "fr_trips", "to_trips"), mark = ",", digits = 0)
 }
@@ -1002,7 +1005,7 @@ An announcement of the 5th edition of AASHTO's *Guide for the Development of Bic
 
 # References
 
-This exercise draws on several datasets published by the City of Chicago, the Chicago Department of Public Health and Divvy. Each is widely used by transportation planners, public health practitioners and researchers in Chicago, and each is worth understanding on its own terms.
+This exercise draws on several datasets published by the City of Chicago, the Chicago Department of Public Health and Divvy. Each is widely used by transportation planners, public health practitioners and researchers.
 
 **Divvy trip data.** Divvy is Chicago's bikeshare system, which launched on June 27, 2013. Each Divvy trip record includes the trip's start and end times and locations, along with details such as the rider type (member or casual). Trips from 2013 through 2019 were downloaded from the City of Chicago's Divvy Trips dataset [@chicago_divvytrips], and trips from 2020 onward from the monthly files on Divvy's system data page [@divvy_systemdata]. The more than 56 million trips were then summarized by date and by community area of trip origin and destination to create the summary tables used in this exercise.
 
@@ -1011,10 +1014,6 @@ This exercise draws on several datasets published by the City of Chicago, the Ch
 **Chicago community areas.** Trips are mapped and summarized by the city's 77 community areas [@chicago_communityareas], downloaded from the City of Chicago's data portal. Community area boundaries have remained largely unchanged for decades, which makes them a common, stable unit for comparing neighborhoods and tracking change over time.
 
 **Chicago Health Atlas.** The community indicators used in Steps 5 and 6 come from the Chicago Health Atlas [@chicago_healthatlas], which publishes hundreds of sociodemographic and public health indicators by community area, census tract and zip code. Each indicator's page on the Atlas describes its definition, units, data source and time period.
-
-**Basemap tiles.** The interactive maps in this exercise are built on CARTO's Positron basemap tiles [@carto_basemaps], a minimal, light-colored basemap designed to keep thematic data (such as the community area polygons and Divvy stations shown here) legible in the foreground.
-
-This exercise also points to supplementary readings that are not code inputs but provide background on bikesharing in Chicago and beyond.
 
 **Shared micromobility trends.** NACTO's *Half a Billion Trips on Shared Micromobility Since 2010* [@nacto_halfbillion] summarizes the growth of bikeshare and scooter share systems across North America, and is suggested as optional background reading before Step 1.
 
