@@ -508,6 +508,11 @@ rm(list=ls(pattern=apattern))
 
 ```
 
+## Divvy Stations
+```{r}
+divvy_stations <- read_json("https://gbfs.divvybikes.com/gbfs/2.3/gbfs.json")
+
+```
 
 
 # Save summary tables

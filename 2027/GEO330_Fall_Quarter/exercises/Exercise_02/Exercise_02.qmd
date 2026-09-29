@@ -33,6 +33,7 @@ library(leaflet) # interactive maps
 library(leaflet.extras) # map reset and full screen buttons
 library(data.table) # interactive tables
 library(DT) # data table format
+library(openxlsx)
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_02")
 
@@ -561,23 +562,7 @@ write.xlsx(trips_by_ses_quintile,
 :::
 
 # Step 6. Compare community areas across socioeconomic categories
-In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use your map from Step 5 (@fig-mapsesquintile) or the table below to choose them.
-
-```{r}
-#| label: tbl-sesquintilecommunityareas
-#| tbl-cap: Community Areas by Socioeconomic Quintile Category
-
-# list community areas by quintile category of the selected indicator
-community_areas_ses %>%
-  st_drop_geometry() %>%
-  select(comarea_id, comarea_name, ses_ntile) %>%
-  arrange(factor(ses_ntile, levels = c("Lowest", "Low", "Moderate", "High", "Highest")), comarea_name) %>%
-  datatable(class = 'cell-border stripe',
-            rownames = FALSE,
-            colnames = c("ID", "Community Area", "Quintile Category"),
-            options = list(pageLength = 5))
-
-```
+In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them.
 
 *Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the printed table to make sure each quintile category appears once.*
 
@@ -585,10 +570,10 @@ community_areas_ses %>%
 #| label: select community areas
 
 # EDIT HERE: replace with five community areas, one from each quintile category
-selected_communityareas <- c("Edison Park",
-                             "Lincoln Square",
-                             "Portage Park",
-                             "Humboldt Park",
+selected_communityareas <- c("Near South Side",
+                             "Near North Side",
+                             "Austin",
+                             "Bridgeport",
                              "Englewood")
 
 # look up selected community areas and their quintile categories
