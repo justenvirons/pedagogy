@@ -17,6 +17,7 @@ format:
     interlinespace: -0.75em
     embed-resources: false
 date: "2026-09-29"
+bibliography: references.bib
 editor_options:
     chunk_output_type: console
 ---
@@ -46,9 +47,9 @@ This project examines trends in Divvy bike sharing ridership over time (i.e., be
 
 ::: {.callout-note collapse="false"}
 ## Optional readings
-National Association of City Transportation Officials (NACTO) [Half a Billion Trips on Shared Micromobility Since 2010](https://nacto.org/publication/shared-micromobility-report-2020-2021/) report which summarizes changes in municipal bikeshare systems over the past decade along with emerging trends in micromobility programs.
+National Association of City Transportation Officials (NACTO) [Half a Billion Trips on Shared Micromobility Since 2010](https://nacto.org/publication/shared-micromobility-report-2020-2021/) report [@nacto_halfbillion], which summarizes changes in municipal bikeshare systems over the past decade along with emerging trends in micromobility programs.
 
-Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesharing in Chicago in a period of growth and expansion](https://las.depaul.edu/centers-and-institutes/chaddick-institute-for-metropolitan-development/research-and-publications/Documents/ChaddickInstitute_DivvyReport_Feb2018.pdf). This study, published in 2018, characterizes the three initial phases of Chicago’s Divvy system beginning with its initial rollout in 2013 through its first and second expansions, in 2015 and 2016, respectively, paying special attention to service and performance gaps.
+Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesharing in Chicago in a period of growth and expansion](https://las.depaul.edu/centers-and-institutes/chaddick-institute-for-metropolitan-development/research-and-publications/Documents/ChaddickInstitute_DivvyReport_Feb2018.pdf) [@chaddick_dimensionsofdivvy]. This study, published in 2018, characterizes the three initial phases of Chicago’s Divvy system beginning with its initial rollout in 2013 through its first and second expansions, in 2015 and 2016, respectively, paying special attention to service and performance gaps.
 :::
 
 # Step 1. Open Exercise #2 in Posit Cloud course workspace
@@ -87,7 +88,7 @@ load("data/Exercise_02.RData")
 # Step 2. Download presentation template
 *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx).*
 
-This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
+This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) [@chicago_divvytrips] and [Divvy bikeshare system data](https://divvybikes.com/system-data) [@divvy_systemdata] web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries [@chicago_communityareas] imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download) [@chicago_healthatlas]. *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
 
 <!-- ::: {.callout-tip collapse="true"} -->
 <!-- ## VIDEO: Step #2 -->
@@ -415,7 +416,7 @@ fx_map_trips_by_communityarea(trips_by_communityarea_ses, total_days = nrow(trip
 In this step we examine trends in Divvy usage across communities with different socioeconomic characteristics. For this step you will need to modify the below R code to create a custom map, plot and table to inform your analysis. An example analysis is summarized here. 
 
 ## Identify and map a community indicator
-First, identify one of the seven community indicators downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org) that you would like to use to explore the equity dimensions of Divvy ridership. Each indicator is stored as a column in the `community_areas_ses` table, which is included in the Divvy summary tables file you loaded in Step 2.
+First, identify one of the seven community indicators downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org) [@chicago_healthatlas] that you would like to use to explore the equity dimensions of Divvy ridership. Each indicator is stored as a column in the `community_areas_ses` table, which is included in the Divvy summary tables file you loaded in Step 2.
 
 | Column | Indicator | Health Atlas topic | Period |
 |:-------|:----------|:-------------------|:-------|
@@ -516,7 +517,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
 }
 ```
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations, grouped into numbered clusters when zoomed out. Use the layer control in the top right corner to turn the stations and community areas on and off. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs], grouped into numbered clusters when zoomed out. Use the layer control in the top right corner to turn the stations and community areas on and off. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 ```{r}
 #| label: fig-mapsesquintile
@@ -827,3 +828,26 @@ fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
 <!-- ## VIDEO: Create custom map -->
 <!-- {{< video videos/exercise_02_06.mp4 >}} -->
 <!-- ::: -->
+
+# References
+
+This exercise draws on several datasets published by the City of Chicago, the Chicago Department of Public Health and Divvy. Each is widely used by transportation planners, public health practitioners and researchers in Chicago, and each is worth understanding on its own terms.
+
+**Divvy trip data.** Divvy is Chicago's bikeshare system, which launched on June 27, 2013. Each Divvy trip record includes the trip's start and end times and locations, along with details such as the rider type (member or casual). Trips from 2013 through 2019 were downloaded from the City of Chicago's Divvy Trips dataset [@chicago_divvytrips], and trips from 2020 onward from the monthly files on Divvy's system data page [@divvy_systemdata]. The more than 56 million trips were then summarized by date and by community area of trip origin and destination to create the summary tables used in this exercise.
+
+**Divvy stations.** Station locations come from Divvy's General Bikeshare Feed Specification (GBFS) feed [@divvy_gbfs]. GBFS is an open data standard, maintained by MobilityData [@mobilitydata_gbfs], that bikeshare and other shared mobility systems use to publish information about their stations and vehicles. The station information feed lists each station's name, location and number of docks. Because the feed describes the system as it is today, the stations shown in Step 5 are current stations, not the stations that existed when earlier trips were taken.
+
+**Chicago community areas.** Trips are mapped and summarized by the city's 77 community areas [@chicago_communityareas], downloaded from the City of Chicago's data portal. Community area boundaries have remained largely unchanged for decades, which makes them a common, stable unit for comparing neighborhoods and tracking change over time.
+
+**Chicago Health Atlas.** The community indicators used in Steps 5 and 6 come from the Chicago Health Atlas [@chicago_healthatlas], which publishes hundreds of sociodemographic and public health indicators by community area, census tract and zip code. Each indicator's page on the Atlas describes its definition, units, data source and time period.
+
+**Basemap tiles.** The interactive maps in this exercise are built on CARTO's Positron basemap tiles [@carto_basemaps], a minimal, light-colored basemap designed to keep thematic data (such as the community area polygons and Divvy stations shown here) legible in the foreground.
+
+This exercise also points to supplementary readings that are not code inputs but provide background on bikesharing in Chicago and beyond.
+
+**Shared micromobility trends.** NACTO's *Half a Billion Trips on Shared Micromobility Since 2010* [@nacto_halfbillion] summarizes the growth of bikeshare and scooter share systems across North America, and is suggested as optional background reading before Step 1.
+
+**Divvy's growth and expansion.** The Chaddick Institute's *Dimensions of Divvy* [@chaddick_dimensionsofdivvy] characterizes Divvy's initial rollout in 2013 and its expansions in 2015 and 2016, paying special attention to service and performance gaps across Chicago's neighborhoods.
+
+::: {#refs}
+:::
