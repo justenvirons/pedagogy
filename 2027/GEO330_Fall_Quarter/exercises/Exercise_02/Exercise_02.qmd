@@ -151,14 +151,14 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
 
 ```{r}
 #| label: fig-cumulativetrips
-#| echo: true
+#| echo: false
 #| fig-cap: Cumulative Divvy Trips, June 2013 through August 2026
 
 # plot cumulative trips by date
 fx_plot_cumulative_trips(trips_by_date)
 ```
 
-Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
+Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, copy the below figure and note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot trips by year and month
@@ -192,14 +192,14 @@ fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
 
 ```{r}
 #| label: fig-tripsbyyearmonth
-#| echo: true
+#| echo: false
 #| fig-cap: Divvy Trips by Year and Month, June 2013 through August 2026
 
 # plot trips by year and month
 fx_plot_trips_by_yearmonth(trips_by_yearmonth)
 ```
 
-Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). Each point is one day, with weekend days (Saturday and Sunday) shown in a darker blue than weekdays. *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
+Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). Each point is one day, with weekend days (Saturday and Sunday) shown in a darker blue than weekdays. *In slide 3 of your presentation, copy the below figure and note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership?*
 
 ```{r}
 #| label: plot trips by date
@@ -248,7 +248,7 @@ fx_plot_trips_by_date <- function(trips_by_date) {
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_trips_by_date")) %>%
     layout(
-      xaxis = list(title = "Date"),
+      xaxis = list(title = ""),
       yaxis = list(title = "Daily Divvy Trips"),
       legend = list(
         font = list(size = 10),
