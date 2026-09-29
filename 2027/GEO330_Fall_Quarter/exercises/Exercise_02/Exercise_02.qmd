@@ -96,7 +96,7 @@ This exercise makes use of data from a variety of sources. Custom summary tables
 <!-- ::: -->
 
 # Step 3. Explore systemwide trends in Divvy trips over time
-Over the past decade the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. 
+Over the past decade the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. Dashed vertical lines mark the dates on which the system reached 10, 20, 30, 40 and 50 million trips.
 
 *In slide 1 of your presentation, copy and paste the plot below and describe the cumulative growth of Divvy's systemwide ridership over the past 14 years. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take for the Divvy system to log 20, 30, 40 and 50 million trips?*
 
@@ -106,8 +106,31 @@ Over the past decade the Divvy system has logged over 56 million trips. @fig-cum
 #| code-fold: true
 #| code-summary: "Show the cumulative plotting function"
 
-# function for plotting cumulative trips by date
-fx_plot_cumulative_trips <- function(trips_by_date) {
+# function for plotting cumulative trips by date, with vertical lines marking the
+# dates the system reached each milestone (10, 20, 30, 40 and 50 million trips)
+fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6, by = 10e6)) {
+
+  # first date on which cumulative trips reached each milestone; milestones not
+  # yet reached are left out
+  trips_by_date <- arrange(trips_by_date, date)
+  milestone_rows <- sapply(milestones, function(m) match(TRUE, trips_by_date$trips_cumul >= m))
+  milestone_dates <- tibble(trips = milestones,
+                            date = trips_by_date$date[milestone_rows]) %>%
+    drop_na(date) %>%
+    mutate(label = paste0(trips / 1e6, " million<br>",
+                          month.abb[month(date)], " ", day(date), ", ", year(date)))
+
+  # dashed vertical line and label for each milestone
+  milestone_lines <- lapply(milestone_dates$date, function(d)
+    list(type = "line", xref = "x", yref = "paper",
+         x0 = d, x1 = d, y0 = 0, y1 = 1,
+         line = list(color = "grey", width = 1, dash = "dash")))
+  milestone_labels <- lapply(seq_len(nrow(milestone_dates)), function(i)
+    list(x = milestone_dates$date[i], y = 1, xref = "x", yref = "paper",
+         text = milestone_dates$label[i], showarrow = FALSE,
+         xanchor = "right", yanchor = "top", align = "right",
+         font = list(size = 10, color = "dimgrey")))
+
   plot_ly(data = trips_by_date,
           x = ~date,
           y = ~trips_cumul,
@@ -121,6 +144,8 @@ fx_plot_cumulative_trips <- function(trips_by_date) {
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_cumulative_trips_by_date")) %>%
     layout(
+      shapes = milestone_lines,
+      annotations = milestone_labels,
       xaxis = list(title = "Date"),
       yaxis = list(title = "Cumulative Divvy Trips"),
       legend = list(
@@ -182,7 +207,7 @@ fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
 fx_plot_trips_by_yearmonth(trips_by_yearmonth)
 ```
 
-Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
+Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). Each point is one day, with weekend days (Saturday and Sunday) shown in a darker blue than weekdays. *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot trips by date
@@ -190,17 +215,42 @@ Lastly, let's examine daily patterns of Divvy ridership over the past decade (@f
 #| code-fold: true
 #| code-summary: "Show the trips by date plotting function"
 
-# function for plotting trips by date
+# function for plotting trips by date; each day is a point, with weekend days
+# (Saturday and Sunday) in a darker blue than weekdays
 fx_plot_trips_by_date <- function(trips_by_date) {
-  plot_ly(data = trips_by_date,
-          x = ~date,
-          y = ~trips,
-          type = 'scatter',
-          mode = 'lines',
-          line = list(color = "lightblue",
-                      width = 0.5),
-          name = 'Daily trips',
-          hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
+  trips_by_date <- trips_by_date %>%
+    mutate(day_type = if_else(wday(date) %in% c(1, 7), "Weekend", "Weekday"), # Sunday = 1, Saturday = 7
+           day_name = as.character(wday(date, label = TRUE, abbr = FALSE)))
+
+  plot_ly() %>%
+    # thin line connecting all days, for context
+    add_trace(data = trips_by_date,
+              x = ~date,
+              y = ~trips,
+              type = 'scatter',
+              mode = 'lines',
+              line = list(color = "lightblue",
+                          width = 0.5),
+              hoverinfo = 'skip',
+              showlegend = FALSE) %>%
+    add_trace(data = filter(trips_by_date, day_type == "Weekday"),
+              x = ~date,
+              y = ~trips,
+              type = 'scatter',
+              mode = 'markers',
+              marker = list(color = "lightblue", size = 3),
+              name = 'Weekday trips',
+              text = ~day_name,
+              hovertemplate = '%{text} trips: %{y:,}<extra></extra>') %>%
+    add_trace(data = filter(trips_by_date, day_type == "Weekend"),
+              x = ~date,
+              y = ~trips,
+              type = 'scatter',
+              mode = 'markers',
+              marker = list(color = "#08519c", size = 3),
+              name = 'Weekend trips (Saturday and Sunday)',
+              text = ~day_name,
+              hovertemplate = '%{text} trips: %{y:,}<extra></extra>') %>%
     config(displaylogo = FALSE,
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_trips_by_date")) %>%
