@@ -566,7 +566,7 @@ Follow the topic links for a full description of each indicator, including its u
 
 The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. Use the layer control in the top left corner to turn the stations off or to show Divvy docks grouped into clusters, where each cluster shows the total number of docks at the stations it contains, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. When the map opens, Divvy docks are grouped into clusters, where each cluster shows the total number of docks at the stations it contains. Use the layer control in the top left corner to turn the dock clusters off or to show the individual stations, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 
 ```{r}
@@ -585,8 +585,8 @@ fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
 }
 
 # function for adding Divvy stations as two layers: every station as a single point
-# (shown when the map opens) and docks grouped into clusters that show the total
-# number of docks they contain (hidden). Points without a reported capacity are
+# (hidden when the map opens) and docks grouped into clusters that show the total
+# number of docks they contain (shown when the map opens). Points without a reported capacity are
 # likely single, free-floating bikes rather than stations, so they are left out of
 # the dock clusters. Stations are drawn in their own pane, above the community areas
 fx_add_station_layers <- function(map, divvy_stations) {
@@ -657,7 +657,7 @@ fx_add_station_layers <- function(map, divvy_stations) {
         singleMarkerMode = TRUE, # single stations also show their docks
         iconCreateFunction = dock_icon),
       group = "Divvy Docks (clustered)") %>%
-    hideGroup("Divvy Docks (clustered)")
+    hideGroup("Divvy Stations")
 }
 
 # function for mapping the selected indicator by community area (quintiles) with
