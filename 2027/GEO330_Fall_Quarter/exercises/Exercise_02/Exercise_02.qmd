@@ -425,9 +425,8 @@ fx_quintile_pal <- function(values) {
 
 # function for adding one community area layer and legend per measure, plus a
 # dropdown list (top right) that shows one measure at a time; the first measure
-# is shown when the map opens, and "None" (when none_option = TRUE) leaves only
-# the boundaries
-fx_add_measure_layers <- function(map, map_data, measures, labels, none_option = TRUE) {
+# is shown when the map opens
+fx_add_measure_layers <- function(map, map_data, measures, labels) {
   for (i in seq_along(measures)) {
     values <- measures[[i]]
     pal <- fx_quintile_pal(values)
@@ -473,7 +472,7 @@ fx_add_measure_layers <- function(map, map_data, measures, labels, none_option =
           div.style.padding = '4px 6px';
           div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
           var select = L.DomUtil.create('select', '', div);
-          groups.concat(data.none_option ? ['None'] : []).forEach(function(g, j) {
+          groups.forEach(function(g, j) {
             var option = L.DomUtil.create('option', '', select);
             option.value = j;
             option.text = g;
@@ -485,7 +484,7 @@ fx_add_measure_layers <- function(map, map_data, measures, labels, none_option =
         };
         control.addTo(map);
         show(0);
-      }", data = list(groups = names(measures), none_option = none_option))
+      }", data = list(groups = names(measures)))
 }
 
 # function for creating the base map shared by the community area maps: basemap,
@@ -519,8 +518,7 @@ fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days
   fx_basemap(trips_by_communityarea_ses) %>%
     fx_add_measure_layers(trips_by_communityarea_ses,
                           measures = measures,
-                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days),
-                          none_option = FALSE)
+                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days))
 }
 ```
 
@@ -566,7 +564,7 @@ Follow the topic links for a full description of each indicator, including its u
 
 The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. When the map opens, Divvy docks are grouped into clusters, where each cluster shows the total number of docks at the stations it contains. Use the layer control in the top left corner to turn the dock clusters off or to show the individual stations, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. When the map opens, Divvy docks are grouped into clusters, where each cluster shows the total number of docks at the stations it contains. Use the layer control in the top left corner to turn your indicator and the dock clusters on and off or to show the individual stations. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 
 ```{r}
@@ -661,19 +659,30 @@ fx_add_station_layers <- function(map, divvy_stations) {
 }
 
 # function for mapping the selected indicator by community area (quintiles) with
-# Divvy stations; the dropdown list switches to any measure in the hover labels,
-# and the layer control turns the stations and dock clusters on and off
+# Divvy stations; the layer control turns the indicator (and its legend), the
+# stations and the dock clusters on and off
 fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
-  measures <- c(setNames(list(trips_by_communityarea_ses$ses_value), ses_name),
-                fx_communityarea_measures(trips_by_communityarea_ses, total_days))
+  map_pal <- fx_quintile_pal(trips_by_communityarea_ses$ses_value)
 
   fx_basemap(trips_by_communityarea_ses) %>%
-    fx_add_measure_layers(trips_by_communityarea_ses,
-                          measures = measures,
-                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name)) %>%
+    addPolygons(
+      fillColor = ~map_pal(ses_value),
+      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name),
+      weight = 2,
+      opacity = 1,
+      color = "white",
+      dashArray = "3",
+      fillOpacity = 0.7,
+      group = ses_name) %>%
+    addLegend("bottomleft",
+              pal = map_pal,
+              values = ~ses_value,
+              title = paste0(ses_name, "<br>Quintiles"),
+              opacity = 1,
+              group = ses_name) %>%
     fx_add_station_layers(divvy_stations) %>%
     addLayersControl(
-      overlayGroups = c("Divvy Stations", "Divvy Docks (clustered)"),
+      overlayGroups = c(ses_name, "Divvy Stations", "Divvy Docks (clustered)"),
       options = layersControlOptions(collapsed = FALSE, position = "topleft"))
 }
 ```
