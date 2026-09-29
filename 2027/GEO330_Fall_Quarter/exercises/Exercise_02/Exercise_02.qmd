@@ -312,6 +312,13 @@ leaflet(data = trips_by_communityarea_ses) %>%
       )) %>% 
   addResetMapButton() %>%
   addFullscreenControl() %>%
+  # community area boundaries for reference, beneath the other layers
+  addPolygons(
+    data = community_areas_ses,
+    fill = FALSE,
+    color = "#555",
+    weight = 1,
+    opacity = 1) %>%
   addPolygons(
     fillColor = ~map_pal(fr_trips_cumul),
     label = communityarea_labels,
@@ -431,6 +438,13 @@ leaflet(data = trips_by_communityarea_ses) %>%
       )) %>% 
   addResetMapButton() %>%
   addFullscreenControl() %>%
+  # community area boundaries for reference, beneath the other layers
+  addPolygons(
+    data = community_areas_ses,
+    fill = FALSE,
+    color = "#555",
+    weight = 1,
+    opacity = 1) %>%
   addPolygons(
     fillColor = ~map_pal(ses_value),
     label = communityarea_labels,
@@ -452,6 +466,7 @@ leaflet(data = trips_by_communityarea_ses) %>%
     # clusters drawn as steelblue circles showing the number of stations,
     # replacing the default green, yellow and orange size classes
     clusterOptions = markerClusterOptions(
+      showCoverageOnHover = FALSE, # no outline of the cluster's area on hover
       iconCreateFunction = htmlwidgets::JS("
         function(cluster) {
           return new L.DivIcon({
