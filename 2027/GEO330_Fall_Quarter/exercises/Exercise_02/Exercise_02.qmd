@@ -115,135 +115,158 @@ community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.ge
 :::
 
 # Step 3. Explore systemwide trends in Divvy trips over time
+The R functions below create the four figures in this step. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how each figure is built. Click "Show the systemwide trip plotting functions" below to expand it. To recreate the figures in your own script, copy and run the functions in your Exercise_02.R script, then run the line of code below each figure.
+
+```{r}
+#| label: define systemwide trip plotting functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the systemwide trip plotting functions"
+
+# function for plotting cumulative trips by date
+fx_plot_cumulative_trips <- function(trips_by_date) {
+  plot_ly(data = trips_by_date,
+          x = ~date,
+          y = ~trips_cumul,
+          name = 'Trips',
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = 'lightblue'),
+          stackgroup = 'one',
+          hovertemplate = 'Cumulative trips: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = "Date"),
+      yaxis = list(title = "Cumulative Divvy Trips"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for plotting trips by year and month
+fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
+  plot_ly(data = trips_by_yearmonth,
+          x = ~yearmonth,
+          y = ~trips,
+          type = 'bar',
+          name = 'trips',
+          marker = list(color = 'lightblue'),
+          hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Monthly Divvy Trips"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for plotting trips by day
+fx_plot_trips_by_date <- function(trips_by_date) {
+  plot_ly(data = trips_by_date,
+          x = ~date,
+          y = ~trips,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "lightblue",
+                      width = 0.5),
+          name = 'trips',
+          hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Daily Divvy Trips"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for plotting average trip duration by year and month: a box of daily
+# averages for each month and a line of each month's overall average
+fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmonth) {
+  plot_ly() %>%
+    add_trace(data = duration_by_date %>%
+                mutate(yearmonth = floor_date(date, "month")),
+              x = ~yearmonth,
+              y = ~mins_per_trip,
+              type = 'box',
+              boxpoints = FALSE, # whiskers extend to min and max
+              name = 'Daily average',
+              fillcolor = 'lightblue',
+              line = list(color = 'steelblue', width = 1)) %>%
+    add_trace(data = duration_by_yearmonth,
+              x = ~yearmonth,
+              y = ~mins_per_trip,
+              type = 'scatter',
+              mode = 'lines',
+              name = 'Monthly average',
+              line = list(color = 'darkred', width = 1.5),
+              hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1))
+}
+```
+
 Over the past decade the Divvy system has logged over 45 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. 
 
 *In slide 1 of your presentation, describe the cumulative growth of Divvy's systemwide ridership over the past decade. How many trips have been logged on Divvy system since its initial rollout? On what date did the system surpass 10 million trips? How long did it take before Divvy logged the next 10 million trips?*
 
 ```{r}
 #| label: fig-cumulativetrips
-#| eval: true
-#| echo: false
+#| echo: true
 #| fig-cap: Cumulative Divvy Trips, June 2013 through August 2026
- 
-plot_ly(data = trips_by_date, 
-        x = ~date, 
-        y = ~trips_cumul,
-        name = 'Trips',
-        type = 'scatter', 
-        mode = 'lines', 
-        line = list(color = 'lightblue'),
-        stackgroup = 'one', 
-        hovertemplate = 'Cumulative trips: %{y:,}<extra></extra>') %>%
-        config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-        layout(
-      xaxis = list(title = "Date"), 
-      yaxis = list(title = "Cumulative Divvy Trips"),
-      legend=list(
-        font = list(
-          size = 10
-        ),
-        orientation = "h", 
-        xanchor="center", 
-        x = 0.5, y=-0.1),
-      hovermode = "x unified")
 
+# plot cumulative trips by date
+fx_plot_cumulative_trips(trips_by_date)
 ```
 
 Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, note any patterns and/or variations you see in monthly ridership. What factors do you feel explain any differences in ridership by month? What other non-seasonal factors do you feel may have influenced ridership?  Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: fig-tripsbyyearmonth
-#| echo: false
+#| echo: true
 #| fig-cap: Divvy Trips by Year and Month, June 2013 through August 2026
 
-plot_ly(data = trips_by_yearmonth,
-        x = ~yearmonth,
-        y = ~trips,
-        type = 'bar',
-        name = 'trips',
-        marker = list(color = 'lightblue'),
-        hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
-      config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-      layout(
-      xaxis = list(title = ""), 
-      yaxis = list(title = "Monthly Divvy Trips"),
-      legend=list(
-        font = list(
-          size = 10
-        ),
-        orientation = "h", 
-        xanchor="center", 
-        x = 0.5, y=-0.1),
-      hovermode = "x unified")
-
+# plot trips by year and month
+fx_plot_trips_by_yearmonth(trips_by_yearmonth)
 ```
 
 Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). *In slide 3 of your presentation, note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership? Again, support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: fig-tripsbydate
-#| echo: false
+#| echo: true
 #| fig-cap: Divvy Trips by Day, June 2013 through August 2026
 
-plot_ly(data = trips_by_date,
-        x = ~date,
-        y = ~trips,
-        type = 'scatter', 
-        mode = 'lines',
-        line = list(color = "lightblue",
-                    width = 0.5),
-        name = 'trips',
-        hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
-      config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-      layout(
-      xaxis = list(title = ""), 
-      yaxis = list(title = "Daily Divvy Trips"),
-      legend=list(
-        font = list(
-          size = 10
-        ),
-        orientation = "h", 
-        xanchor="center", 
-        x = 0.5, y=-0.1),
-      hovermode = "x unified")
-
+# plot trips by day
+fx_plot_trips_by_date(trips_by_date)
 ```
 
 Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the daily average trip durations (in minutes per trip) in one month, so each box is based on one observation per day: about 30 observations in a full month (June 2013 has only four, since Divvy launched on June 27). The box spans the middle half of those daily averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge), so it holds about 15 of a month's days. This range is called the interquartile range (IQR). The line inside the box marks the median: half of the month's days had a shorter average trip and half a longer one. In this figure the whiskers extend to the shortest and longest daily averages in each month, and the red line shows each month's overall average (all minutes divided by all trips). Hover over a box to see its values. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
 
 ```{r}
 #| label: fig-tripdurationbyyearmonth
-#| echo: false
+#| echo: true
 #| fig-cap: Average Divvy Trip Duration (Minutes per Trip) by Year and Month, June 2013 through August 2026
 
-plot_ly() %>%
-  add_trace(data = duration_by_date %>%
-              mutate(yearmonth = floor_date(date, "month")),
-            x = ~yearmonth,
-            y = ~mins_per_trip,
-            type = 'box',
-            boxpoints = FALSE, # whiskers extend to min and max
-            name = 'Daily average',
-            fillcolor = 'lightblue',
-            line = list(color = 'steelblue', width = 1)) %>%
-  add_trace(data = duration_by_yearmonth,
-            x = ~yearmonth,
-            y = ~mins_per_trip,
-            type = 'scatter',
-            mode = 'lines',
-            name = 'Monthly average',
-            line = list(color = 'darkred', width = 1.5),
-            hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
-  config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-  layout(
-    xaxis = list(title = ""),
-    yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
-    legend = list(
-      font = list(size = 10),
-      orientation = "h",
-      xanchor = "center",
-      x = 0.5, y = -0.1))
-
+# plot average trip duration by year and month
+fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 ```
 
 # Step 4. Explore total and average trips by community area
@@ -251,88 +274,124 @@ In this step we examine variations in Divvy trip patterns across the city by com
 
 *In slide 4 of your presentation, note any patterns and/or variations you see in total ridership by community area. What factors do you feel explain differences in total and daily ridership? Support your findings by referencing statistics from the figure.*
 
+The R functions below carry out the steps behind @fig-frtripsbycommunityarea: they summarize total trips and average trip durations by community area and map them. The map in Step 5 uses the same functions. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the community area trip mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
+
+```{r}
+#| label: define community area trip mapping functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the community area trip mapping functions"
+
+# function for summarizing total (cumulative) trips and average trip duration
+# (minutes per trip) by community area over the study period
+fx_summarise_communityarea_trips <- function(community_areas_ses, trips_by_yearmonth_ca, duration_by_yearmonth_ca) {
+
+  # cumulative trips as of the latest month
+  trips_by_communityarea <- trips_by_yearmonth_ca %>%
+    drop_na(yearmonth) %>%
+    filter(yearmonth == max(yearmonth))
+
+  # average trip duration (minutes per trip) over the study period
+  duration_by_communityarea <- duration_by_yearmonth_ca %>%
+    group_by(comarea_id) %>%
+    summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
+              to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
+
+  # join trips and durations to community areas
+  community_areas_ses %>%
+    left_join(trips_by_communityarea, by = "comarea_id") %>%
+    left_join(duration_by_communityarea, by = "comarea_id") %>%
+    select(-starts_with("yearmonth"))
+}
+
+# function for creating community area hover labels; the selected indicator's
+# value and quintile category are added when ses_name is given (Step 5)
+fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_name = NULL) {
+  x <- trips_by_communityarea_ses
+  labels <- sprintf(
+    "<strong>%s</strong><br/>
+    <i>Trips (from):</i> %s<br/>
+    <i>Trips (to):</i> %s<br/>
+    <i>Avg daily trips (from):</i> %0.1f<br/>
+    <i>Avg daily trips (to):</i> %0.1f<br/>
+    <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
+    <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
+    <i>Avg trip duration (from):</i> %0.1f min<br/>
+    <i>Avg trip duration (to):</i> %0.1f min<br/>",
+    x$comarea_name,
+    prettyNum(x$fr_trips_cumul, big.mark = ","),
+    prettyNum(x$to_trips_cumul, big.mark = ","),
+    x$fr_trips_cumul/total_days,
+    x$to_trips_cumul/total_days,
+    x$fr_trips_cumul/total_days/x$population*1000,
+    x$to_trips_cumul/total_days/x$population*1000,
+    x$fr_mins_per_trip,
+    x$to_mins_per_trip)
+  if (!is.null(ses_name)) {
+    labels <- paste0(labels,
+                     sprintf("<i>%s:</i> %s (%s)<br/>",
+                             ses_name,
+                             formatC(x$ses_value, format = "f", digits = 1, big.mark = ","),
+                             x$ses_ntile))
+  }
+  lapply(labels, htmltools::HTML)
+}
+
+# function for creating the base map shared by the community area maps: basemap,
+# reset and full screen buttons and community area boundaries for reference
+# (added first, so they are drawn beneath the other layers)
+fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
+  leaflet(data = map_data) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      carto_api_key
+    )) %>%
+    addResetMapButton() %>%
+    addFullscreenControl() %>%
+    addPolygons(
+      fill = FALSE,
+      color = "#555",
+      weight = 1,
+      opacity = 1)
+}
+
+# function for mapping total trips (from) by community area (quintiles)
+fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days) {
+
+  # color palette
+  map_pal <- colorQuantile(palette = "RdYlBu",
+                           domain = trips_by_communityarea_ses$fr_trips_cumul,
+                           n = 5,
+                           reverse = TRUE)
+
+  # interactive map
+  fx_basemap(trips_by_communityarea_ses) %>%
+    addPolygons(
+      fillColor = ~map_pal(fr_trips_cumul),
+      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days),
+      weight = 2,
+      opacity = 1,
+      color = "white",
+      dashArray = "3",
+      fillOpacity = 0.7) %>%
+    addLegend("bottomleft",
+              pal = map_pal,
+              values = ~fr_trips_cumul,
+              title = "Divvy Trips (Quintiles)",
+              opacity = 1)
+}
+```
+
 ```{r}
 #| label: fig-frtripsbycommunityarea
 #| fig-cap: Total Divvy Trips by Community Area (Quintile Categorization)
-#| echo: false
+#| echo: true
 
-# create total trips (over study period) by community area dataset
-trips_by_communityarea <- trips_by_yearmonth_ca %>%
-  drop_na(yearmonth) %>%
-  filter(yearmonth == max(yearmonth))
-
-# average trip duration (minutes per trip) by community area over study period
-duration_by_communityarea <- duration_by_yearmonth_ca %>%
-  group_by(comarea_id) %>%
-  summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
-            to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
-
-# join trips to community areas
-trips_by_communityarea_ses <- community_areas_ses %>%
-  left_join(trips_by_communityarea, by="comarea_id") %>%
-  left_join(duration_by_communityarea, by="comarea_id") %>%
-  select(-starts_with("yearmonth"))
-
-# total days in dataset
-total_days <- as.integer(count(trips_by_date))
-
-# create interactive map using leaflet
-# color palette
-map_pal <- colorQuantile(palette =  "RdYlBu", # EDIT HERE 
-                   domain = trips_by_communityarea_ses$fr_trips_cumul,
-                   n=5,
-                   reverse=TRUE)
-
-# hover labels
-communityarea_labels <- sprintf(
-  "<strong>%s</strong><br/>
-  <i>Trips (from):</i> %s<br/>
-  <i>Trips (to):</i> %s<br/>
-  <i>Avg daily trips (from):</i> %0.1f<br/>
-  <i>Avg daily trips (to):</i> %0.1f<br/>
-  <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
-  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
-  <i>Avg trip duration (from):</i> %0.1f min<br/>
-  <i>Avg trip duration (to):</i> %0.1f min<br/>",
-  trips_by_communityarea_ses$comarea_name,
-  prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
-  prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
-  trips_by_communityarea_ses$fr_trips_cumul/total_days,
-  trips_by_communityarea_ses$to_trips_cumul/total_days,
-  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
-  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
-  trips_by_communityarea_ses$fr_mins_per_trip,
-  trips_by_communityarea_ses$to_mins_per_trip) %>%
-lapply(htmltools::HTML)
-
-# interactive map
-leaflet(data = trips_by_communityarea_ses) %>%
-  addTiles(urlTemplate = paste0(
-        "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-        CARTO_API_KEY
-      )) %>% 
-  addResetMapButton() %>%
-  addFullscreenControl() %>%
-  # community area boundaries for reference, beneath the other layers
-  addPolygons(
-    data = community_areas_ses,
-    fill = FALSE,
-    color = "#555",
-    weight = 1,
-    opacity = 1) %>%
-  addPolygons(
-    fillColor = ~map_pal(fr_trips_cumul),
-    label = communityarea_labels,
-    weight = 2,
-    opacity = 1,
-    color = "white",
-    dashArray = "3",
-    fillOpacity = 0.7) %>%
-  addLegend("bottomleft", 
-            pal = map_pal, 
-            values = ~fr_trips_cumul,
-            title = "Divvy Trips (Quintiles)",
-            opacity = 1)
+# summarize trips by community area and map total trips
+trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_ses,
+                                                               trips_by_yearmonth_ca,
+                                                               duration_by_yearmonth_ca)
+fx_map_trips_by_communityarea(trips_by_communityarea_ses, total_days = nrow(trips_by_date))
 ```
 
 # Step 5. Explore trends by socioeconomic status
@@ -353,139 +412,108 @@ First, identify one of the seven community indicators downloaded from the [Chica
 
 Follow the topic links for a full description of each indicator, including its units and data source. Community areas are grouped into five quintile categories (Lowest, Low, Moderate, High and Highest) of the indicator's values. Before interpreting your results, note whether higher values of your indicator signal more or less advantaged conditions (e.g., a higher poverty rate or social vulnerability index signals less advantaged conditions).
 
+The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
+
+```{r}
+#| label: define indicator mapping functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the indicator mapping functions"
+
+# function for adding the selected indicator's values (ses_value) and quintile
+# categories (ses_ntile) to community areas
+fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
+  quintile_labels <- c("Lowest", "Low", "Moderate", "High", "Highest")
+  community_areas_ses %>%
+    mutate(ses_value = .data[[ses_column]],
+           ses_ntile = quintile_labels[ntile(ses_value, 5)])
+}
+
+# function for mapping the selected indicator by community area (quintiles) with
+# Divvy stations; a layer control turns the community areas and stations on and off
+fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
+
+  # color palette
+  map_pal <- colorQuantile(palette = "RdYlBu",
+                           domain = trips_by_communityarea_ses$ses_value,
+                           n = 5,
+                           reverse = TRUE)
+
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s</strong><br/>
+    <i>Docks:</i> %s<br/>
+    <i>Community area:</i> %s",
+    divvy_stations$name,
+    divvy_stations$capacity,
+    coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
+    lapply(htmltools::HTML)
+
+  # interactive map
+  fx_basemap(trips_by_communityarea_ses) %>%
+    addPolygons(
+      fillColor = ~map_pal(ses_value),
+      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name),
+      weight = 2,
+      opacity = 1,
+      color = "white",
+      dashArray = "3",
+      fillOpacity = 0.7,
+      group = "Community Areas") %>%
+    # stations are grouped into numbered clusters when zoomed out
+    addCircleMarkers(
+      data = divvy_stations,
+      radius = 5,
+      color = "#fff",
+      weight = 1,
+      fillColor = "steelblue",
+      fillOpacity = 0.9,
+      label = station_labels,
+      # clusters drawn as steelblue circles showing the number of stations,
+      # replacing the default green, yellow and orange size classes
+      clusterOptions = markerClusterOptions(
+        showCoverageOnHover = FALSE, # no outline of the cluster's area on hover
+        iconCreateFunction = htmlwidgets::JS("
+          function(cluster) {
+            return new L.DivIcon({
+              html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: 36px; height: 36px; line-height: 32px; text-align: center;\">' + cluster.getChildCount() + '</div>',
+              className: '',
+              iconSize: new L.Point(36, 36)
+            });
+          }")),
+      group = "Divvy Stations") %>%
+    addLegend("bottomleft",
+              pal = map_pal,
+              values = ~ses_value,
+              title = paste0(ses_name, " Quintiles"),
+              opacity = 1,
+              group = "Community Areas") %>%
+    addLayersControl(
+      overlayGroups = c("Community Areas", "Divvy Stations"),
+      options = layersControlOptions(collapsed = FALSE))
+}
+```
+
 *After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations, grouped into numbered clusters when zoomed out. Use the layer control in the top right corner to turn the stations and community areas on and off. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 ```{r}
 #| label: fig-mapsesquintile
 #| fig-cap: Socioeconomic Indicator by Community Area (Quintile Categorization)
+#| echo: true
 
 # Edit the following two lines with the selected indicator's name and column
 ses_name <- "Poverty" # EDIT HERE: indicator name used in map labels and legend
 ses_column <- "poverty" # EDIT HERE: population, SVI, poverty, inactivity, mortality, transit or violence
 
 # add the selected indicator's values and quintile categories to community areas
-quintile_labels <- c("Lowest", "Low", "Moderate", "High", "Highest")
-community_areas_ses <- community_areas_ses %>%
-  mutate(ses_value = .data[[ses_column]],
-         ses_ntile = quintile_labels[ntile(ses_value, 5)])
+community_areas_ses <- fx_add_ses_quintiles(community_areas_ses, ses_column)
 
-# create total trips (over study period) by community area dataset
-trips_by_communityarea <- trips_by_yearmonth_ca %>%
-  drop_na(yearmonth) %>%
-  filter(yearmonth == max(yearmonth))
-
-# average trip duration (minutes per trip) by community area over study period
-duration_by_communityarea <- duration_by_yearmonth_ca %>%
-  group_by(comarea_id) %>%
-  summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
-            to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
-
-# join trips to community areas with ses attributes
-trips_by_communityarea_ses <- community_areas_ses %>%
-  left_join(trips_by_communityarea, by="comarea_id") %>%
-  left_join(duration_by_communityarea, by="comarea_id") %>%
-  select(-starts_with("yearmonth"))
-
-# return total days included in dataset
-total_days <- as.integer(count(trips_by_date))
-
-# create interactive map using leaflet
-# color palette
-map_pal <- colorQuantile(palette =  "RdYlBu", 
-                   domain = trips_by_communityarea_ses$ses_value,
-                   n=5,
-                   reverse=TRUE)
-
-# hover labels
-communityarea_labels <- sprintf(
-  paste0("<strong>%s</strong><br/>
-  <i>Trips (from):</i> %s<br/>
-  <i>Trips (to):</i> %s<br/>
-  <i>Avg daily trips (from):</i> %0.1f<br/>
-  <i>Avg daily trips (to):</i> %0.1f<br/>
-  <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
-  <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
-  <i>Avg trip duration (from):</i> %0.1f min<br/>
-  <i>Avg trip duration (to):</i> %0.1f min<br/><i>",
-  ses_name,":</i> %s (%s)<br/>"),
-  trips_by_communityarea_ses$comarea_name,
-  prettyNum(trips_by_communityarea_ses$fr_trips_cumul, big.mark=","),
-  prettyNum(trips_by_communityarea_ses$to_trips_cumul, big.mark=","),
-  trips_by_communityarea_ses$fr_trips_cumul/total_days,
-  trips_by_communityarea_ses$to_trips_cumul/total_days,
-  trips_by_communityarea_ses$fr_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
-  trips_by_communityarea_ses$to_trips_cumul/total_days/trips_by_communityarea_ses$population*1000,
-  trips_by_communityarea_ses$fr_mins_per_trip,
-  trips_by_communityarea_ses$to_mins_per_trip,
-  formatC(trips_by_communityarea_ses$ses_value, format = "f", digits = 1, big.mark = ","),
-  trips_by_communityarea_ses$ses_ntile) %>%
-lapply(htmltools::HTML)
-
-# station hover labels
-station_labels <- sprintf(
-  "<strong>%s</strong><br/>
-  <i>Docks:</i> %s<br/>
-  <i>Community area:</i> %s",
-  divvy_stations$name,
-  divvy_stations$capacity,
-  coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
-lapply(htmltools::HTML)
-
-# interactive map
-leaflet(data = trips_by_communityarea_ses) %>%
-  addTiles(urlTemplate = paste0(
-        "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-        CARTO_API_KEY
-      )) %>% 
-  addResetMapButton() %>%
-  addFullscreenControl() %>%
-  # community area boundaries for reference, beneath the other layers
-  addPolygons(
-    data = community_areas_ses,
-    fill = FALSE,
-    color = "#555",
-    weight = 1,
-    opacity = 1) %>%
-  addPolygons(
-    fillColor = ~map_pal(ses_value),
-    label = communityarea_labels,
-    weight = 2,
-    opacity = 1,
-    color = "white",
-    dashArray = "3",
-    fillOpacity = 0.7,
-    group = "Community Areas") %>%
-  # stations are grouped into numbered clusters when zoomed out
-  addCircleMarkers(
-    data = divvy_stations,
-    radius = 5,
-    color = "#fff",
-    weight = 1,
-    fillColor = "steelblue",
-    fillOpacity = 0.9,
-    label = station_labels,
-    # clusters drawn as steelblue circles showing the number of stations,
-    # replacing the default green, yellow and orange size classes
-    clusterOptions = markerClusterOptions(
-      showCoverageOnHover = FALSE, # no outline of the cluster's area on hover
-      iconCreateFunction = htmlwidgets::JS("
-        function(cluster) {
-          return new L.DivIcon({
-            html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: 36px; height: 36px; line-height: 32px; text-align: center;\">' + cluster.getChildCount() + '</div>',
-            className: '',
-            iconSize: new L.Point(36, 36)
-          });
-        }")),
-    group = "Divvy Stations") %>%
-  addLegend("bottomleft", 
-            pal = map_pal, 
-            values = ~ses_value,
-            title = paste0(ses_name," Quintiles"),
-            opacity = 1,
-            group = "Community Areas") %>%
-  addLayersControl(
-    overlayGroups = c("Community Areas", "Divvy Stations"),
-    options = layersControlOptions(collapsed = FALSE))
+# summarize trips by community area and map the indicator with Divvy stations
+trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_ses,
+                                                               trips_by_yearmonth_ca,
+                                                               duration_by_yearmonth_ca)
+fx_map_ses_quintiles(trips_by_communityarea_ses, divvy_stations, ses_name,
+                     total_days = nrow(trips_by_date))
 ```
 
 ::: {.callout-tip collapse="true"}
@@ -494,63 +522,83 @@ leaflet(data = trips_by_communityarea_ses) %>%
 :::
 
 ## Examine Divvy ridership trends by socioeconomic indicator over time
-Now you will evaluate Divvy ridership over the past decade for communities with different socioeconomic characteristics. 
+Now you will evaluate Divvy ridership over the past decade for communities with different socioeconomic characteristics. The R functions below carry out the steps behind @fig-tripsbyses: they summarize trips by year, month and quintile category of your indicator and plot them. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the plot is built. Click "Show the indicator trend functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*Using the same indicator you selected above, copy and paste the following two code chunks into your R script and follow the instructions in the video to create a custom table and plot. Copy both the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the socioeconomic indicator you selected over the past ten years. Have variations in ridership changed differently over time with respect to community socioeconomic condition?*
+```{r}
+#| label: define indicator trend functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the indicator trend functions"
+
+# quintile category colors, from Highest to Lowest (also used in Step 6)
+quintile_colors <- c(Highest = "darkred",
+                     High = "orange",
+                     Moderate = "yellow",
+                     Low = "lightblue",
+                     Lowest = "darkblue")
+
+# function for summarizing trips by year, month and quintile category of the
+# selected indicator (added to community areas with fx_add_ses_quintiles)
+fx_summarise_trips_by_ses <- function(trips_by_yearmonth_ca, community_areas_ses, total_days) {
+  trips_by_yearmonth_ca %>%
+    left_join(community_areas_ses %>% st_drop_geometry(), by = "comarea_id") %>%
+    group_by(yearmonth, ses_ntile) %>%
+    summarise(tot_pop = sum(population),
+              fr_trips = sum(fr_trips),
+              to_trips = sum(to_trips),
+              fr_trips_cumul = sum(fr_trips_cumul),
+              to_trips_cumul = sum(to_trips_cumul),
+              fr_dailytrips = fr_trips/total_days,
+              to_dailytrips = to_trips/total_days,
+              fr_trips_per1k = fr_trips/tot_pop*1000,
+              to_trips_per1k = to_trips/tot_pop*1000,
+              .groups = "drop") %>%
+    drop_na(tot_pop) %>%
+    mutate(order = case_when(ses_ntile == "Lowest" ~ 1,
+                             ses_ntile == "Low" ~ 2,
+                             ses_ntile == "Moderate" ~ 3,
+                             ses_ntile == "High" ~ 4,
+                             ses_ntile == "Highest" ~ 5),
+           ses_label = factor(ses_ntile, levels = names(quintile_colors))) %>%
+    arrange(yearmonth, order)
+}
+
+# function for plotting monthly trips per 1,000 residents by quintile category
+fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses) {
+  plot_ly(data = trips_by_yearmonth_by_ses,
+          x = ~yearmonth,
+          y = ~fr_trips_per1k,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~ses_label,
+          colors = unname(quintile_colors),
+          text = ~ses_label,
+          hovertemplate = '%{text}: %{y:0.1f}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Divvy Trips per 1,000 Residents"),
+      legend = list(
+        font = list(size = 10),
+        xanchor = "center",
+        orientation = "h",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+```
+
+*Using the same indicator you selected above, copy and paste the following code chunk into your R script and follow the instructions in the video to create a custom plot. Copy the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the socioeconomic indicator you selected over the past ten years. Have variations in ridership changed differently over time with respect to community socioeconomic condition?*
 
 ```{r}
 #| label: fig-tripsbyses
 #| fig-cap: Divvy Trips by Community Socioeconomic Status
+#| echo: true
 
-trips_by_yearmonth_by_ses <- trips_by_yearmonth_ca %>%
-  left_join(community_areas_ses %>% st_drop_geometry(), by="comarea_id") %>%
-  group_by(yearmonth, ses_ntile) %>% #
-  summarise(tot_pop = sum(population),
-            fr_trips = sum(fr_trips),
-            to_trips = sum(to_trips),
-            fr_trips_cumul = sum(fr_trips_cumul),
-            to_trips_cumul = sum(to_trips_cumul),
-            fr_dailytrips = fr_trips/total_days,
-            to_dailytrips = to_trips/total_days,
-            fr_trips_per1k = fr_trips/tot_pop*1000,
-            to_trips_per1k = to_trips/tot_pop*1000) %>%
-  drop_na(tot_pop) %>%
-  mutate(order = case_when(ses_ntile == "Lowest" ~ 1,
-                           ses_ntile == "Low" ~ 2,
-                           ses_ntile == "Moderate" ~ 3,
-                           ses_ntile == "High" ~ 4,
-                           ses_ntile == "Highest" ~ 5),
-         ses_label = factor(ses_ntile, levels = c("Highest", 
-                                                  "High", 
-                                                  "Moderate",
-                                                  "Low",
-                                                  "Lowest"))) %>%
-  arrange(yearmonth, order)
-
-# create a color palette
-pal_quintile_colors <- c("darkred", "orange", "yellow", "lightblue","darkblue")
-pal_quintile <- colorFactor(palette = pal_quintile_colors, domain = levels(trips_by_yearmonth_by_ses$ses_label), ordered = T)
-
-plot_ly(data = trips_by_yearmonth_by_ses,
-        x = ~yearmonth,
-        y = ~fr_trips_per1k,
-        type = 'scatter',
-        mode = 'marker+line',
-        color = ~ses_label,
-        colors = pal_quintile_colors,
-        text = ~ses_label,
-        hovertemplate = '%{text}: %{y:0.1f}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-    layout(
-      xaxis = list(title = ""), # EDIT HERE
-      yaxis = list(title = "Divvy Trips per 1,000 Residents"),
-      legend=list(
-        font = list(size = 10),
-        xanchor="center",
-        orientation = "h", 
-        x = 0.5, y=-0.1),
-      hovermode = "x unified")
-
+# summarize trips by quintile category of the selected indicator and plot them
+trips_by_yearmonth_by_ses <- fx_summarise_trips_by_ses(trips_by_yearmonth_ca,
+                                                       community_areas_ses,
+                                                       total_days = nrow(trips_by_date))
+fx_plot_trips_by_ses(trips_by_yearmonth_by_ses)
 ```
 
 ::: {.callout-tip collapse="true"}
@@ -559,54 +607,65 @@ plot_ly(data = trips_by_yearmonth_by_ses,
 :::
 
 ## Summary of ridership by socioeconomic indicator 
-Here you create a final custom table with your summary information by socioeconomic category. The code saves the output table to your project data directory for further analysis. *Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
+Here you create a final custom table with your summary information by socioeconomic category. The R functions below summarize trips and population by quintile category and format the table (@fig-tripsbysestable). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the table is built. Click "Show the summary table functions" below to expand it, then copy and run it in your Exercise_02.R script.
+
+```{r}
+#| label: define summary table functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the summary table functions"
+
+# function for summarizing population and trips by quintile category of the
+# selected indicator, from Highest to Lowest
+fx_summarise_ses_quintiles <- function(trips_by_yearmonth_by_ses) {
+  trips_by_yearmonth_by_ses %>%
+    group_by(ses_ntile) %>%
+    summarise(order = max(order),
+              tot_pop = max(tot_pop),
+              fr_trips = sum(fr_trips),
+              to_trips = sum(to_trips)) %>%
+    mutate(tot_pop_pct = tot_pop/sum(tot_pop),
+           fr_trips_pct = fr_trips/sum(fr_trips),
+           to_trips_pct = to_trips/sum(to_trips)) %>%
+    arrange(-order) %>%
+    select(-order)
+}
+
+# function for formatting the summary table as an interactive table
+fx_table_ses_quintiles <- function(trips_by_ses_quintile) {
+  trips_by_ses_quintile %>%
+    datatable(class = 'cell-border stripe',
+              rownames = FALSE,
+              colnames = c("SES Quintile", "Total Population", "Trips (from)", "Trips (to)",
+                           "Percent of Population", "Percent of Trips (from)", "Percent of Trips (to)"),
+              options = list(pageLength = 5)) %>%
+    formatPercentage(c("tot_pop_pct", "fr_trips_pct", "to_trips_pct"), digits = 1) %>%
+    formatRound(c("tot_pop", "fr_trips", "to_trips"), mark = ",", digits = 0)
+}
+```
+
+*Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
 
 ```{r}
 #| label: fig-tripsbysestable
 #| fig-cap: Summary Table of Divvy Trips (6/27/2013-8/31/2026) by Community Socioeconomic Status
-#| eval: true 
-#| echo: false
+#| echo: true
 
-trips_by_yearmonth_by_ses %>%
-  group_by(ses_ntile) %>%
-  summarise(order = max(order),
-            tot_pop = max(tot_pop),
-            fr_trips = sum(fr_trips),
-            to_trips = sum(to_trips)) %>%
-  mutate(tot_pop_pct = tot_pop/sum(tot_pop),
-         fr_trips_pct = fr_trips/sum(fr_trips),
-         to_trips_pct = to_trips/sum(to_trips)) %>%
-  arrange(-order) %>%
-  select(-order) %>%
-  datatable(class = 'cell-border stripe',
-            rownames = FALSE,
-            colnames = c("SES Quintile","Total Population","Trips (from)", "Trips (to)", "Percent of Population","Percent of Trips (from)","Percent of Trips (to)"),
-            options = list(pageLength = 5)) %>%
-  formatPercentage(c("tot_pop_pct","fr_trips_pct","to_trips_pct"),digits = 1) %>%
-  formatRound(c("tot_pop","fr_trips","to_trips"), mark = ",", digits = 0)
-
+# summarize trips by quintile category and display the table
+trips_by_ses_quintile <- fx_summarise_ses_quintiles(trips_by_yearmonth_by_ses)
+fx_table_ses_quintiles(trips_by_ses_quintile)
 ```
 
 ```{r}
-#| label: Create table summarizing trips by socioeconomic category
+#| label: save table summarizing trips by socioeconomic category
 #| eval: false
+#| echo: true
 
-trips_by_ses_quintile <- trips_by_yearmonth_by_ses %>%
-  group_by(ses_ntile) %>%
-  summarise(order = max(order),
-            tot_pop = max(tot_pop),
-            fr_trips = sum(fr_trips),
-            to_trips = sum(to_trips)) %>%
-  mutate(tot_pop_pct = tot_pop/sum(tot_pop),
-         fr_trips_pct = fr_trips/sum(fr_trips),
-         to_trips_pct = to_trips/sum(to_trips)) %>% 
-  arrange(desc(ses_ntile))
-
+# save the summary table as an Excel spreadsheet in your project data directory
 write.xlsx(trips_by_ses_quintile,
            file = "data/trips_by_ses_quintile.xlsx",
            asTable = TRUE,
            overwrite = TRUE)
-
 ```
 
 ::: {.callout-tip collapse="true"}
@@ -617,10 +676,82 @@ write.xlsx(trips_by_ses_quintile,
 # Step 6. Compare community areas across socioeconomic categories
 In this final step you will take a closer look at five individual community areas, one from each of the socioeconomic quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them.
 
+The R functions below look up your selected community areas and create @fig-tripsbyyearmonthselected and @fig-tripdurationselected. They use the quintile categories and colors from Step 5, so run those functions first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the figures are built. Click "Show the selected community area functions" below to expand it, then copy and run it in your Exercise_02.R script.
+
+```{r}
+#| label: define selected community area functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the selected community area functions"
+
+# function for looking up the selected community areas, their quintile categories
+# and colors (from Highest to Lowest)
+fx_select_communityareas <- function(community_areas_ses, selected_communityareas, colors = quintile_colors) {
+  community_areas_ses %>%
+    st_drop_geometry() %>%
+    filter(comarea_name %in% selected_communityareas) %>%
+    select(comarea_id, comarea_name, ses_ntile) %>%
+    mutate(ses_label = factor(ses_ntile, levels = names(colors)),
+           ca_label = paste0(comarea_name, " (", ses_ntile, ")"),
+           color = unname(colors[as.character(ses_ntile)])) %>%
+    arrange(ses_label)
+}
+
+# function for plotting monthly trips (from) for the selected community areas
+fx_plot_trips_selected <- function(trips_by_yearmonth_ca, selected_ca) {
+  trips_by_yearmonth_selected <- trips_by_yearmonth_ca %>%
+    inner_join(selected_ca, by = "comarea_id") %>%
+    mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+  plot_ly(data = trips_by_yearmonth_selected,
+          x = ~yearmonth,
+          y = ~fr_trips,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~ca_label,
+          colors = setNames(selected_ca$color, selected_ca$ca_label),
+          text = ~ca_label,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Monthly Divvy Trips (from)"),
+      legend = list(
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for plotting a box plot of monthly average trip duration (from) for
+# the selected community areas
+fx_plot_duration_selected <- function(duration_by_yearmonth_ca, selected_ca) {
+  duration_by_yearmonth_selected <- duration_by_yearmonth_ca %>%
+    inner_join(selected_ca, by = "comarea_id") %>%
+    mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+  plot_ly(data = duration_by_yearmonth_selected,
+          x = ~ca_label,
+          y = ~fr_mins_per_trip,
+          type = 'box',
+          boxpoints = "outliers", # whiskers extend to 1.5 x IQR; months beyond them are plotted as points
+          color = ~ca_label,
+          colors = setNames(selected_ca$color, selected_ca$ca_label)) %>%
+    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
+                   hoverformat = ".1f"), # hover values to tenths
+      showlegend = FALSE)
+}
+```
+
 *Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the printed table to make sure each quintile category appears once.*
 
 ```{r}
 #| label: select community areas
+#| echo: true
 
 # EDIT HERE: replace with five community areas, one from each quintile category
 selected_communityareas <- c("Near South Side",
@@ -630,28 +761,8 @@ selected_communityareas <- c("Near South Side",
                              "Englewood")
 
 # look up selected community areas and their quintile categories
-selected_ca <- community_areas_ses %>%
-  st_drop_geometry() %>%
-  filter(comarea_name %in% selected_communityareas) %>%
-  select(comarea_id, comarea_name, ses_ntile) %>%
-  mutate(ses_label = factor(ses_ntile, levels = c("Highest", "High", "Moderate", "Low", "Lowest")),
-         ca_label = paste0(comarea_name, " (", ses_ntile, ")")) %>%
-  arrange(ses_label)
-
-# trips by yearmonth for selected community areas
-trips_by_yearmonth_selected <- trips_by_yearmonth_ca %>%
-  inner_join(selected_ca, by = "comarea_id") %>%
-  mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
-
-# average trip duration by yearmonth for selected community areas
-duration_by_yearmonth_selected <- duration_by_yearmonth_ca %>%
-  inner_join(selected_ca, by = "comarea_id") %>%
-  mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
-
-# assign quintile colors to selected community areas (Highest to Lowest)
-pal_selected_colors <- setNames(pal_quintile_colors, c("Highest", "High", "Moderate", "Low", "Lowest"))[as.character(selected_ca$ses_ntile)] %>%
-  setNames(selected_ca$ca_label)
-
+selected_ca <- fx_select_communityareas(community_areas_ses, selected_communityareas)
+selected_ca %>% select(comarea_name, ses_ntile)
 ```
 
 ## Trips by year and month for selected community areas
@@ -660,27 +771,10 @@ pal_selected_colors <- setNames(pal_quintile_colors, c("Highest", "High", "Moder
 ```{r}
 #| label: fig-tripsbyyearmonthselected
 #| fig-cap: Divvy Trips by Year and Month for Selected Community Areas
+#| echo: true
 
-plot_ly(data = trips_by_yearmonth_selected,
-        x = ~yearmonth,
-        y = ~fr_trips,
-        type = 'scatter',
-        mode = 'lines',
-        color = ~ca_label,
-        colors = pal_selected_colors,
-        text = ~ca_label,
-        hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-  config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-  layout(
-    xaxis = list(title = ""),
-    yaxis = list(title = "Monthly Divvy Trips (from)"),
-    legend = list(
-      font = list(size = 10),
-      orientation = "h",
-      xanchor = "center",
-      x = 0.5, y = -0.1),
-    hovermode = "x unified")
-
+# plot monthly trips for the selected community areas
+fx_plot_trips_selected(trips_by_yearmonth_ca, selected_ca)
 ```
 
 ## Average trip duration for selected community areas
@@ -698,19 +792,8 @@ Hover over a box to see its minimum, quartiles, median and maximum, and over a p
 ```{r}
 #| label: fig-tripdurationselected
 #| fig-cap: Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas
+#| echo: true
 
-plot_ly(data = duration_by_yearmonth_selected,
-        x = ~ca_label,
-        y = ~fr_mins_per_trip,
-        type = 'box',
-        boxpoints = "outliers", # whiskers extend to 1.5 x IQR; months beyond them are plotted as points
-        color = ~ca_label,
-        colors = pal_selected_colors) %>%
-  config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-  layout(
-    xaxis = list(title = ""),
-    yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
-                 hoverformat = ".1f"), # hover values to hundredths
-    showlegend = FALSE)
-
+# plot a box plot of average trip duration for the selected community areas
+fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
 ```
