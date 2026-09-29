@@ -96,7 +96,7 @@ This exercise makes use of data from a variety of sources. Custom summary tables
 <!-- ::: -->
 
 # Step 3. Explore systemwide trends in Divvy trips over time
-Over the past 13 years, the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. Dashed vertical lines mark the dates on which the system reached 10, 20, 30, 40 and 50 million trips. *In slide 1 of your presentation, copy and paste the plot below and describe the cumulative growth of Divvy's systemwide ridership over the past 13 years. Approximately how many trips were logged on the Divvy system during its first year? Compare this the latest year for which data are available. On what date did the system surpass 10 million trips? What does the spacing between these vertical lines suggest about Divvy ridership over the entire period?*
+Over the past 13 years, the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. Dashed vertical lines mark the dates on which the system reached 10, 20, 30, 40 and 50 million trips. *In slide 1 of your presentation, copy and paste the plot below and describe the cumulative growth of Divvy's systemwide ridership over the past 13 years. How many trips have been logged on the Divvy system since its initial rollout? Approximately how many trips were logged during its first year, and how does this compare with the latest year for which data are available? On what date did the system surpass 10 million trips, and how long did it take for the system to log 20, 30, 40 and 50 million trips? What does the spacing between the vertical lines suggest about whether the pace of growth has sped up or slowed down over time? Consider whether things like system expansions, e-bikes, pricing or the COVID-19 pandemic might help explain the pattern you observe.*
 
 ```{r}
 #| label: plot cumulative trips by date
@@ -156,7 +156,7 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
 fx_plot_cumulative_trips(trips_by_date)
 ```
 
-Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Winter months (December, January and February) are shown in a darker blue. Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, copy the below figure and note any patterns and/or variations you see in monthly ridership. Compare August 2025 with August 2026 trips. What factors do you feel explain any differences in monthly ridership? What other non-seasonal factors do you feel may have influenced Divvy usage over the study period?*
+Now examine monthly patterns of Divvy ridership over the same period (@fig-tripsbyyearmonth). Winter months (December, January and February) are shown in a darker blue. Hover over each bar to see how ridership differs from month to month. *In slide 2 of your presentation, copy the below figure and note any patterns and/or variations you see in monthly ridership. How does ridership in winter months (December to February) compare with the rest of the year? Compare August 2025 with August 2026 trips. What factors do you feel explain any differences in monthly ridership? What other non-seasonal factors do you feel may have influenced Divvy usage over the study period? Consider whether things like system expansions, the introduction of e-bikes, pricing changes or the COVID-19 pandemic might have played a role. Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot trips by year and month
@@ -211,7 +211,7 @@ fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
 fx_plot_trips_by_yearmonth(trips_by_yearmonth)
 ```
 
-Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). Each point is one day, with weekend days (Saturday and Sunday) shown in a darker blue than weekdays. *In slide 3 of your presentation, copy the below figure and note any patterns and/or variations you see in daily ridership. What factors do you feel explain any daily differences in ridership?*
+Lastly, let's examine daily patterns of Divvy ridership over the past decade (@fig-tripsbydate). Each point is one day, with weekend days (Saturday and Sunday) shown in a darker blue than weekdays. *In slide 3 of your presentation, copy the below figure and note any patterns and/or variations you see in daily ridership. How does weekend ridership compare with weekday ridership, and what factors do you feel explain any daily differences in ridership? Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot trips by date
@@ -270,7 +270,7 @@ fx_plot_trips_by_date <- function(trips_by_date) {
 fx_plot_trips_by_date(trips_by_date)
 ```
 
-Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the daily average trip durations (in minutes per trip) in one month, so each box is based on one observation per day: about 30 observations in a full month (June 2013 has only four, since Divvy launched on June 27). The box spans the middle half of those daily averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge), so it holds about 15 of a month's days. This range is called the interquartile range (IQR). The line inside the box marks the median: half of the month's days had a shorter average trip and half a longer one. In this figure the whiskers extend to the shortest and longest daily averages in each month, and the red line shows each month's overall average (all minutes divided by all trips). Hover over a box to see its values. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes?*
+Finally, examine how long Divvy trips have lasted over time (@fig-tripdurationbyyearmonth). Each box summarizes the daily average trip durations (in minutes per trip) in one month, so each box is based on one observation per day: about 30 observations in a full month (June 2013 has only four, since Divvy launched on June 27). The box spans the middle half of those daily averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge), so it holds about 15 of a month's days. This range is called the interquartile range (IQR). The line inside the box marks the median: half of the month's days had a shorter average trip and half a longer one. In this figure the whiskers extend to the shortest and longest daily averages in each month, and the red line shows each month's overall average (all minutes divided by all trips). Hover over a box to see its values. *In slide 3 of your presentation, note any trends or seasonal patterns in average trip duration. Have trips become shorter or longer over time? What factors (e.g., e-bikes, pricing, membership, weather) might explain the changes? Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: plot average trip duration by year and month
@@ -331,7 +331,7 @@ fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 # Step 4. Explore total and average trips by community area
 In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows average daily Divvy trips per 10,000 residents (i.e., ridership standardized by the community area population) between 2013 and 2026 across the city. Use the dropdown list in the top right corner of the map to switch between average daily trips per 10,000 residents and average trip duration, for trips starting (from) or ending (to) in each community area. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade, along with these rates and trip durations.
 
-*In slide 4 of your presentation, note any patterns and/or variations you see in ridership by community area. What factors do you feel explain differences in total and daily ridership and trip duration? Support your findings by referencing statistics from the figure.*
+*In slide 4 of your presentation, note any patterns and/or variations you see in ridership by community area. Which community areas logged the most and fewest trips, and where are they located? Does the picture change when you compare total trips, average daily trips and trips standardized by population (per 10,000 residents)? What factors do you feel explain differences in total and daily ridership and trip duration? Consider things like population and job density, proximity to downtown and the lakefront, and how long stations have been in place. Support your findings by referencing statistics from the figure.*
 
 ```{r}
 #| label: define community area trip mapping functions
@@ -564,7 +564,7 @@ Follow the topic links for a full description of each indicator, including its u
 
 The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. When the map opens, Divvy docks are grouped into clusters, where each cluster shows the total number of docks at the stations it contains. Use the layer control in the top right corner to turn your indicator and the dock clusters on and off or to show the individual stations. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs]. Points without a reported number of docks are likely single, free-floating bikes rather than stations. When the map opens, Divvy docks are grouped into clusters, where each cluster shows the total number of docks at the stations it contains. Use the layer control in the top right corner to turn your indicator and the dock clusters on and off or to show the individual stations. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected. Before interpreting your map, note whether higher values of your indicator signal more or less advantaged conditions. Where are Divvy stations and docks most and least concentrated with respect to the indicator's quintile categories? Do community areas with higher ridership tend to have more or less advantaged conditions?*
 
 
 ```{r}
@@ -708,7 +708,7 @@ fx_map_ses_quintiles(trips_by_communityarea_ses, divvy_stations, ses_name,
 ```
 
 ## Examine Divvy ridership trends by community indicator
-Now you will evaluate Divvy ridership across communities with different characteristics. *Using the same indicator you selected above, copy and paste the following code chunk into your R script and run the new code to create a custom plot. Copy the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the community indicator you selected. Do ridership trends differ across these stratified communities?*
+Now you will evaluate Divvy ridership across communities with different characteristics. *Using the same indicator you selected above, copy and paste the following code chunk into your R script and run the new code to create a custom plot. Copy the plot into slide 6 of your presentation and describe any relationships you see (or don't see) between ridership and the community indicator you selected over the study period. Do ridership trends differ across these stratified communities, and have variations in ridership changed differently over time with respect to community conditions?*
 
 ```{r}
 #| label: define indicator trend functions
@@ -790,7 +790,7 @@ fx_plot_trips_by_ses(trips_by_yearmonth_by_ses, ses_name)
 ```
 
 ## Summary table showing ridership by community indicator 
-Here you create a custom table that summarizes ridership information with respect to the indicator you selected. *Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
+Here you create a custom table that summarizes ridership information with respect to the indicator you selected. *Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings, referencing trips and population by quintile category. What are the implications for sustainable urban transportation and equitable access to bikesharing?*
 
 ```{r}
 #| label: define summary table functions
@@ -954,7 +954,7 @@ selected_ca %>%
 ## Average trip duration for selected community areas
 @fig-tripdurationselected uses the same kind of box plot as @fig-tripdurationbyyearmonth, but here each observation is one month's average trip duration (minutes per trip) for trips starting in a community area. Each box includes every month in which at least one trip started there, up to 159 months (June 2013 through August 2026), so community areas that received Divvy stations after 2013 have fewer months. Unlike the earlier figure, the whiskers extend only to the shortest and longest monthly averages within 1.5 times the interquartile range of the box. Months beyond the whiskers are plotted as individual points called outliers: months whose average trip duration was unusually short or long for that community area, often because only a few trips were taken (e.g., in winter or soon after stations opened).
 
-*Copy, paste and run the code below in your R script to create the box plot for the community areas you selected. Copy the output plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Which community areas have the most outliers, and what might explain them?*
+*Copy, paste and run the code below in your R script to create the box plot for the community areas you selected. Copy the output plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Compare the medians and the spread (interquartile range) of each box. Which community areas have the most outliers, and what might explain them? Consider things like distance to common destinations, trip purpose (commuting versus recreation), rider type (member or casual), winter ridership or how recently stations were installed.*
 
 ```{r}
 #| label: fig-tripdurationselected
@@ -966,7 +966,7 @@ fx_plot_duration_selected(duration_by_yearmonth_ca, selected_ca)
 ```
 
 ## Trips by year and month for selected community areas
-*Run the code below to plot monthly trips starting in each of your selected community areas (@fig-tripsbyyearmonthselected). Copy the plot into slide 7 of your presentation and describe how ridership has changed over time in each community area. Do the trends differ across community indicator quintiles? Lastly, how might you improve Divvy usage across lower ridership communities and the city of Chicago as a whole?*
+*Run the code below to plot monthly trips starting in each of your selected community areas (@fig-tripsbyyearmonthselected). Copy the plot into slide 7 of your presentation and describe how ridership has changed over time in each community area. Do the trends differ across community indicator quintiles? When did trips begin in each community area, and how have seasonal peaks changed over the years? Consider whether things like when stations were installed, system expansions or local land use might help explain the differences you observe. Lastly, how might you improve Divvy usage across lower ridership communities and the city of Chicago as a whole?*
 
 ```{r}
 #| label: fig-tripsbyyearmonthselected
