@@ -89,11 +89,6 @@ load("data/Exercise_02.RData")
 
 This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) and [Divvy bikeshare system data](https://divvybikes.com/system-data) web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download). *Copy and paste the code below to import the necessary data from the course GitHub and the city of Chicago's data portal.*
 
-::: {.callout-note collapse="false"}
-## Chicago Health Atlas
-The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hundreds of sociodemographic and public health indicators for communities throughout the city. The website  allows for searching and exploring various metrics via maps, charts and tables. Indicator data can also be downloaded by community area, census tract and zip code. Refer to the Atlas' [how to use](https://chicagohealthatlas.org/how-to) page for more information.  
-:::
-
 <!-- ::: {.callout-tip collapse="true"} -->
 <!-- ## VIDEO: Step #2 -->
 <!-- {{< video videos/exercise_02_02.mp4 >}} -->
@@ -455,6 +450,11 @@ First, identify one of the seven community indicators downloaded from the [Chica
 | `mortality` | Mortality | [VRDTHR](https://chicagohealthatlas.org/indicators/VRDTHR) | 2020-2024 |
 | `transit` | Transit | [HCSWTSP](https://chicagohealthatlas.org/indicators/HCSWTSP) | 2023-2024 |
 | `violence` | Violence | [HCSNVP](https://chicagohealthatlas.org/indicators/HCSNVP) | 2023-2024 |
+
+::: {.callout-note collapse="false"}
+## Chicago Health Atlas
+The [Chicago Health Atlas](https://chicagohealthatlas.org) publishes data on hundreds of sociodemographic and public health indicators for communities throughout the city. The website  allows for searching and exploring various metrics via maps, charts and tables. Indicator data can also be downloaded by community area, census tract and zip code. Refer to the Atlas' [how to use](https://chicagohealthatlas.org/how-to) page for more information.  
+:::
 
 Follow the topic links for a full description of each indicator, including its units and data source. Community areas are grouped into five quintile categories (Lowest, Low, Moderate, High and Highest) of the indicator's values. Before interpreting your results, note whether higher values of your indicator signal more or less advantaged conditions (e.g., a higher poverty rate or social vulnerability index signals less advantaged conditions).
 
