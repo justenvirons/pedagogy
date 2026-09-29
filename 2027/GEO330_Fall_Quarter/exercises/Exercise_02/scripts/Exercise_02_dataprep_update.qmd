@@ -528,7 +528,7 @@ if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_0
 
 save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
      duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
-     divvy_data_through, CARTO_API_KEY, community_areas_ses,
+     divvy_data_through, CARTO_API_KEY, community_areas_ses, divvy_stations,
      file = summary_file)
 
 # save(divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
