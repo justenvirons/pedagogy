@@ -443,10 +443,10 @@ leaflet(data = trips_by_communityarea_ses) %>%
   # stations are grouped into numbered clusters when zoomed out
   addCircleMarkers(
     data = divvy_stations,
-    radius = 4,
-    color = "#555555",
+    radius = 5,
+    color = "#fff",
     weight = 1,
-    fillColor = "white",
+    fillColor = "steelblue",
     fillOpacity = 0.9,
     label = station_labels,
     clusterOptions = markerClusterOptions(),

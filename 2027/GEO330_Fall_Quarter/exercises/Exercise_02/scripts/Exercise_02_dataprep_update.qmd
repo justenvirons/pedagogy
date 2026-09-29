@@ -521,7 +521,7 @@ station_information_url <- gbfs_feeds$url[gbfs_feeds$name == "station_informatio
 
 # current stations as points, with the community area each is in (NA outside Chicago)
 divvy_stations <- fromJSON(station_information_url)$data$stations %>%
-  select(any_of(c("station_id", "short_name", "name", "capacity", "lat", "lon"))) %>%
+  select(any_of(c("short_name", "name", "capacity", "lat", "lon"))) %>%
   st_as_sf(coords = c("lon", "lat"), crs = 4326) %>% # GBFS coordinates are WGS 84
   st_transform(crs = 4326) %>%
   st_join(community_areas %>%
