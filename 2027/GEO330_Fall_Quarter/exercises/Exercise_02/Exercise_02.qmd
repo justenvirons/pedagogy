@@ -784,7 +784,7 @@ fx_plot_trips_selected <- function(trips_by_yearmonth_ca, selected_ca) {
            modeBarButtons = list(list("toImage", "resetScale2d")),
            toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth_selected_communityareas")) %>%
     layout(
-      xaxis = list(title = "Year and Month"),
+      xaxis = list(title = ""),
       yaxis = list(title = "Monthly Divvy Trips (from)"),
       legend = list(
         title = list(text = "Community Area (Quintile)  "),
