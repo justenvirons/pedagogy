@@ -467,13 +467,13 @@ First, identify one of the seven community indicators downloaded from the [Chica
 
 | Column | Indicator | Health Atlas topic | Period |
 |:-------|:----------|:-------------------|:-------|
-| `population` | Population | [POP](https://chicagohealthatlas.org/indicators/POP) | 2020-2024 |
+| `population` | Total population | [POP](https://chicagohealthatlas.org/indicators/POP) | 2020-2024 |
 | `SVI` | Social Vulnerability Index | [SVI](https://chicagohealthatlas.org/indicators/SVI) | 2022 |
-| `poverty` | Poverty | [POV](https://chicagohealthatlas.org/indicators/POV) | 2020-2024 |
+| `poverty` | Poverty rate | [POV](https://chicagohealthatlas.org/indicators/POV) | 2020-2024 |
 | `inactivity` | Physical inactivity | [HCSPAP](https://chicagohealthatlas.org/indicators/HCSPAP) | 2016-2018 |
-| `mortality` | Mortality | [VRDTHR](https://chicagohealthatlas.org/indicators/VRDTHR) | 2020-2024 |
+| `mortality` | All-cause mortality rate | [VRDTHR](https://chicagohealthatlas.org/indicators/VRDTHR) | 2020-2024 |
 | `transit` | Transit | [HCSWTSP](https://chicagohealthatlas.org/indicators/HCSWTSP) | 2023-2024 |
-| `violence` | Violence | [HCSNVP](https://chicagohealthatlas.org/indicators/HCSNVP) | 2023-2024 |
+| `violence` | Perceived neighborhood violence rate | [HCSNVP](https://chicagohealthatlas.org/indicators/HCSNVP) | 2023-2024 |
 
 ::: {.callout-note collapse="false"}
 ## Chicago Health Atlas
@@ -852,14 +852,7 @@ fx_plot_trips_selected(trips_by_yearmonth_ca, selected_ca)
 ```
 
 ## Average trip duration for selected community areas
-@fig-tripdurationselected summarizes the average trip duration (minutes per trip) of trips starting in each of your selected community areas. Each observation is one month's average for one community area, and each box includes every month in which at least one trip started in that community area: up to 159 months (June 2013 through August 2026). Community areas that received Divvy stations after 2013 have fewer months.
-
-- **Box:** spans the middle half of a community area's monthly averages, from the 25th percentile (lower edge) to the 75th percentile (upper edge). With 159 months, about 80 months fall inside the box. This range is called the interquartile range (IQR); a taller box means trip durations varied more from month to month.
-- **Line inside the box:** the median monthly average. Half of the months had a shorter average trip and half a longer one.
-- **Whiskers:** extend to the shortest and longest monthly averages that lie within 1.5 × IQR of the box. Unlike in @fig-tripdurationbyyearmonth, they do not necessarily reach the minimum and maximum values.
-- **Outliers:** months beyond the whiskers, plotted as individual points. An outlier is a month whose average trip duration was unusually short or long compared with that community area's typical months. Outliers often come from months with only a few trips, when one or two very long or very short trips can move the average a lot (e.g., winter months or the first months after stations opened). They can also reflect special events, service changes or unusual trips, such as bikes kept out for many hours.
-
-Hover over a box to see its minimum, quartiles, median and maximum, and over a point to see an outlier's value.
+@fig-tripdurationselected uses the same kind of box plot as @fig-tripdurationbyyearmonth, but here each observation is one month's average trip duration (minutes per trip) for trips starting in a community area. Each box includes every month in which at least one trip started there, up to 159 months (June 2013 through August 2026), so community areas that received Divvy stations after 2013 have fewer months. Unlike the earlier figure, the whiskers extend only to the shortest and longest monthly averages within 1.5 times the interquartile range of the box. Months beyond the whiskers are plotted as individual points called outliers: months whose average trip duration was unusually short or long for that community area, often because only a few trips were taken (e.g., in winter or soon after stations opened).
 
 *Run the code below to create the box plot. Copy the plot into slide 8 of your presentation. How do trip durations compare across the five community areas? Which community areas have the most outliers, and what might explain them? What might explain the differences between community areas?*
 
