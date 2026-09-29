@@ -116,20 +116,13 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
   milestone_rows <- sapply(milestones, function(m) match(TRUE, trips_by_date$trips_cumul >= m))
   milestone_dates <- tibble(trips = milestones,
                             date = trips_by_date$date[milestone_rows]) %>%
-    drop_na(date) %>%
-    mutate(label = paste0(trips / 1e6, " million<br>",
-                          month.abb[month(date)], " ", day(date), ", ", year(date)))
+    drop_na(date)
 
-  # dashed vertical line and label for each milestone
+  # dashed vertical line for each milestone
   milestone_lines <- lapply(milestone_dates$date, function(d)
     list(type = "line", xref = "x", yref = "paper",
          x0 = d, x1 = d, y0 = 0, y1 = 1,
          line = list(color = "grey", width = 1, dash = "dash")))
-  milestone_labels <- lapply(seq_len(nrow(milestone_dates)), function(i)
-    list(x = milestone_dates$date[i], y = 1, xref = "x", yref = "paper",
-         text = milestone_dates$label[i], showarrow = FALSE,
-         xanchor = "right", yanchor = "top", align = "right",
-         font = list(size = 10, color = "dimgrey")))
 
   plot_ly(data = trips_by_date,
           x = ~date,
@@ -145,7 +138,6 @@ fx_plot_cumulative_trips <- function(trips_by_date, milestones = seq(10e6, 50e6,
            toImageButtonOptions = list(filename = "divvy_cumulative_trips_by_date")) %>%
     layout(
       shapes = milestone_lines,
-      annotations = milestone_labels,
       xaxis = list(title = "Date"),
       yaxis = list(title = "Cumulative Divvy Trips"),
       legend = list(
