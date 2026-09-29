@@ -329,7 +329,7 @@ fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 <!-- ::: -->
 
 # Step 4. Explore total and average trips by community area
-In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2026 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Average daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated along with average trip duration. Use the dropdown list in the top right corner of the map to map any of these measures.
+In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows average daily Divvy trips per 10,000 residents (i.e., ridership standardized by the community area population) between 2013 and 2026 across the city. Use the dropdown list in the top right corner of the map to switch between average daily trips per 10,000 residents and average trip duration, for trips starting (from) or ending (to) in each community area. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade, along with these rates and trip durations.
 
 *In slide 4 of your presentation, note any patterns and/or variations you see in ridership by community area. What factors do you feel explain differences in total and daily ridership and trip duration? Support your findings by referencing statistics from the figure.*
 
@@ -425,8 +425,9 @@ fx_quintile_pal <- function(values) {
 
 # function for adding one community area layer and legend per measure, plus a
 # dropdown list (top right) that shows one measure at a time; the first measure
-# is shown when the map opens, and "None" leaves only the boundaries
-fx_add_measure_layers <- function(map, map_data, measures, labels) {
+# is shown when the map opens, and "None" (when none_option = TRUE) leaves only
+# the boundaries
+fx_add_measure_layers <- function(map, map_data, measures, labels, none_option = TRUE) {
   for (i in seq_along(measures)) {
     values <- measures[[i]]
     pal <- fx_quintile_pal(values)
@@ -472,7 +473,7 @@ fx_add_measure_layers <- function(map, map_data, measures, labels) {
           div.style.padding = '4px 6px';
           div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
           var select = L.DomUtil.create('select', '', div);
-          groups.concat(['None']).forEach(function(g, j) {
+          groups.concat(data.none_option ? ['None'] : []).forEach(function(g, j) {
             var option = L.DomUtil.create('option', '', select);
             option.value = j;
             option.text = g;
@@ -484,7 +485,7 @@ fx_add_measure_layers <- function(map, map_data, measures, labels) {
         };
         control.addTo(map);
         show(0);
-      }", data = list(groups = names(measures)))
+      }", data = list(groups = names(measures), none_option = none_option))
 }
 
 # function for creating the base map shared by the community area maps: basemap,
@@ -506,21 +507,29 @@ fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
 }
 
 # function for mapping trips by community area (quintiles); the dropdown list
-# switches between the measures in the hover labels, starting with total trips (from)
+# switches between average daily trips per 10,000 residents and average trip
+# duration, for trips from and to each community area
 fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days) {
+  measures <- fx_communityarea_measures(trips_by_communityarea_ses, total_days)[
+    c("Avg daily trips (from) per 10K pop",
+      "Avg daily trips (to) per 10K pop",
+      "Avg trip duration (from), min",
+      "Avg trip duration (to), min")]
+
   fx_basemap(trips_by_communityarea_ses) %>%
     fx_add_measure_layers(trips_by_communityarea_ses,
-                          measures = fx_communityarea_measures(trips_by_communityarea_ses, total_days),
-                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days))
+                          measures = measures,
+                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days),
+                          none_option = FALSE)
 }
 ```
 
 ```{r}
 #| label: fig-frtripsbycommunityarea
-#| fig-cap: Total Divvy Trips (from) by Community Area (Quintile Categorization), June 2013 through August 2026
+#| fig-cap: Average Daily Divvy Trips per 10,000 Residents and Average Trip Duration by Community Area (Quintile Categorization), June 2013 through August 2026
 #| echo: false
 
-# summarize trips by community area and map total trips
+# summarize trips by community area and map trip rates and durations
 trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_ses,
                                                                trips_by_yearmonth_ca,
                                                                duration_by_yearmonth_ca)
