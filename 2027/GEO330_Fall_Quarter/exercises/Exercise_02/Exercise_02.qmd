@@ -979,14 +979,19 @@ fx_plot_trips_selected(trips_by_yearmonth_ca, selected_ca)
 
 ::: {.callout-note collapse="false"}
 ## Bike Infrastructure Planning
+The sources below show where Chicago's bikeways are today and how cities around the world design streets that make bicycling safe, comfortable and connected. Planners, engineers and community members can use them to imagine what a more bikeable street or neighborhood could look like, compare design options and build the case for filling gaps in the bike network, such as those you may have found in the community areas you examined.
 
-https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/bike-program/existing-bike-network.html
+**[Existing Bike Network](https://www.chicago.gov/city/en/sites/complete-streets-chicago/home/bike-program/existing-bike-network.html)** (Chicago Department of Transportation)  
+The City of Chicago's inventory of its on-street bikeways and off-street trails, with an interactive map and a regularly updated breakdown of miles by bikeway type, from protected and buffered bike lanes to neighborhood greenways.
 
-https://bicycleinfrastructuremanuals.com/
+**[Bicycle Infrastructure Manuals](https://bicycleinfrastructuremanuals.com/)** (Bicycle User Experience and Urban Cycling Institute)  
+A searchable, open database of more than 600 cycling infrastructure manuals, design guides and strategy documents from around the world, for comparing how different countries and cities design for bicycling.
 
-https://nacto.org/publication/urban-bikeway-design-guide/
+**[Urban Bikeway Design Guide](https://nacto.org/publication/urban-bikeway-design-guide/)** (National Association of City Transportation Officials)  
+NACTO's guide to state-of-the-practice bikeway designs developed by cities for cities, covering bike lanes, protected bike lanes (cycle tracks), intersections and signals, and, in its 2025 third edition, planning whole bike networks and engaging communities.
 
-https://aashtojournal.transportation.org/aashto-releases-5th-edition-of-comprehensive-bicycle-guide/
+**[AASHTO Releases 5th Edition of Comprehensive Bicycle Guide](https://aashtojournal.transportation.org/aashto-releases-5th-edition-of-comprehensive-bicycle-guide/)** (AASHTO Journal)  
+An announcement of the 5th edition of AASHTO's *Guide for the Development of Bicycle Facilities*, the national engineering reference for planning, designing and operating bikeways on streets, roads, highways and shared use paths in urban, suburban and rural settings.
 
 :::
 
