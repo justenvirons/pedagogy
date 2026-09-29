@@ -699,7 +699,8 @@ plot_ly(data = duration_by_yearmonth_selected,
   config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
   layout(
     xaxis = list(title = ""),
-    yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+    yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
+                 hoverformat = ".2f"), # hover values to hundredths
     showlegend = FALSE)
 
 ```
