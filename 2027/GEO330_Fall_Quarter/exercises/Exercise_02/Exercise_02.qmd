@@ -110,13 +110,15 @@ fx_plot_cumulative_trips <- function(trips_by_date) {
   plot_ly(data = trips_by_date,
           x = ~date,
           y = ~trips_cumul,
-          name = 'Trips',
+          name = 'Cumulative trips',
           type = 'scatter',
           mode = 'lines',
           line = list(color = 'lightblue'),
           stackgroup = 'one',
           hovertemplate = 'Cumulative trips: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_cumulative_trips_by_date")) %>%
     layout(
       xaxis = list(title = "Date"),
       yaxis = list(title = "Cumulative Divvy Trips"),
@@ -126,38 +128,6 @@ fx_plot_cumulative_trips <- function(trips_by_date) {
         xanchor = "center",
         x = 0.5, y = -0.1),
       hovermode = "x unified")
-}
-
-# function for plotting average trip duration by year and month: a box of daily
-# averages for each month and a line of each month's overall average
-fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmonth) {
-  plot_ly() %>%
-    add_trace(data = duration_by_date %>%
-                mutate(yearmonth = floor_date(date, "month")),
-              x = ~yearmonth,
-              y = ~mins_per_trip,
-              type = 'box',
-              boxpoints = FALSE, # whiskers extend to min and max
-              name = 'Daily average',
-              fillcolor = 'lightblue',
-              line = list(color = 'steelblue', width = 1)) %>%
-    add_trace(data = duration_by_yearmonth,
-              x = ~yearmonth,
-              y = ~mins_per_trip,
-              type = 'scatter',
-              mode = 'lines',
-              name = 'Monthly average',
-              line = list(color = 'darkred', width = 1.5),
-              hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
-    layout(
-      xaxis = list(title = ""),
-      yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
-      legend = list(
-        font = list(size = 10),
-        orientation = "h",
-        xanchor = "center",
-        x = 0.5, y = -0.1))
 }
 ```
 
@@ -184,12 +154,14 @@ fx_plot_trips_by_yearmonth <- function(trips_by_yearmonth) {
           x = ~yearmonth,
           y = ~trips,
           type = 'bar',
-          name = 'trips',
+          name = 'Monthly trips',
           marker = list(color = 'lightblue'),
           hovertemplate = 'Monthly trips: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth")) %>%
     layout(
-      xaxis = list(title = ""),
+      xaxis = list(title = "Year and Month"),
       yaxis = list(title = "Monthly Divvy Trips"),
       legend = list(
         font = list(size = 10),
@@ -226,11 +198,13 @@ fx_plot_trips_by_date <- function(trips_by_date) {
           mode = 'lines',
           line = list(color = "lightblue",
                       width = 0.5),
-          name = 'trips',
+          name = 'Daily trips',
           hovertemplate = 'Daily trips: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trips_by_date")) %>%
     layout(
-      xaxis = list(title = ""),
+      xaxis = list(title = "Date"),
       yaxis = list(title = "Daily Divvy Trips"),
       legend = list(
         font = list(size = 10),
@@ -279,9 +253,11 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
               name = 'Monthly average',
               line = list(color = 'darkred', width = 1.5),
               hovertemplate = 'Monthly average: %{y:.1f} min<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trip_duration_by_yearmonth")) %>%
     layout(
-      xaxis = list(title = ""),
+      xaxis = list(title = "Year and Month"),
       yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
       legend = list(
         font = list(size = 10),
@@ -413,14 +389,14 @@ fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days
     addLegend("bottomleft",
               pal = map_pal,
               values = ~fr_trips_cumul,
-              title = "Divvy Trips (Quintiles)",
+              title = "Total Divvy Trips (from)<br>Quintiles",
               opacity = 1)
 }
 ```
 
 ```{r}
 #| label: fig-frtripsbycommunityarea
-#| fig-cap: Total Divvy Trips by Community Area (Quintile Categorization)
+#| fig-cap: Total Divvy Trips (from) by Community Area (Quintile Categorization), June 2013 through August 2026
 #| echo: true
 
 # summarize trips by community area and map total trips
@@ -531,7 +507,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
     addLegend("bottomleft",
               pal = map_pal,
               values = ~ses_value,
-              title = paste0(ses_name, " Quintiles"),
+              title = paste0(ses_name, "<br>Quintiles"),
               opacity = 1,
               group = "Community Areas") %>%
     addLayersControl(
@@ -544,7 +520,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
 
 ```{r}
 #| label: fig-mapsesquintile
-#| fig-cap: Socioeconomic Indicator by Community Area (Quintile Categorization)
+#| fig-cap: Selected Community Indicator by Community Area (Quintile Categorization) with Divvy Stations
 #| echo: true
 
 # Edit the following two lines with the selected indicator's name and column
@@ -604,8 +580,9 @@ fx_summarise_trips_by_ses <- function(trips_by_yearmonth_ca, community_areas_ses
     arrange(yearmonth, order)
 }
 
-# function for plotting monthly trips per 1,000 residents by quintile category
-fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses) {
+# function for plotting monthly trips per 1,000 residents by quintile category;
+# ses_name labels the legend
+fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses, ses_name = "Indicator") {
   plot_ly(data = trips_by_yearmonth_by_ses,
           x = ~yearmonth,
           y = ~fr_trips_per1k,
@@ -615,11 +592,14 @@ fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses) {
           colors = unname(quintile_colors),
           text = ~ses_label,
           hovertemplate = '%{text}: %{y:0.1f}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = paste0("divvy_trips_by_", tolower(gsub("[^A-Za-z0-9]+", "_", ses_name)), "_quintile"))) %>%
     layout(
-      xaxis = list(title = ""),
-      yaxis = list(title = "Divvy Trips per 1,000 Residents"),
+      xaxis = list(title = "Year and Month"),
+      yaxis = list(title = "Monthly Divvy Trips (from) per 1,000 Residents"),
       legend = list(
+        title = list(text = paste0(ses_name, " Quintile  ")),
         font = list(size = 10),
         xanchor = "center",
         orientation = "h",
@@ -632,18 +612,18 @@ fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses) {
 
 ```{r}
 #| label: fig-tripsbyses
-#| fig-cap: Divvy Trips by Community Socioeconomic Status
+#| fig-cap: Monthly Divvy Trips per 1,000 Residents by Quintile Category of the Selected Community Indicator
 #| echo: true
 
 # summarize trips by quintile category of the selected indicator and plot them
 trips_by_yearmonth_by_ses <- fx_summarise_trips_by_ses(trips_by_yearmonth_ca,
                                                        community_areas_ses,
                                                        total_days = nrow(trips_by_date))
-fx_plot_trips_by_ses(trips_by_yearmonth_by_ses)
+fx_plot_trips_by_ses(trips_by_yearmonth_by_ses, ses_name)
 ```
 
 ## Summary of ridership by socioeconomic indicator 
-Here you create a final custom table with your summary information by socioeconomic category. The R functions below summarize trips and population by quintile category and format the table (@fig-tripsbysestable). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the table is built. Click "Show the summary table functions" below to expand it, then copy and run it in your Exercise_02.R script.
+Here you create a final custom table with your summary information by socioeconomic category. The R functions below summarize trips and population by quintile category and format the table (@tbl-tripsbysestable). You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the table is built. Click "Show the summary table functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
 ```{r}
 #| label: define summary table functions
@@ -667,12 +647,13 @@ fx_summarise_ses_quintiles <- function(trips_by_yearmonth_by_ses) {
     select(-order)
 }
 
-# function for formatting the summary table as an interactive table
-fx_table_ses_quintiles <- function(trips_by_ses_quintile) {
+# function for formatting the summary table as an interactive table; ses_name
+# labels the quintile column
+fx_table_ses_quintiles <- function(trips_by_ses_quintile, ses_name = "Indicator") {
   trips_by_ses_quintile %>%
     datatable(class = 'cell-border stripe',
               rownames = FALSE,
-              colnames = c("SES Quintile", "Total Population", "Trips (from)", "Trips (to)",
+              colnames = c(paste(ses_name, "Quintile"), "Total Population", "Trips (from)", "Trips (to)",
                            "Percent of Population", "Percent of Trips (from)", "Percent of Trips (to)"),
               options = list(pageLength = 5)) %>%
     formatPercentage(c("tot_pop_pct", "fr_trips_pct", "to_trips_pct"), digits = 1) %>%
@@ -683,13 +664,13 @@ fx_table_ses_quintiles <- function(trips_by_ses_quintile) {
 *Copy, paste and run the following code chunks in your R script. The second chunk saves the table to your project data directory for further analysis. Copy and paste the table into slide 6 of your presentation (along with the above plot) and briefly summarize your findings.*
 
 ```{r}
-#| label: fig-tripsbysestable
-#| fig-cap: Summary Table of Divvy Trips (6/27/2013-8/31/2026) by Community Socioeconomic Status
+#| label: tbl-tripsbysestable
+#| tbl-cap: Divvy Trips (6/27/2013-8/31/2026) and Population by Quintile Category of the Selected Community Indicator
 #| echo: true
 
 # summarize trips by quintile category and display the table
 trips_by_ses_quintile <- fx_summarise_ses_quintiles(trips_by_yearmonth_by_ses)
-fx_table_ses_quintiles(trips_by_ses_quintile)
+fx_table_ses_quintiles(trips_by_ses_quintile, ses_name)
 ```
 
 ```{r}
@@ -748,11 +729,14 @@ fx_plot_trips_selected <- function(trips_by_yearmonth_ca, selected_ca) {
           colors = setNames(selected_ca$color, selected_ca$ca_label),
           text = ~ca_label,
           hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth_selected_communityareas")) %>%
     layout(
-      xaxis = list(title = ""),
+      xaxis = list(title = "Year and Month"),
       yaxis = list(title = "Monthly Divvy Trips (from)"),
       legend = list(
+        title = list(text = "Community Area (Quintile)  "),
         font = list(size = 10),
         orientation = "h",
         xanchor = "center",
@@ -774,19 +758,22 @@ fx_plot_duration_selected <- function(duration_by_yearmonth_ca, selected_ca) {
           boxpoints = "outliers", # whiskers extend to 1.5 x IQR; months beyond them are plotted as points
           color = ~ca_label,
           colors = setNames(selected_ca$color, selected_ca$ca_label)) %>%
-    config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trip_duration_selected_communityareas")) %>%
     layout(
-      xaxis = list(title = ""),
+      xaxis = list(title = "Community Area (Quintile)"),
       yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
                    hoverformat = ".1f"), # hover values to tenths
       showlegend = FALSE)
 }
 ```
 
-*Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the printed table to make sure each quintile category appears once.*
+*Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the table (@tbl-selectedcommunityareas) to make sure each quintile category appears once.*
 
 ```{r}
-#| label: select community areas
+#| label: tbl-selectedcommunityareas
+#| tbl-cap: Selected Community Areas by Quintile Category
 #| echo: true
 
 # EDIT HERE: replace with five community areas, one from each quintile category
@@ -798,6 +785,9 @@ selected_communityareas <- c("Near South Side",
 
 # look up selected community areas and their quintile categories
 selected_ca <- fx_select_communityareas(community_areas_ses, selected_communityareas)
+selected_ca %>%
+  select(`Community Area` = comarea_name, `Quintile Category` = ses_ntile) %>%
+  knitr::kable()
 ```
 
 ## Trips by year and month for selected community areas
@@ -805,7 +795,7 @@ selected_ca <- fx_select_communityareas(community_areas_ses, selected_communitya
 
 ```{r}
 #| label: fig-tripsbyyearmonthselected
-#| fig-cap: Divvy Trips by Year and Month for Selected Community Areas
+#| fig-cap: Monthly Divvy Trips (from) for Selected Community Areas, June 2013 through August 2026
 #| echo: true
 
 # plot monthly trips for the selected community areas
@@ -826,7 +816,7 @@ Hover over a box to see its minimum, quartiles, median and maximum, and over a p
 
 ```{r}
 #| label: fig-tripdurationselected
-#| fig-cap: Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas
+#| fig-cap: Monthly Average Divvy Trip Duration (Minutes per Trip) for Selected Community Areas, June 2013 through August 2026
 #| echo: true
 
 # plot a box plot of average trip duration for the selected community areas
