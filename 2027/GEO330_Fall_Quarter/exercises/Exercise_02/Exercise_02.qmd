@@ -103,7 +103,8 @@ community_areas <- st_read("https://data.cityofchicago.org/resource/igwz-8jzy.ge
   select(comarea_id, comarea_name)
 
 # socioeconomic indicators by community area (community_areas_ses), adapted from the
-# Chicago Health Atlas, are included in the Divvy summary tables file loaded above
+# Chicago Health Atlas, and Divvy stations (divvy_stations) are included in the
+# Divvy summary tables file loaded above
 
 ```
 
@@ -344,7 +345,7 @@ First, identify one of the seven community indicators downloaded from the [Chica
 
 Follow the topic links for a full description of each indicator, including its units and data source. Community areas are grouped into five quintile categories (Lowest, Low, Moderate, High and Highest) of the indicator's values. Before interpreting your results, note whether higher values of your indicator signal more or less advantaged conditions (e.g., a higher poverty rate or social vulnerability index signals less advantaged conditions).
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations, grouped into numbered clusters when zoomed out. Use the layer control in the top right corner to turn the stations and community areas on and off. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 ```{r}
 #| label: fig-mapsesquintile
@@ -412,6 +413,16 @@ communityarea_labels <- sprintf(
   trips_by_communityarea_ses$ses_ntile) %>%
 lapply(htmltools::HTML)
 
+# station hover labels
+station_labels <- sprintf(
+  "<strong>%s</strong><br/>
+  <i>Docks:</i> %s<br/>
+  <i>Community area:</i> %s",
+  divvy_stations$name,
+  divvy_stations$capacity,
+  coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
+lapply(htmltools::HTML)
+
 # interactive map
 leaflet(data = trips_by_communityarea_ses) %>%
   addTiles(urlTemplate = paste0(
@@ -427,12 +438,28 @@ leaflet(data = trips_by_communityarea_ses) %>%
     opacity = 1,
     color = "white",
     dashArray = "3",
-    fillOpacity = 0.7) %>%
+    fillOpacity = 0.7,
+    group = "Community Areas") %>%
+  # stations are grouped into numbered clusters when zoomed out
+  addCircleMarkers(
+    data = divvy_stations,
+    radius = 4,
+    color = "#555555",
+    weight = 1,
+    fillColor = "white",
+    fillOpacity = 0.9,
+    label = station_labels,
+    clusterOptions = markerClusterOptions(),
+    group = "Divvy Stations") %>%
   addLegend("bottomleft", 
             pal = map_pal, 
             values = ~ses_value,
             title = paste0(ses_name," Quintiles"),
-            opacity = 1)
+            opacity = 1,
+            group = "Community Areas") %>%
+  addLayersControl(
+    overlayGroups = c("Community Areas", "Divvy Stations"),
+    options = layersControlOptions(collapsed = FALSE))
 ```
 
 ::: {.callout-tip collapse="true"}

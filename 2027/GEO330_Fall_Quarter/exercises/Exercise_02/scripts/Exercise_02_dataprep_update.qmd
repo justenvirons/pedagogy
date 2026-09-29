@@ -509,9 +509,28 @@ rm(list=ls(pattern=apattern))
 ```
 
 ## Divvy Stations
-```{r}
-divvy_stations <- read_json("https://gbfs.divvybikes.com/gbfs/2.3/gbfs.json")
+Divvy publishes its system information as a [General Bikeshare Feed Specification](https://gbfs.org) (GBFS) feed. The GBFS index (`gbfs.json`) lists the URLs of the system's feeds. Station locations are in the `station_information` feed, as latitude and longitude values, which are converted to points.
 
+```{r}
+#| label: import divvy stations
+
+# GBFS index: one list of feeds per language
+gbfs_index <- fromJSON("https://gbfs.divvybikes.com/gbfs/2.3/gbfs.json")
+gbfs_feeds <- gbfs_index$data[[1]]$feeds
+station_information_url <- gbfs_feeds$url[gbfs_feeds$name == "station_information"]
+
+# current stations as points, with the community area each is in (NA outside Chicago)
+divvy_stations <- fromJSON(station_information_url)$data$stations %>%
+  select(any_of(c("station_id", "short_name", "name", "capacity", "lat", "lon"))) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>% # GBFS coordinates are WGS 84
+  st_transform(crs = 4326) %>%
+  st_join(community_areas %>%
+            st_transform(crs = 4326) %>%
+            select(comarea_id, comarea_name),
+          join = st_within)
+
+# date the station feed was downloaded, used to label maps in Exercise_02.qmd
+divvy_stations_date <- Sys.Date()
 ```
 
 
@@ -528,7 +547,8 @@ if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_0
 
 save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
      duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
-     divvy_data_through, CARTO_API_KEY, community_areas_ses, divvy_stations,
+     divvy_data_through, CARTO_API_KEY, community_areas_ses,
+     divvy_stations, divvy_stations_date,
      file = summary_file)
 
 # save(divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
