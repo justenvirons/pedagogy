@@ -700,7 +700,7 @@ plot_ly(data = duration_by_yearmonth_selected,
   layout(
     xaxis = list(title = ""),
     yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
-                 hoverformat = ".2f"), # hover values to hundredths
+                 hoverformat = ".1f"), # hover values to hundredths
     showlegend = FALSE)
 
 ```
