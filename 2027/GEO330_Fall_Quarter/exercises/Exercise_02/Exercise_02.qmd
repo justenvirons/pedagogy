@@ -693,7 +693,7 @@ plot_ly(data = duration_by_yearmonth_selected,
         x = ~ca_label,
         y = ~fr_mins_per_trip,
         type = 'box',
-        boxpoints = FALSE, # whiskers extend to min and max
+        boxpoints = TRUE, # whiskers do not extend to min and max
         color = ~ca_label,
         colors = pal_selected_colors) %>%
   config(displaylogo = FALSE, modeBarButtons = list(list("toImage", "resetScale2d"))) %>%
