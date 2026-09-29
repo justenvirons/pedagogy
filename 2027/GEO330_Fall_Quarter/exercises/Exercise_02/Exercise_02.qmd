@@ -304,7 +304,8 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
            toImageButtonOptions = list(filename = "divvy_trip_duration_by_yearmonth")) %>%
     layout(
       xaxis = list(title = ""),
-      yaxis = list(title = "Average Trip Duration (Minutes per Trip)"),
+      yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
+                   hoverformat = ".1f"), # hover values to one decimal place
       legend = list(
         font = list(size = 10),
         orientation = "h",
@@ -328,7 +329,7 @@ fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 <!-- ::: -->
 
 # Step 4. Explore total and average trips by community area
-In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2026 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated along with average trip duration.
+In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows the distribution of total Divvy trips between 2013 and 2026 across the city. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade. Average daily ridership per 10,000 residents (i.e., ridership standardized by the community area population) is also indicated along with average trip duration. Use the dropdown list in the top right corner of the map to map any of these measures.
 
 *In slide 4 of your presentation, note any patterns and/or variations you see in ridership by community area. What factors do you feel explain differences in total and daily ridership and trip duration? Support your findings by referencing statistics from the figure.*
 
@@ -360,29 +361,47 @@ fx_summarise_communityarea_trips <- function(community_areas_ses, trips_by_yearm
     select(-starts_with("yearmonth"))
 }
 
-# function for creating community area hover labels; the selected indicator's
-# value and quintile category are added when ses_name is given (Step 5)
+# function for calculating the measures shown in the community area hover labels
+# and in the map's dropdown list; daily trips per 10K pop are average daily trips
+# per 10,000 residents
+fx_communityarea_measures <- function(trips_by_communityarea_ses, total_days) {
+  x <- trips_by_communityarea_ses
+  list(
+    "Total trips (from)" = x$fr_trips_cumul,
+    "Total trips (to)" = x$to_trips_cumul,
+    "Avg daily trips (from)" = x$fr_trips_cumul/total_days,
+    "Avg daily trips (to)" = x$to_trips_cumul/total_days,
+    "Avg daily trips (from) per 10K pop" = x$fr_trips_cumul/total_days/x$population*10000,
+    "Avg daily trips (to) per 10K pop" = x$to_trips_cumul/total_days/x$population*10000,
+    "Avg trip duration (from), min" = x$fr_mins_per_trip,
+    "Avg trip duration (to), min" = x$to_mins_per_trip)
+}
+
+# function for creating community area hover labels from the measures above; the
+# selected indicator's value and quintile category are added when ses_name is
+# given (Step 5)
 fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_name = NULL) {
   x <- trips_by_communityarea_ses
+  m <- fx_communityarea_measures(x, total_days)
   labels <- sprintf(
     "<strong>%s</strong><br/>
     <i>Trips (from):</i> %s<br/>
     <i>Trips (to):</i> %s<br/>
     <i>Avg daily trips (from):</i> %0.1f<br/>
     <i>Avg daily trips (to):</i> %0.1f<br/>
-    <i>Avg daily trips (from) per 1K pop:</i> %0.1f<br/>
-    <i>Avg daily trips (to) per 1K pop:</i> %0.1f<br/>
+    <i>Avg daily trips (from) per 10K pop:</i> %0.1f<br/>
+    <i>Avg daily trips (to) per 10K pop:</i> %0.1f<br/>
     <i>Avg trip duration (from):</i> %0.1f min<br/>
     <i>Avg trip duration (to):</i> %0.1f min<br/>",
     x$comarea_name,
-    prettyNum(x$fr_trips_cumul, big.mark = ","),
-    prettyNum(x$to_trips_cumul, big.mark = ","),
-    x$fr_trips_cumul/total_days,
-    x$to_trips_cumul/total_days,
-    x$fr_trips_cumul/total_days/x$population*1000,
-    x$to_trips_cumul/total_days/x$population*1000,
-    x$fr_mins_per_trip,
-    x$to_mins_per_trip)
+    prettyNum(m[["Total trips (from)"]], big.mark = ","),
+    prettyNum(m[["Total trips (to)"]], big.mark = ","),
+    m[["Avg daily trips (from)"]],
+    m[["Avg daily trips (to)"]],
+    m[["Avg daily trips (from) per 10K pop"]],
+    m[["Avg daily trips (to) per 10K pop"]],
+    m[["Avg trip duration (from), min"]],
+    m[["Avg trip duration (to), min"]])
   if (!is.null(ses_name)) {
     labels <- paste0(labels,
                      sprintf("<i>%s:</i> %s (%s)<br/>",
@@ -391,6 +410,81 @@ fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_
                              x$ses_ntile))
   }
   lapply(labels, htmltools::HTML)
+}
+
+# function for creating a quintile color palette; when repeated values make some
+# quintile breaks identical, the remaining distinct breaks are used instead
+fx_quintile_pal <- function(values) {
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) == 6) {
+    colorQuantile(palette = "RdYlBu", domain = values, n = 5, reverse = TRUE)
+  } else {
+    colorBin(palette = "RdYlBu", domain = values, bins = unique(c(breaks, max(breaks) + 1)), reverse = TRUE)
+  }
+}
+
+# function for adding one community area layer and legend per measure, plus a
+# dropdown list (top right) that shows one measure at a time; the first measure
+# is shown when the map opens, and "None" leaves only the boundaries
+fx_add_measure_layers <- function(map, map_data, measures, labels) {
+  for (i in seq_along(measures)) {
+    values <- measures[[i]]
+    pal <- fx_quintile_pal(values)
+    map <- map %>%
+      addPolygons(
+        data = map_data,
+        fillColor = pal(values),
+        label = labels,
+        weight = 2,
+        opacity = 1,
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        group = names(measures)[i]) %>%
+      addLegend("bottomleft",
+                pal = pal,
+                values = values,
+                title = paste0(names(measures)[i], "<br>Quintiles"),
+                opacity = 1,
+                className = paste0("info legend measure-legend measure-legend-", i - 1))
+  }
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        // show the selected measure's layer and legend and hide the others
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) {
+              if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); }
+            }
+          });
+          el.querySelectorAll('.measure-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('measure-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.concat(['None']).forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(0);
+      }", data = list(groups = names(measures)))
 }
 
 # function for creating the base map shared by the community area maps: basemap,
@@ -411,30 +505,13 @@ fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
       opacity = 1)
 }
 
-# function for mapping total trips (from) by community area (quintiles)
+# function for mapping trips by community area (quintiles); the dropdown list
+# switches between the measures in the hover labels, starting with total trips (from)
 fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days) {
-
-  # color palette
-  map_pal <- colorQuantile(palette = "RdYlBu",
-                           domain = trips_by_communityarea_ses$fr_trips_cumul,
-                           n = 5,
-                           reverse = TRUE)
-
-  # interactive map
   fx_basemap(trips_by_communityarea_ses) %>%
-    addPolygons(
-      fillColor = ~map_pal(fr_trips_cumul),
-      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days),
-      weight = 2,
-      opacity = 1,
-      color = "white",
-      dashArray = "3",
-      fillOpacity = 0.7) %>%
-    addLegend("bottomleft",
-              pal = map_pal,
-              values = ~fr_trips_cumul,
-              title = "Total Divvy Trips (from)<br>Quintiles",
-              opacity = 1)
+    fx_add_measure_layers(trips_by_communityarea_ses,
+                          measures = fx_communityarea_measures(trips_by_communityarea_ses, total_days),
+                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days))
 }
 ```
 
@@ -480,7 +557,7 @@ Follow the topic links for a full description of each indicator, including its u
 
 The R functions below carry out the steps behind @fig-mapsesquintile: they add your indicator's values and quintile categories to the community areas and map them along with Divvy stations. They use the community area functions from Step 4, so run those first. You do not need to read or edit this code to complete the exercise, but it is left visible, rather than hidden, so you can see exactly how the map is built. Click "Show the indicator mapping functions" below to expand it, then copy and run it in your Exercise_02.R script.
 
-*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs], grouped into numbered clusters when zoomed out. Use the layer control in the top right corner to turn the stations and community areas on and off. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
+*After selecting one of the indicators, copy and paste the following code into your R script. Edit the two lines marked `EDIT HERE` with your indicator's name and column (from the table above) and follow the instructions in the video to create a custom map. The map also shows current Divvy stations [@divvy_gbfs], grouped into numbered clusters when zoomed out. Use the layer control in the top left corner to switch between clustered and individual stations or turn them off, and the dropdown list in the top right corner to map any of the measures in the hover labels instead of your indicator. Copy the map to slide 5 of your presentation and describe any visual relationship you see (or don't see) between ridership, station locations and the indicator you selected.*
 
 
 ```{r}
@@ -498,15 +575,10 @@ fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
            ses_ntile = quintile_labels[ntile(ses_value, 5)])
 }
 
-# function for mapping the selected indicator by community area (quintiles) with
-# Divvy stations; a layer control turns the community areas and stations on and off
-fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
-
-  # color palette
-  map_pal <- colorQuantile(palette = "RdYlBu",
-                           domain = trips_by_communityarea_ses$ses_value,
-                           n = 5,
-                           reverse = TRUE)
+# function for adding Divvy stations as two layers: grouped into numbered clusters
+# when zoomed out (shown when the map opens) and as individual stations (hidden);
+# stations are drawn in their own pane, above the community areas
+fx_add_station_layers <- function(map, divvy_stations) {
 
   # station hover labels
   station_labels <- sprintf(
@@ -518,18 +590,8 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
     coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
     lapply(htmltools::HTML)
 
-  # interactive map
-  fx_basemap(trips_by_communityarea_ses) %>%
-    addPolygons(
-      fillColor = ~map_pal(ses_value),
-      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name),
-      weight = 2,
-      opacity = 1,
-      color = "white",
-      dashArray = "3",
-      fillOpacity = 0.7,
-      group = "Community Areas") %>%
-    # stations are grouped into numbered clusters when zoomed out
+  map %>%
+    addMapPane("stations", zIndex = 450) %>%
     addCircleMarkers(
       data = divvy_stations,
       radius = 5,
@@ -538,6 +600,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
       fillColor = "steelblue",
       fillOpacity = 0.9,
       label = station_labels,
+      options = pathOptions(pane = "stations"),
       # clusters drawn as steelblue circles showing the number of stations,
       # replacing the default green, yellow and orange size classes
       clusterOptions = markerClusterOptions(
@@ -550,16 +613,35 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
               iconSize: new L.Point(36, 36)
             });
           }")),
-      group = "Divvy Stations") %>%
-    addLegend("bottomleft",
-              pal = map_pal,
-              values = ~ses_value,
-              title = paste0(ses_name, "<br>Quintiles"),
-              opacity = 1,
-              group = "Community Areas") %>%
+      group = "Divvy Stations (clustered)") %>%
+    addCircleMarkers(
+      data = divvy_stations,
+      radius = 5,
+      color = "#fff",
+      weight = 1,
+      fillColor = "steelblue",
+      fillOpacity = 0.9,
+      label = station_labels,
+      options = pathOptions(pane = "stations"),
+      group = "Divvy Stations (individual)") %>%
+    hideGroup("Divvy Stations (individual)")
+}
+
+# function for mapping the selected indicator by community area (quintiles) with
+# Divvy stations; the dropdown list switches to any measure in the hover labels,
+# and the layer control turns the clustered and individual stations on and off
+fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
+  measures <- c(setNames(list(trips_by_communityarea_ses$ses_value), ses_name),
+                fx_communityarea_measures(trips_by_communityarea_ses, total_days))
+
+  fx_basemap(trips_by_communityarea_ses) %>%
+    fx_add_measure_layers(trips_by_communityarea_ses,
+                          measures = measures,
+                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name)) %>%
+    fx_add_station_layers(divvy_stations) %>%
     addLayersControl(
-      overlayGroups = c("Community Areas", "Divvy Stations"),
-      options = layersControlOptions(collapsed = FALSE))
+      overlayGroups = c("Divvy Stations (clustered)", "Divvy Stations (individual)"),
+      options = layersControlOptions(collapsed = FALSE, position = "topleft"))
 }
 ```
 
