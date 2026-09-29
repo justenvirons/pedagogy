@@ -211,8 +211,9 @@ Lastly, let's examine daily patterns of Divvy ridership over the past decade (@f
 # (Saturday and Sunday) in a darker blue than weekdays
 fx_plot_trips_by_date <- function(trips_by_date) {
   trips_by_date <- trips_by_date %>%
-    mutate(day_type = if_else(wday(date) %in% c(1, 7), "Weekend", "Weekday"), # Sunday = 1, Saturday = 7
-           day_name = as.character(wday(date, label = TRUE, abbr = FALSE)))
+    # lubridate:: keeps data.table's wday() from being used when data.table is loaded
+    mutate(day_type = if_else(lubridate::wday(date) %in% c(1, 7), "Weekend", "Weekday"), # Sunday = 1, Saturday = 7
+           day_name = as.character(lubridate::wday(date, label = TRUE, abbr = FALSE)))
 
   plot_ly() %>%
     # thin line connecting all days, for context
