@@ -387,8 +387,8 @@ fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_
     "<strong>%s</strong><br/>
     <i>Trips (from):</i> %s<br/>
     <i>Trips (to):</i> %s<br/>
-    <i>Avg daily trips (from):</i> %0.1f<br/>
-    <i>Avg daily trips (to):</i> %0.1f<br/>
+    <i>Avg daily trips (from):</i> %s<br/>
+    <i>Avg daily trips (to):</i> %s<br/>
     <i>Avg daily trips (from) per 10K pop:</i> %0.1f<br/>
     <i>Avg daily trips (to) per 10K pop:</i> %0.1f<br/>
     <i>Avg trip duration (from):</i> %0.1f min<br/>
@@ -396,8 +396,8 @@ fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_
     x$comarea_name,
     prettyNum(m[["Total trips (from)"]], big.mark = ","),
     prettyNum(m[["Total trips (to)"]], big.mark = ","),
-    m[["Avg daily trips (from)"]],
-    m[["Avg daily trips (to)"]],
+    formatC(m[["Avg daily trips (from)"]], format = "f", digits = 1, big.mark = ","),
+    formatC(m[["Avg daily trips (to)"]], format = "f", digits = 1, big.mark = ","),
     m[["Avg daily trips (from) per 10K pop"]],
     m[["Avg daily trips (to) per 10K pop"]],
     m[["Avg trip duration (from), min"]],
