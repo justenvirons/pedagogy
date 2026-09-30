@@ -43,8 +43,9 @@ Keep that framing in mind as we move through the periods—you’ll see that the
 -   Period 3: Cycling as a Pre-Automobile Urban Mode (1900–1930s)
 -   Period 4: Automobile Ascendancy & Cycling Marginalization (1930s–1960s)
 -   Period 5: Oil Crisis & Environmental Reawakening (1970s)
--   Period 6: Information Technologies & Sharing Economies (2000s–2010s)
--   Period 7: Rise of Electric Micromobility Vehicles  (2020s-Present)
+-   Period 6: Institutionalization of Cycling Policy (1980s–1990s)
+-   Period 7: Information Technologies & Sharing Economies (2000s–2010s)
+-   Period 8: Rise of Electric Micromobility Vehicles  (2020s-Present)
 :::
 
 ::: {.column width="45%"}
@@ -113,6 +114,8 @@ From the mid-20th century onward, bicycling re-enters planning conversations thr
 In this first period, bicycles are better understood as mechanical experiments than true transportation. Devices like hobby horses and draisines had no pedals and relied on foot propulsion, functioning much like modern balance bikes. Engineers experimented with levers and front-wheel pedals, gradually learning how balance, steering, and speed might work on two wheels.
 
 From an urban perspective, these early cycles had limited everyday use. They were expensive, often wooden, and used mainly by elites in parks and promenades rather than busy streets. Even so, they established a critical idea: that zero-emission, human-powered wheeled mobility was possible, laying the conceptual groundwork for later urban cycling.
+
+Example the Walls of Lucca, Italy. Built between 1504 and 1648, they are the second-largest intact Renaissance city walls in Europe. 
 :::
 
 
@@ -340,6 +343,7 @@ This era also saw cycling become increasingly integrated into the professional p
 
 The sustainability significance of this period lies in the accumulation of empirical evidence showing that safety and ridership levels are primarily shaped by policy choices and infrastructure design. The sources note that before this institutionalization, cyclists were often vulnerable to both high-speed traffic and urban crime, particularly in densely built environments. By moving toward networks that were continuous, legible, and physically separated from motor traffic, cities proved that high cycling rates were not merely a result of "cultural preference" but a response to safe and efficient infrastructure. By supporting a mode shift away from private automobiles, these institutionalized policies reinforced the bicycle's role in reducing greenhouse gas emissions and enhancing overall urban livability.
 
+The international North Sea Cycle Route (EuroVelo 12) officially opened in 2001 as a joint project with 68 partners in 8 countries. In 2003 it received a Guinness World Records certificate as the world's longest cycle route. The Dutch part runs about 585 km from the German border at Nieuweschans to Sluis near the Belgian border, following two national routes: the LF10 (Waddenzeeroute) and the LF1 (Noordzeeroute). Before the Belgian sections were added, the route originally ended at Hook of Holland, where ferries to Harwich in England close the loop.
 :::
 
 ---

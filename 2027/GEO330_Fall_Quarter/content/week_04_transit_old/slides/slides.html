@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="slides_files/libs/clipboard/clipboard.min.js"></script>
+<script src="slides_files/libs/quarto-html/tabby.min.js"></script>
+<script src="slides_files/libs/quarto-html/popper.min.js"></script>
+<script src="slides_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="slides_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="slides_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="slides_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.27">
+
+  <meta name="author" content="C. Scott Smith, PhD AICP">
+  <title>GEO 3/430 Sustainable Urban Transportation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="slides_files/libs/revealjs/dist/theme/quarto-534cd8e3a96973385dffff3f4709048d.css">
+  <link rel="stylesheet" href="slides.css">
+  <link href="slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="slides_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">GEO 3/430 Sustainable Urban Transportation</h1>
+  <p class="subtitle">Week #4: Public Transit and the <br>Efficiencies of Mass Movement</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+C. Scott Smith, PhD AICP 
+</div>
+        <p class="quarto-title-affiliation">
+            DePaul University
+          </p>
+    </div>
+</div>
+
+</section>
+<section class="slide level2">
+
+<div class="img-center">
+<p><img data-src="images/tube_station.png" style="height:100.0%"></p>
+</div>
+<aside class="notes">
+<p>This week examines public transit as a system of coordinated mass movement, emphasizing how fixed-route, shared vehicles deliver mobility at scale while optimizing energy use, street space, and network reliability. The focus is not on any single mode, but on how networks—bus, rail, and bus rapid transit—function together to move large numbers of people efficiently through dense urban environments.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="periods-of-public-transit" class="slide level2">
+<h2>Periods of Public Transit</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<ul>
+<li>Period 1: Horse-Drawn &amp; Early Fixed-Route Transit (1830s–1880s)</li>
+<li>Period 2: Electric Streetcars &amp; Urban Expansion (1890s–1920s)</li>
+<li>Period 3: Motorization, Decline &amp; Public Takeover (1930s–1970s)</li>
+<li>Period 4: Modern Transit Revival &amp; Network Integration (1980s–2000s)</li>
+<li>Period 5: Integration of Mass Transit with Other Shared Mobilities (2000s–Present)</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<h3 id="sources">Sources</h3>
+<p><img data-src="images/source_mass_motorization_mass_transit.png"> <img data-src="images/source_transforming_cities_with_transit.jpg"> <img data-src="images/source_human_transit.jpg"></p>
+</div></div>
+<aside class="notes">
+<p>Public transit history can be organized into five broad periods reflecting shifts in technology, governance, and urban form. Together, these periods illustrate how transit has alternately expanded and contracted in response to economic forces, policy choices, and competition with private automobiles.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-1-horse-drawn-early-fixed-route-transit-1830s1880s" class="slide level2">
+<h2>Period 1: Horse-Drawn &amp; Early Fixed-Route Transit (1830s–1880s)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="key-developments">Key Developments</h3>
+<ul>
+<li>Horse-drawn omnibuses and street railways introduced fixed routes and regular schedules, marking the first large-scale shift from individual to shared urban mobility.</li>
+<li>The use of steel rails reduced rolling resistance, allowing vehicles to carry more passengers with greater reliability than horse-drawn carriages.</li>
+<li>Early fare systems and standardized routes formalized public transit as a coordinated urban service rather than an informal travel option.</li>
+</ul>
+<h3 id="urban-transportation-relevance">Urban Transportation Relevance</h3>
+<ul>
+<li>These systems extended practical travel distances beyond walking, enabling early forms of commuting within expanding industrial cities.</li>
+<li>Development began to concentrate along transit corridors, establishing early patterns of accessibility-based urban growth.</li>
+<li>Fixed-route services introduced the idea of predictable, collective mobility as a core urban function.</li>
+</ul>
+<h3 id="sustainability-significance">Sustainability Significance</h3>
+<ul>
+<li>Shared horse-drawn transit improved efficiency relative to individualized carriage travel by moving more people with fewer vehicles.</li>
+<li>The consolidation of trips reduced street congestion and disorder compared to unregulated private transport.</li>
+<li>These systems were ultimately constrained by animal labor, waste management, and limited scalability, highlighting the need for technological transition.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period01_human_carriage.jpg"></p>
+<figcaption>Human-powered carriage. London Transport Museum</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period01_horse_carriage.png"></p>
+<figcaption>Horse and carriage. London Transport Museum</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period01_horse_omnibus.png"></p>
+<figcaption>Horse omnibus. London Transport Museum</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period01_horsecar.jpg"></p>
+<figcaption>Horse car. London Transport Museum</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period01_early_transportation.jpg"></p>
+<figcaption>Early transportation diorama. London Transport Museum</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Before the 1880s, walking was the primary mode of travel for most urban residents because owning a horse and buggy was prohibitively expensive. The introduction of horsecars served primarily middle-income households, marking a significant shift from individual travel to shared urban mobility. These early systems operated on tracks located in the center of city streets and were governed by franchise agreements that formalized routes and fare collection. By utilizing fixed rails and schedules, these vehicles provided the first predictable transit services that allowed multiple people with different destinations to travel together.</p>
+<p>Early horse-drawn transit systems transformed urban travel habits by extending practical distances beyond the traditional walking range. These fixed services established the idea of collective mobility as a core urban function, as people could plan their trips around a predictable pattern without coordinating with one another. While many workers still lived within walking distance of their jobs during this era, these systems facilitated the early patterns of accessibility-based growth that would later define industrial cities. Consequently, development began to concentrate along these transit corridors, laying the groundwork for the future expansion of metropolitan areas.</p>
+<p>Shared horse-drawn transit improved urban efficiency compared to individualized carriage travel by moving more people with fewer vehicles. The consolidation of trips into fixed routes helped manage street congestion, though early urban centers remained dominated by a mix of pedestrians and horse carts. However, these systems were ultimately limited by the inherent constraints of animal labor, including significant waste management issues and the physical limitations of horse speed. These challenges, combined with the difficulty of scaling horse-drawn service to meet rising demand, eventually highlighted the need for the technological transition to electric power that began in the mid-1880s.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-2-electric-streetcars-urban-expansion-1890s1920s" class="slide level2">
+<h2>Period 2: Electric Streetcars &amp; Urban Expansion (1890s–1920s)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="key-developments-1">Key Developments</h3>
+<ul>
+<li>The electrification of street railways replaced horse-drawn systems, dramatically increasing speed, capacity, and operational reliability.</li>
+<li>Private transit companies rapidly built extensive streetcar networks, often financed through integrated real estate and land development ventures.</li>
+<li>Technological standardization, including electric traction and fixed rails, enabled frequent, high-volume service across metropolitan areas.</li>
+</ul>
+<h3 id="urban-transportation-relevance-1">Urban Transportation Relevance</h3>
+<ul>
+<li>Electric streetcars made routine commuting possible over longer distances, fundamentally expanding the spatial footprint of cities.</li>
+<li>Urban growth became organized around radial streetcar corridors, giving rise to compact but expanding “streetcar suburbs.”</li>
+<li>Mass transit emerged as the dominant mode of daily urban travel for working- and middle-class populations during this period.</li>
+</ul>
+<h3 id="sustainability-significance-1">Sustainability Significance</h3>
+<ul>
+<li>Streetcar systems moved large numbers of passengers with relatively low per-capita energy use compared to later automobile travel.</li>
+<li>Electrified transit supported dense, walkable urban development that minimized travel distances and infrastructure costs.</li>
+<li>This period demonstrated the scalability of electric mass transit as an efficient alternative to individualized motorized mobility.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period02_pacific_electric_streetcar_map.png"></p>
+<figcaption>Pacific Electric streetcar system map</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period02_pacific_electric_streetcar.jpg"></p>
+<figcaption>Pacific Electric streetcar, (1910s)</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period02_west_chicago_streetcar.jpg"></p>
+<figcaption>West Chicago Streetcar (1910s)</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period02_oak_park_marion_station.jpg"></p>
+<figcaption>Oak Park Marion station construction (1957)</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>The electrification of street railways in the late 1880s represented a massive technological leap over horse-drawn systems, offering much higher speeds, larger vehicle capacities, and improved operational reliability. These extensive networks were often built by private companies affiliated with electric utilities or real estate syndicates that used transit lines to unlock the value of suburban land. This boom was supported by technological standardization, including specialized power station equipment and overhead electric wires, which enabled frequent and high-volume service across hundreds of cities.</p>
+<p>Electric streetcars fundamentally reshaped the spatial footprint of cities by making routine commuting possible over much longer distances than walking. Urban growth became organized around radial streetcar corridors, resulting in the development of compact but rapidly expanding streetcar suburbs. During this peak era, mass transit emerged as the dominant mode of daily travel for working- and middle-class populations, with per capita ridership nearly doubling between 1890 and 1902.</p>
+<p>Streetcar systems were remarkably efficient for moving large urban populations, utilizing relatively low per-capita energy compared to the individualized automobile travel that would later follow. These electrified systems also supported a dense, walkable built form because the reliance on transit required high-quality pedestrian environments near stops, which minimized infrastructure costs and travel distances. Ultimately, this period demonstrated that electric mass transit was a highly scalable mobility tool capable of serving as a predictable and shared alternative to individualized motorized transport.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-3-motorization-decline-public-takeover-1930s1970s" class="slide level2">
+<h2>Period 3: Motorization, Decline &amp; Public Takeover (1930s–1970s)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="key-developments-2">Key Developments</h3>
+<ul>
+<li>Rapid growth in private automobile ownership reshaped travel behavior and reduced demand for fixed-route public transit.</li>
+<li>Many privately operated transit systems became financially unsustainable due to declining ridership, fixed fare structures, and rising operating costs.</li>
+<li>Governments increasingly intervened by acquiring failing transit companies and consolidating them under public ownership to preserve basic service.</li>
+</ul>
+<h3 id="urban-transportation-relevance-2">Urban Transportation Relevance</h3>
+<ul>
+<li>Transit ridership declined as metropolitan areas dispersed and land use patterns shifted toward low-density, automobile-oriented development.</li>
+<li>Public transit increasingly served transit-dependent populations rather than functioning as a universal urban mobility system.</li>
+<li>Highway construction and street redesigns prioritized automobile throughput, further marginalizing transit operations in urban rights-of-way.</li>
+</ul>
+<h3 id="sustainability-significance-2">Sustainability Significance</h3>
+<ul>
+<li>Widespread motorization substantially increased energy consumption and transportation-related emissions.</li>
+<li>The decline of high-capacity transit reinforced longer travel distances and inefficient land use patterns.</li>
+<li>Public takeover of transit systems preserved essential infrastructure that later enabled reinvestment and system recovery.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period03_futurama_exhibit.png"></p>
+<figcaption>The General Motors-sponsored Futurama exhibit at the 1939 World’s Fair in New York</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period03_national_highway_system.png"></p>
+<figcaption>The National Highway System of Interstate and Defense Highways</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period03_phoenix_highway.jpg"></p>
+<figcaption>Interstate Highway 17 in Phoenix, Arizona</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period03_network_distance.png"></p>
+<figcaption>Access and street network design. Urban Design 4 Health</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period03_amsterdam_street_redesign.png"></p>
+<figcaption>Amsterdam street redesign and transformation, 1910-2020</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>The mid-20th century was defined by a ruinous financial vice for private transit companies, created by rigid fixed-fare structures and rising operating costs driven by wartime inflation and labor unionization. The Great Depression accelerated the collapse of these already distressed systems, forcing many operators to replace streetcars with less expensive buses or face outright abandonment. Rapid growth in private automobile ownership followed World War II, fundamentally reshaping travel behavior and significantly reducing the demand for shared fixed-route mobility. Consequently, governments began to intervene on a large scale by the 1960s, acquiring failing private companies and consolidating them under public ownership to ensure the continued provision of basic urban services. As metropolitan areas dispersed, the relevance of public transit shifted from a universal urban utility to a specialized service often limited to transit-dependent populations. The rise of mass motorization and the federal prioritization of highway construction facilitated low-density, automobile-oriented development that was structurally inhospitable to traditional transit. Street redesigns and the creation of the interstate highway system prioritized automobile throughput, further marginalizing transit operations within urban rights-of-way. This era saw the hollowing out of industrial centers as middle-class residents and employers migrated to suburbs, leaving transit systems to serve a shrinking share of total metropolitan trips.</p>
+<p>From a sustainability perspective, widespread motorization resulted in a substantial increase in per-capita energy consumption and transportation-related greenhouse gas emissions. The decline of high-capacity streetcar networks and the subsequent shift toward private vehicles reinforced inefficient land use patterns and necessitated much longer travel distances. While this period was marked by the erosion of transit’s market share, the eventual public takeover of failing systems was significant because it preserved essential infrastructure and rights-of-way. This preservation of core corridors and systems provided the foundational armature that would later enable the modern reinvestment and network integration seen in contemporary transit revivals.</p>
+<p>How did federal highway policy lead to urban transit’s decline? Could public ownership have saved transit ridership in the 1960s? How does Portland’s Smart Growth model compare to older systems?</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-4-modern-transit-revival-network-integration-1980s2000s" class="slide level2">
+<h2>Period 4: Modern Transit Revival &amp; Network Integration (1980s–2000s)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="key-developments-3">Key Developments</h3>
+<ul>
+<li>Public agencies renewed investment in rail transit, light rail systems, and high-frequency bus services after decades of disinvestment.</li>
+<li>Bus Rapid Transit emerged as a cost-effective strategy for delivering higher-capacity service using dedicated lanes and priority treatments.</li>
+<li>Transit planning increasingly emphasized network design, service frequency, and reliability rather than isolated capital projects.</li>
+</ul>
+<h3 id="urban-transportation-relevance-3">Urban Transportation Relevance</h3>
+<ul>
+<li>Transit was reframed as a competitive alternative to driving in dense urban corridors and regional centers.</li>
+<li>Integration between transit investments and land use planning supported downtown revitalization and compact urban development.</li>
+<li>Regional transit authorities expanded coordination across municipal boundaries, improving system legibility and connectivity.</li>
+</ul>
+<h3 id="sustainability-significance-3">Sustainability Significance</h3>
+<ul>
+<li>Higher-capacity transit systems reduced per-passenger energy use relative to automobile travel in congested corridors.</li>
+<li>Transit-oriented development patterns supported walkable neighborhoods and reduced automobile dependence.</li>
+<li>Network-based planning improved operational efficiency and laid the groundwork for long-term mode shift.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period04_cta_greenline_oak_park.JPG"></p>
+<figcaption>CTA Greenline viaduct in Oak Park, IL. C. Scott Smith</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period04_evolution_tube_cars.jpg"></p>
+<figcaption>Evolution of Underground cars. London Transit History Museum. C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Public agencies have entered an era of renewed investment, targeting rail systems, light rail, and high-frequency bus networks to reverse decades of previous disinvestment. Bus Rapid Transit has emerged during this period as a particularly cost-effective strategy, using dedicated lanes and signal priority to provide high-capacity service at a fraction of the capital cost required for heavy rail. Modern transit planning now moves beyond isolated capital projects to emphasize network design, where service frequency and reliability are prioritized to create a frequent transit network that offers passengers a sense of freedom and spontaneous mobility.</p>
+<p>Transit is being reframed as a competitive alternative to driving, particularly in dense urban corridors and regional centers where it can offer more reliable travel times than congested road networks. Integrating transit investments with strategic land-use planning has become central to downtown revitalization and compact development efforts, as evidenced by successful models in Arlington County, Singapore, and Copenhagen. To improve system legibility and connectivity for the user, regional transit authorities have expanded their coordination across municipal boundaries, ensuring that the transit network aligns with regional commuter and labor sheds.</p>
+<p>From a sustainability perspective, higher-capacity transit systems are being utilized to significantly reduce per-passenger energy use compared to private automobile travel in congested corridors. Contemporary transit-oriented development patterns support the creation of walkable neighborhoods, which effectively reduces automobile dependence and the associated environmental footprint of urban growth. Finally, the current shift toward network-based planning improves overall operational efficiency and establishes the foundational urban form necessary for a long-term shift in travel behavior toward more ecological modes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="period-5-integration-of-mass-transit-with-other-shared-mobilities-2010spresent" class="slide level2">
+<h2>Period 5: Integration of Mass Transit with Other Shared Mobilities (2010s–Present)</h2>
+<div class="columns">
+<div class="column" style="width:55%;">
+<h3 id="key-developments-4">Key Developments</h3>
+<ul>
+<li>Public transit systems have increasingly integrated with walking, bicycling, micromobility, and shared mobility services to form coordinated urban transportation networks.</li>
+<li>Digital technologies now support real-time information, trip planning, and fare integration across multiple modes.</li>
+<li>Transit agencies have accelerated the electrification of bus and rail fleets in response to climate and air quality goals.</li>
+</ul>
+<h3 id="urban-transportation-relevance-4">Urban Transportation Relevance</h3>
+<ul>
+<li>Mass transit functions as the backbone of multimodal mobility systems, with shared and active modes addressing first- and last-mile connections.</li>
+<li>Integrated networks improve accessibility and user experience by reducing transfer friction and travel uncertainty.</li>
+<li>Planning increasingly emphasizes reliability, legibility, and equity to serve diverse urban populations.</li>
+</ul>
+<h3 id="sustainability-significance-4">Sustainability Significance</h3>
+<ul>
+<li>Multimodal integration enables large-scale mode shift away from private automobiles, reducing congestion and emissions.</li>
+<li>Electrified transit and shared mobility reduce per-capita energy use and exposure to air pollution.</li>
+<li>Contemporary transit systems align transportation policy with climate action, public health, and broader sustainability objectives.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period05_bike_rack_transit.jpg"></p>
+<figcaption>Bike rack near Ridgeland CTA station in Oak Park, IL (2017). C. Scott Smith</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period05_bikeshare_transit.JPG"></p>
+<figcaption>Bublr bikeshare bike rack near transit stop in Milwaukee, WI (2018). C. Scott Smith</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period05_washington_cta_station.jpg"></p>
+<figcaption>Rendering of new Washington and Wabash CTA station in Chicago, IL (2017). CTA</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period05_milwaukee_streetcar.jpg"></p>
+<figcaption>The Hop street car construction in Milwaukee, WI (2017). C. Scott Smith</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/period05_milwaukee_streetcar_02.jpg"></p>
+<figcaption>The Hop street car in Milwaukee, WI (2018). C. Scott Smith</figcaption>
+</figure>
+</div>
+</div></div>
+<aside class="notes">
+<p>Modern public transit is increasingly positioned as the backbone of an integrated multimodal system where walking, cycling, and shared mobility serve as critical feeders. Because nearly every transit trip begins and ends as a pedestrian, high-quality walking environments and green connectors like dedicated bike paths are essential to reducing transfer friction and addressing first- and last-mile connectivity. These integrated networks are designed to provide passengers with a sense of personal mobility that extends beyond their walking range, fostering a high-capacity system where different modes work together to provide spontaneous freedom of movement.</p>
+<p>The user experience is being fundamentally transformed by digital technologies that support real-time information, trip planning, and seamless fare integration. Real-time data on vehicle locations reduces the uncertainty associated with waiting and connecting, making transit phases like walking or transferring feel less onerous and more predictable. Planning now emphasizes legibility—the simplicity of network design and clarity of presentation—as a critical value, allowing diverse populations to navigate complex urban regions spontaneously without relying on confusing paper timetables.</p>
+<p>Contemporary transit strategies align transportation policy with broader sustainability and equity objectives, such as climate action and public health. Agencies are accelerating the search for new motive powers, such as fleet electrification and hydrogen fuel cells, to reduce per-capita energy use and localized air pollution. Furthermore, a focus on inclusive development through social housing and affordable accessibility near transit hubs ensures that these integrated systems serve a wide demographic, making cities more economically competitive and socially resilient.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p>© 2026 C. Scott Smith | DePaul University</p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="slides_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="slides_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="slides_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': false,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'fade',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

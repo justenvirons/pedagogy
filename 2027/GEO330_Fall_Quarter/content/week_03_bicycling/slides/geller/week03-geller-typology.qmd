@@ -1,0 +1,161 @@
+---
+title: "Employing Geller's Typology"
+subtitle: "What kinds of (actual/potential) cyclists are we?"
+format:
+  revealjs:
+    theme: [default, custom.scss]
+    slide-number: c/t
+    transition: fade
+    width: 1280
+    height: 720
+    margin: 0.06
+    center: false
+    hash-type: number
+    preview-links: auto
+execute:
+  echo: false
+---
+
+## The premise
+
+::: {.callout-quote}
+"Riding a bicycle should not require bravery."
+:::
+
+- The principal reason why people don't ride is **fear of motor vehicle traffic** — not other cyclists, pedestrians, or solo falls
+- High-cycling cities (NL, DK, DE) **removed the fear** of cycling
+- In the Netherlands, a quarter of trips by people 75+ are by bike (riding "alongside seven-year-olds")
+
+::: {.notes}
+Ask: who in this room has been told they're "brave" for biking in Chicago? That comment is the phenomenon Geller is describing.
+:::
+
+## The four types
+
+![](images/four_types_bar.png){fig-align="center" width="100%"}
+
+:::: {.columns}
+::: {.column width="25%"}
+::: {.type-card .sf-card}
+**Strong & Fearless** · <1%<br>Ride regardless of conditions; cycling is identity
+:::
+:::
+::: {.column width="25%"}
+::: {.type-card .ec-card}
+**Enthused & Confident** · 7%<br>Will share the road, but prefer bike lanes & boulevards
+:::
+:::
+::: {.column width="25%"}
+::: {.type-card .ic-card}
+**Interested but Concerned** · 60%<br>Like riding; afraid of cars. Would ride if streets felt safe
+:::
+:::
+::: {.column width="25%"}
+::: {.type-card .nw-card}
+**No Way No How** · 33%<br>Not interested in cycling *for transportation* (topography, inability, disinterest)
+:::
+:::
+::::
+
+# Part 1 · Take the survey {background-color="#1b1b1a"}
+
+Answer honestly for **you, today, in Chicago** (or wherever you may be located). 
+
+## Section A · About you
+
+::: {.qbox}
+[A1]{.qid} Are you physically able to ride a bicycle (any kind, including adaptive or e-bike)?  **Yes / No**
+:::
+
+::: {.qbox}
+[A2]{.qid} *"I would like to travel by bicycle more than I do now."*<br>
+1 Strongly disagree · 2 Disagree · 3 Agree · 4 Strongly agree
+:::
+
+::: {.qbox}
+[A3]{.qid} In the past 30 days, did you ride a bicycle (own bike, Divvy, e-bike) **to get somewhere** — class, work, errands — not only for exercise or fun?  **Yes / No**
+:::
+
+::: {.qbox}
+[B1]{.qid} What **most** keeps you from biking more? *(pick one)*<br>
+Traffic / drivers · Distance · Weather · No bike · Bike theft / parking · Arriving sweaty · Don't know good routes · Personal security · Other
+:::
+
+::: {.notes}
+B1 is not used in scoring. It lets us test Geller's central claim — that fear of traffic is the dominant barrier — against our own data.
+:::
+
+## Section S · How comfortable would you feel?
+
+For each street on the next five slides, rate how comfortable you would feel **riding a bicycle there**:
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+<br>
+
+- Imagine a typical weekday afternoon, good weather, a trip you actually need to make
+- Rate the **street**, not your destination
+- Go with your first reaction
+
+## S1 · Major street, no bike lane
+
+![](images/s1_major_no_lane.png){fig-align="center" width="80%"}
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+[Think: a four-lane arterial like Western or Ashland Ave, 30–35 mph, parked cars on your right.]{.tiny}
+
+## S2 · Major street with a painted bike lane
+
+![](images/s2_major_painted_lane.png){fig-align="center" width="80%"}
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+[Same street and traffic; a striped lane between moving traffic and parked cars (watch for opening doors).]{.tiny}
+
+## S3 · Major street with a protected bike lane
+
+![](images/s3_major_protected_lane.png){fig-align="center" width="80%"}
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+[Same street; the bike lane runs curbside, separated by posts and a row of parked cars (e.g., Dearborn St downtown).]{.tiny}
+
+## S4 · Quiet residential street / neighborhood greenway
+
+![](images/s4_residential_greenway.png){fig-align="center" width="80%"}
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+[One lane each way, 20 mph, few cars, speed humps and bike markings.]{.tiny}
+
+## S5 · Off-street path or trail
+
+![](images/s5_offstreet_path.png){fig-align="center" width="80%"}
+
+::: {.scale}
+[**1** Very uncomfortable]{} [**2** Somewhat uncomfortable]{} [**3** Somewhat comfortable]{} [**4** Very comfortable]{}
+:::
+
+[No cars at all — shared with people walking and running (e.g., the Lakefront Trail).]{.tiny}
+
+# Part 2 - Score it
+
+![](images/scoring_tree.png){fig-align="center" width="80%"}
+
+[Rule-based classification adapted from Dill & McNeil (2013). Apply the steps **in order**; stop at the first type you reach.]{.tiny}
+
+::: {.notes}
+Order matters. Someone very comfortable on S1 is S&F even if they also love paths. IBC is still partly a residual category, exactly as in Geller — but now it has a positive definition: interested, able, and NOT very comfortable even with a painted lane.
+:::
+

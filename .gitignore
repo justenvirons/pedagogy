@@ -7,6 +7,9 @@
 *.csv
 *.RData
 *.zip
+*.MOV
+*.jpg
+*.png
 
 # History files
 .Rhistory
