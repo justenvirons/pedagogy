@@ -10,6 +10,7 @@
 *.MOV
 *.jpg
 *.png
+*.jpeg
 
 # History files
 .Rhistory
