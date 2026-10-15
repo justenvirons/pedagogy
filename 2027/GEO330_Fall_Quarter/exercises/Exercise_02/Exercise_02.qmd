@@ -38,7 +38,7 @@ library(openxlsx) # write tables as Excel spreadsheets
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_02")
 
-load(file="data/Exercise_02.RData")
+load(file = "https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exercise_02.RData")
 
 ```
 

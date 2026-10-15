@@ -816,9 +816,10 @@ fx_plot_duration_selected <- function(duration_by_yearmonth_ca, selected_ca) {
 
 ```
 
+## Save Exercise #2 elements
 
 ```{r}
-#| label: save summary tables
+#| label: save exercise elements to RData file
 
 CARTO_API_KEY  <- Sys.getenv("CARTO_API_KEY",  unset = "cb1_31xh_1_06fb99adb466f0f5a0392d7d")
 
