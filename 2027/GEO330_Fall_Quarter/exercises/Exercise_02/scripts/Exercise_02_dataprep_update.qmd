@@ -829,6 +829,12 @@ save(trips_by_date, trips_by_yearmonth, trips_by_yearmonth_ca,
      duration_by_yearmonth, duration_by_date, duration_by_yearmonth_ca,
      divvy_data_through, CARTO_API_KEY, community_areas_ses,
      divvy_stations, divvy_stations_date,
+     # functions for Exercise #2 (and the quintile colors they use)
+     quintile_colors,
+     fx_add_ses_quintiles, fx_add_station_layers, fx_map_ses_quintiles,
+     fx_summarise_trips_by_ses, fx_plot_trips_by_ses, fx_summarise_ses_quintiles,
+     fx_table_ses_quintiles, fx_select_communityareas, fx_plot_trips_selected,
+     fx_plot_duration_selected,
      file = summary_file)
 
 # save(divvy_trips_2013_2026_ca_all, file="exercises/Exercise_02/data/divvy_trips_latest_ca_all.RData")
