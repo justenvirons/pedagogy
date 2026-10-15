@@ -68,7 +68,7 @@ dir.create(raw_dir, showWarnings = FALSE, recursive = TRUE)
 options(timeout = max(600, getOption("timeout"))) # monthly zip files are large
 ```
 
-# Functions
+# Functions for data development
 ```{r}
 #| label: functions
 
@@ -534,8 +534,288 @@ divvy_stations_date <- Sys.Date()
 ```
 
 
-# Save summary tables
+# Create Exercise_02.RData file
 `Exercise_02.qmd` loads this file. The CARTO API key comes from the `CARTO_API_KEY` environment variable (e.g., set in `.Renviron`) unless it is already defined in the session.
+
+## Functions for Exercise #2
+
+```{r}
+#| label: save summary tables
+
+# function for adding the selected indicator's values (ses_value) and quintile
+# categories (ses_ntile) to community areas
+fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
+  quintile_labels <- c("Lowest", "Low", "Moderate", "High", "Highest")
+  community_areas_ses %>%
+    mutate(ses_value = .data[[ses_column]],
+           ses_ntile = quintile_labels[ntile(ses_value, 5)])
+}
+
+# function for adding Divvy stations as two layers: every station as a single point
+# (hidden when the map opens) and docks grouped into clusters that show the total
+# number of docks they contain (shown when the map opens). Points without a reported capacity are
+# likely single, free-floating bikes rather than stations, so they are left out of
+# the dock clusters. Stations are drawn in their own pane, above the community areas
+fx_add_station_layers <- function(map, divvy_stations) {
+
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s</strong><br/>
+    <i>Docks:</i> %s<br/>
+    <i>Community area:</i> %s",
+    divvy_stations$name,
+    if_else(is.na(divvy_stations$capacity),
+            "not reported (likely a free-floating bike)",
+            as.character(divvy_stations$capacity)),
+    coalesce(divvy_stations$comarea_name, "Outside Chicago")) %>%
+    lapply(htmltools::HTML)
+
+  # stations with a reported number of docks
+  docked <- !is.na(divvy_stations$capacity)
+  docked_stations <- divvy_stations[docked, ]
+
+  # dock counts passed to the cluster icons, keyed by each station's coordinates;
+  # stations that share coordinates split their combined docks equally, so the
+  # cluster totals add up
+  coords <- st_coordinates(docked_stations)
+  coord_key <- sprintf("%.6f,%.6f", coords[, "Y"], coords[, "X"])
+  dock_share <- tapply(docked_stations$capacity, coord_key, sum) /
+    tapply(docked_stations$capacity, coord_key, length)
+  dock_lookup <- jsonlite::toJSON(as.list(dock_share), auto_unbox = TRUE, digits = NA)
+
+  # cluster icons: steelblue circles showing the total docks of the stations in each
+  # cluster (single stations included), sized to fit the number
+  dock_icon <- htmlwidgets::JS(paste0("
+    (function() {
+      var docks = ", dock_lookup, ";
+      return function(cluster) {
+        var total = 0;
+        cluster.getAllChildMarkers().forEach(function(m) {
+          var ll = m.getLatLng();
+          total += docks[ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6)] || 0;
+        });
+        var text = Math.round(total).toLocaleString('en-US');
+        var size = Math.max(32, 14 + 8 * text.length);
+        return new L.DivIcon({
+          html: '<div style=\"background-color: rgba(70, 130, 180, 0.85); color: white; font-weight: bold; border: 2px solid white; border-radius: 50%; width: ' + size + 'px; height: ' + size + 'px; line-height: ' + (size - 4) + 'px; text-align: center;\">' + text + '</div>',
+          className: '',
+          iconSize: new L.Point(size, size)
+        });
+      };
+    })()"))
+
+  map %>%
+    addMapPane("stations", zIndex = 450) %>%
+    addCircleMarkers(
+      data = divvy_stations,
+      radius = 5,
+      color = "#fff",
+      weight = 1,
+      fillColor = "steelblue",
+      fillOpacity = 0.9,
+      label = station_labels,
+      options = pathOptions(pane = "stations"),
+      group = "Divvy Stations") %>%
+    addMarkers(
+      data = docked_stations,
+      label = station_labels[docked],
+      clusterOptions = markerClusterOptions(
+        showCoverageOnHover = FALSE, # no outline of the cluster's area on hover
+        singleMarkerMode = TRUE, # single stations also show their docks
+        iconCreateFunction = dock_icon),
+      group = "Divvy Docks (clustered)") %>%
+    hideGroup("Divvy Stations")
+}
+
+# function for mapping the selected indicator by community area (quintiles) with
+# Divvy stations; the layer control turns the indicator (and its legend), the
+# stations and the dock clusters on and off
+fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses_name, total_days) {
+  map_pal <- fx_quintile_pal(trips_by_communityarea_ses$ses_value)
+
+  fx_basemap(trips_by_communityarea_ses) %>%
+    addPolygons(
+      fillColor = ~map_pal(ses_value),
+      label = fx_communityarea_labels(trips_by_communityarea_ses, total_days, ses_name),
+      weight = 2,
+      opacity = 1,
+      color = "white",
+      dashArray = "3",
+      fillOpacity = 0.7,
+      group = ses_name) %>%
+    addLegend("bottomleft",
+              pal = map_pal,
+              values = ~ses_value,
+              title = paste0(ses_name, "<br>Quintiles"),
+              opacity = 1,
+              group = ses_name) %>%
+    fx_add_station_layers(divvy_stations) %>%
+    addLayersControl(
+      overlayGroups = c(ses_name, "Divvy Stations", "Divvy Docks (clustered)"),
+      options = layersControlOptions(collapsed = FALSE, position = "topright"))
+}
+
+# quintile category colors, from Highest to Lowest (also used in Step 6)
+quintile_colors <- c(Highest = "darkred",
+                     High = "orange",
+                     Moderate = "yellow",
+                     Low = "lightblue",
+                     Lowest = "darkblue")
+
+# function for summarizing trips by year, month and quintile category of the
+# selected indicator (added to community areas with fx_add_ses_quintiles)
+fx_summarise_trips_by_ses <- function(trips_by_yearmonth_ca, community_areas_ses, total_days) {
+  trips_by_yearmonth_ca %>%
+    left_join(community_areas_ses %>% st_drop_geometry(), by = "comarea_id") %>%
+    group_by(yearmonth, ses_ntile) %>%
+    summarise(tot_pop = sum(population),
+              fr_trips = sum(fr_trips),
+              to_trips = sum(to_trips),
+              fr_trips_cumul = sum(fr_trips_cumul),
+              to_trips_cumul = sum(to_trips_cumul),
+              fr_dailytrips = fr_trips/total_days,
+              to_dailytrips = to_trips/total_days,
+              fr_trips_per10k = fr_trips/tot_pop*10000,
+              to_trips_per10k = to_trips/tot_pop*10000,
+              .groups = "drop") %>%
+    drop_na(tot_pop) %>%
+    mutate(order = case_when(ses_ntile == "Lowest" ~ 1,
+                             ses_ntile == "Low" ~ 2,
+                             ses_ntile == "Moderate" ~ 3,
+                             ses_ntile == "High" ~ 4,
+                             ses_ntile == "Highest" ~ 5),
+           ses_label = factor(ses_ntile, levels = names(quintile_colors))) %>%
+    arrange(yearmonth, order)
+}
+
+# function for plotting monthly trips per 10,000 residents by quintile category;
+# ses_name labels the legend
+fx_plot_trips_by_ses <- function(trips_by_yearmonth_by_ses, ses_name = "Indicator") {
+  plot_ly(data = trips_by_yearmonth_by_ses,
+          x = ~yearmonth,
+          y = ~fr_trips_per10k,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~ses_label,
+          colors = unname(quintile_colors),
+          text = ~ses_label,
+          hovertemplate = '%{text}: %{y:0.1f}<extra></extra>') %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = paste0("divvy_trips_by_", tolower(gsub("[^A-Za-z0-9]+", "_", ses_name)), "_quintile"))) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Monthly Divvy Trips (from) per 10,000 Residents"),
+      legend = list(
+        title = list(text = paste0(ses_name, " Quintile  ")),
+        font = list(size = 10),
+        xanchor = "center",
+        orientation = "h",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for summarizing population and trips by quintile category of the
+# selected indicator, from Highest to Lowest
+fx_summarise_ses_quintiles <- function(trips_by_yearmonth_by_ses) {
+  trips_by_yearmonth_by_ses %>%
+    group_by(ses_ntile) %>%
+    summarise(order = max(order),
+              tot_pop = max(tot_pop),
+              fr_trips = sum(fr_trips),
+              to_trips = sum(to_trips)) %>%
+    mutate(tot_pop_pct = tot_pop/sum(tot_pop),
+           fr_trips_pct = fr_trips/sum(fr_trips),
+           to_trips_pct = to_trips/sum(to_trips)) %>%
+    arrange(-order) %>%
+    select(-order)
+}
+
+# function for formatting the summary table as an interactive table; ses_name
+# labels the quintile column
+fx_table_ses_quintiles <- function(trips_by_ses_quintile, ses_name = "Indicator") {
+  trips_by_ses_quintile %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none", 
+              rownames = FALSE,
+              colnames = c(paste(ses_name, "Quintile"), "Total Population", "Trips (from)", "Trips (to)",
+                           "Percent of Population", "Percent of Trips (from)", "Percent of Trips (to)"),
+              options = list(searching = FALSE,
+                             lengthChange = FALSE,
+                             paging = FALSE)) %>%
+    formatPercentage(c("tot_pop_pct", "fr_trips_pct", "to_trips_pct"), digits = 1) %>%
+    formatRound(c("tot_pop", "fr_trips", "to_trips"), mark = ",", digits = 0)
+}
+
+# function for looking up the selected community areas, their quintile categories
+# and colors (from Highest to Lowest)
+fx_select_communityareas <- function(community_areas_ses, selected_communityareas, colors = quintile_colors) {
+  community_areas_ses %>%
+    st_drop_geometry() %>%
+    filter(comarea_name %in% selected_communityareas) %>%
+    select(comarea_id, comarea_name, ses_ntile) %>%
+    mutate(ses_label = factor(ses_ntile, levels = names(colors)),
+           ca_label = paste0(comarea_name, " (", ses_ntile, ")"),
+           color = unname(colors[as.character(ses_ntile)])) %>%
+    arrange(ses_label)
+}
+
+# function for plotting monthly trips (from) for the selected community areas
+fx_plot_trips_selected <- function(trips_by_yearmonth_ca, selected_ca) {
+  trips_by_yearmonth_selected <- trips_by_yearmonth_ca %>%
+    inner_join(selected_ca, by = "comarea_id") %>%
+    mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+  plot_ly(data = trips_by_yearmonth_selected,
+          x = ~yearmonth,
+          y = ~fr_trips,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~ca_label,
+          colors = setNames(selected_ca$color, selected_ca$ca_label),
+          text = ~ca_label,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trips_by_yearmonth_selected_communityareas")) %>%
+    layout(
+      xaxis = list(title = ""),
+      yaxis = list(title = "Monthly Divvy Trips (from)"),
+      legend = list(
+        title = list(text = "Community Area (Quintile)  "),
+        font = list(size = 10),
+        orientation = "h",
+        xanchor = "center",
+        x = 0.5, y = -0.1),
+      hovermode = "x unified")
+}
+
+# function for plotting a box plot of monthly average trip duration (from) for
+# the selected community areas
+fx_plot_duration_selected <- function(duration_by_yearmonth_ca, selected_ca) {
+  duration_by_yearmonth_selected <- duration_by_yearmonth_ca %>%
+    inner_join(selected_ca, by = "comarea_id") %>%
+    mutate(ca_label = factor(ca_label, levels = selected_ca$ca_label))
+
+  plot_ly(data = duration_by_yearmonth_selected,
+          x = ~ca_label,
+          y = ~fr_mins_per_trip,
+          type = 'box',
+          boxpoints = "outliers", # whiskers extend to 1.5 x IQR; months beyond them are plotted as points
+          color = ~ca_label,
+          colors = setNames(selected_ca$color, selected_ca$ca_label)) %>%
+    config(displaylogo = FALSE,
+           modeBarButtons = list(list("toImage", "resetScale2d")),
+           toImageButtonOptions = list(filename = "divvy_trip_duration_selected_communityareas")) %>%
+    layout(
+      xaxis = list(title = "Community Area (Quintile)"),
+      yaxis = list(title = "Average Trip Duration (Minutes per Trip)",
+                   hoverformat = ".1f"), # hover values to tenths
+      showlegend = FALSE)
+}
+
+```
+
 
 ```{r}
 #| label: save summary tables
