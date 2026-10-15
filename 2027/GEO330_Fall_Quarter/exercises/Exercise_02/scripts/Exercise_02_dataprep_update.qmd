@@ -540,7 +540,7 @@ divvy_stations_date <- Sys.Date()
 ## Functions for Exercise #2
 
 ```{r}
-#| label: save summary tables
+#| label: exercise functions
 
 # function for adding the selected indicator's values (ses_value) and quintile
 # categories (ses_ntile) to community areas
