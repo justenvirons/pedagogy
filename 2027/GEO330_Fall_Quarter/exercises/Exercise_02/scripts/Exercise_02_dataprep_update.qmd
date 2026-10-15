@@ -44,7 +44,7 @@ raw_dir <- file.path(data_dir, "divvy_raw") # downloaded zip files are kept here
 comprehensive_file <- file.path(data_dir, "divvy_trips_2013_2026_ca_all.RData")
 
 # summary tables loaded by Exercise_02.qmd
-summary_file <- file.path(data_dir, "divvy_trips_summary_tables_latest.RData")
+summary_file <- file.path(data_dir, "Exercise_02.RData")
 
 # legacy comprehensive file, used only the first time this script runs
 legacy_file <- file.path(data_dir, "divvy_trips_latest_ca_all_2013_202608.RData")
