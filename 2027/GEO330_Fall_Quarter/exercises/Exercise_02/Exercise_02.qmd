@@ -16,7 +16,7 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: false
-date: "2026-09-29"
+date: "2026-10-15"
 bibliography: references.bib
 editor_options:
     chunk_output_type: console
@@ -38,7 +38,7 @@ library(openxlsx) # write tables as Excel spreadsheets
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_02")
 
-load(file = "https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exercise_02.RData")
+load("data/Exercise_02.RData")
 
 ```
 
@@ -56,7 +56,7 @@ Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesh
 Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #2 announcement. Open the Exercise #2 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
 
 ## Open R script and activate R packages
-In your default exercise #2 project you will find an R script named *Exercise_02.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #2. *Activate the R libraries by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Also import the necessary data for the exercise by selecting and running the load command.*
+In your default exercise #2 project you will find an R script named *Exercise_02.R*. You will use this script to input, manage and execute all code for this exercise. Click the Exercise_02.R file under the "Files" tab to open the empty R script.  Click the clipboard icon in the upper right of the code chunk below and paste the code into the empty R script in Posit Cloud. Activate the R libraries by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Also import the necessary data for the exercise by selecting and running the load command.
 
 ```{r}
 #| label: activate libraries for exercise
@@ -76,7 +76,7 @@ library(openxlsx) # write tables as Excel spreadsheets
 options(scipen=999, digits = 2)
 
 # Load project data
-load("data/Exercise_02.RData")
+load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exercise_02.RData"))
 
 ```
 
@@ -691,6 +691,9 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
 #| label: fig-mapsesquintile
 #| fig-cap: Selected Community Indicator by Community Area (Quintile Categorization) with Divvy Stations
 #| echo: true
+
+# Load all essential functions
+load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exercise_02.RData"))
 
 # Edit the following two lines with the selected indicator's name and column
 ses_name <- "Poverty" # EDIT HERE: indicator name used in map labels and legend
