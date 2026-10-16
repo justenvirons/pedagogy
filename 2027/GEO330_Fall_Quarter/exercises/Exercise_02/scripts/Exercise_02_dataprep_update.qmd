@@ -542,6 +542,188 @@ divvy_stations_date <- Sys.Date()
 ```{r}
 #| label: exercise functions
 
+# function for summarizing total (cumulative) trips and average trip duration
+# (minutes per trip) by community area over the study period
+fx_summarise_communityarea_trips <- function(community_areas_ses, trips_by_yearmonth_ca, duration_by_yearmonth_ca) {
+
+  # cumulative trips as of the latest month
+  trips_by_communityarea <- trips_by_yearmonth_ca %>%
+    drop_na(yearmonth) %>%
+    filter(yearmonth == max(yearmonth))
+
+  # average trip duration (minutes per trip) over the study period
+  duration_by_communityarea <- duration_by_yearmonth_ca %>%
+    group_by(comarea_id) %>%
+    summarise(fr_mins_per_trip = sum(fr_trip_duration_mins, na.rm = TRUE)/sum(fr_trips),
+              to_mins_per_trip = sum(to_trip_duration_mins, na.rm = TRUE)/sum(to_trips))
+
+  # join trips and durations to community areas
+  community_areas_ses %>%
+    left_join(trips_by_communityarea, by = "comarea_id") %>%
+    left_join(duration_by_communityarea, by = "comarea_id") %>%
+    select(-starts_with("yearmonth"))
+}
+
+# function for calculating the measures shown in the community area hover labels
+# and in the map's dropdown list; daily trips per 10K pop are average daily trips
+# per 10,000 residents
+fx_communityarea_measures <- function(trips_by_communityarea_ses, total_days) {
+  x <- trips_by_communityarea_ses
+  list(
+    "Total trips (from)" = x$fr_trips_cumul,
+    "Total trips (to)" = x$to_trips_cumul,
+    "Avg daily trips (from)" = x$fr_trips_cumul/total_days,
+    "Avg daily trips (to)" = x$to_trips_cumul/total_days,
+    "Avg daily trips (from) per 10K pop" = x$fr_trips_cumul/total_days/x$population*10000,
+    "Avg daily trips (to) per 10K pop" = x$to_trips_cumul/total_days/x$population*10000,
+    "Avg trip duration (from), min" = x$fr_mins_per_trip,
+    "Avg trip duration (to), min" = x$to_mins_per_trip)
+}
+
+# function for creating community area hover labels from the measures above; the
+# selected indicator's value and quintile category are added when ses_name is
+# given (Step 5)
+fx_communityarea_labels <- function(trips_by_communityarea_ses, total_days, ses_name = NULL) {
+  x <- trips_by_communityarea_ses
+  m <- fx_communityarea_measures(x, total_days)
+  labels <- sprintf(
+    "<strong>%s</strong><br/>
+    <i>Trips (from):</i> %s<br/>
+    <i>Trips (to):</i> %s<br/>
+    <i>Avg daily trips (from):</i> %s<br/>
+    <i>Avg daily trips (to):</i> %s<br/>
+    <i>Avg daily trips (from) per 10K pop:</i> %0.1f<br/>
+    <i>Avg daily trips (to) per 10K pop:</i> %0.1f<br/>
+    <i>Avg trip duration (from):</i> %0.1f min<br/>
+    <i>Avg trip duration (to):</i> %0.1f min<br/>",
+    x$comarea_name,
+    prettyNum(m[["Total trips (from)"]], big.mark = ","),
+    prettyNum(m[["Total trips (to)"]], big.mark = ","),
+    formatC(m[["Avg daily trips (from)"]], format = "f", digits = 1, big.mark = ","),
+    formatC(m[["Avg daily trips (to)"]], format = "f", digits = 1, big.mark = ","),
+    m[["Avg daily trips (from) per 10K pop"]],
+    m[["Avg daily trips (to) per 10K pop"]],
+    m[["Avg trip duration (from), min"]],
+    m[["Avg trip duration (to), min"]])
+  if (!is.null(ses_name)) {
+    labels <- paste0(labels,
+                     sprintf("<i>%s:</i> %s (%s)<br/>",
+                             ses_name,
+                             formatC(x$ses_value, format = "f", digits = 1, big.mark = ","),
+                             x$ses_ntile))
+  }
+  lapply(labels, htmltools::HTML)
+}
+
+# function for creating a quintile color palette; when repeated values make some
+# quintile breaks identical, the remaining distinct breaks are used instead
+fx_quintile_pal <- function(values) {
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) == 6) {
+    colorQuantile(palette = "RdYlBu", domain = values, n = 5, reverse = TRUE)
+  } else {
+    colorBin(palette = "RdYlBu", domain = values, bins = unique(c(breaks, max(breaks) + 1)), reverse = TRUE)
+  }
+}
+
+# function for adding one community area layer and legend per measure, plus a
+# dropdown list (top right) that shows one measure at a time; the first measure
+# is shown when the map opens
+fx_add_measure_layers <- function(map, map_data, measures, labels) {
+  for (i in seq_along(measures)) {
+    values <- measures[[i]]
+    pal <- fx_quintile_pal(values)
+    map <- map %>%
+      addPolygons(
+        data = map_data,
+        fillColor = pal(values),
+        label = labels,
+        weight = 2,
+        opacity = 1,
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        group = names(measures)[i]) %>%
+      addLegend("bottomleft",
+                pal = pal,
+                values = values,
+                title = paste0(names(measures)[i], "<br>Quintiles"),
+                opacity = 1,
+                className = paste0("info legend measure-legend measure-legend-", i - 1))
+  }
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        // show the selected measure's layer and legend and hide the others
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) {
+              if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); }
+            }
+          });
+          el.querySelectorAll('.measure-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('measure-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(0);
+      }", data = list(groups = names(measures)))
+}
+
+# function for creating the base map shared by the community area maps: basemap,
+# reset and full screen buttons and community area boundaries for reference
+# (added first, so they are drawn beneath the other layers)
+fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
+  leaflet(data = map_data) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      carto_api_key
+    )) %>%
+    addResetMapButton() %>%
+    addFullscreenControl() %>%
+    addPolygons(
+      fill = FALSE,
+      color = "#555",
+      weight = 1,
+      opacity = 1)
+}
+
+# function for mapping trips by community area (quintiles); the dropdown list
+# switches between average daily trips per 10,000 residents and average trip
+# duration, for trips from and to each community area
+fx_map_trips_by_communityarea <- function(trips_by_communityarea_ses, total_days) {
+  measures <- fx_communityarea_measures(trips_by_communityarea_ses, total_days)[
+    c("Avg daily trips (from) per 10K pop",
+      "Avg daily trips (to) per 10K pop",
+      "Avg trip duration (from), min",
+      "Avg trip duration (to), min")]
+
+  fx_basemap(trips_by_communityarea_ses) %>%
+    fx_add_measure_layers(trips_by_communityarea_ses,
+                          measures = measures,
+                          labels = fx_communityarea_labels(trips_by_communityarea_ses, total_days))
+}
+
 # function for adding the selected indicator's values (ses_value) and quintile
 # categories (ses_ntile) to community areas
 fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
