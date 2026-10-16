@@ -692,9 +692,6 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
 #| fig-cap: Selected Community Indicator by Community Area (Quintile Categorization) with Divvy Stations
 #| echo: true
 
-# Load all essential functions
-load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exercise_02.RData"))
-
 # Edit the following two lines with the selected indicator's name and column
 ses_name <- "Poverty" # EDIT HERE: indicator name used in map labels and legend
 ses_column <- "poverty" # EDIT HERE: population, SVI, poverty, inactivity, mortality, transit or violence
