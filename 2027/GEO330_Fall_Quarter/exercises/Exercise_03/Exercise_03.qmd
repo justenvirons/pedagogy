@@ -364,6 +364,221 @@ fx_map_station_change(ridership_attributes_station,
 :::
 
 # Step 3. Ridership by community characteristics
+
+## Community area by indicator
+This exercise evaluates L ridership with respect to community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., community areas and zip codes) in Chicago that have been disproportionately affected by COVID-19. Vulnerability combines sociodemographic, epidemiological and occupational factors with other factors related to cumulative COVID-19 burden. These factors are weighted and combined into a single composite CCVI score: the higher the score, the more vulnerable the community area. The `community_areas_ccvi` dataset joins CCVI scores, categories and ranks (from least (1) to most (77) vulnerable) to each community area.
+
+@fig-ccvibycommunityarea maps CCVI by community area. Use the "Map" dropdown list in the upper right of the map to switch between the CCVI category and quintiles of selected CCVI ranks (from least to most vulnerable), and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *In slide 1 of your presentation, paste your custom map and describe the geographic distribution of COVID-19 vulnerability across Chicago. Which parts of the city have the highest and lowest CCVI scores? Use the dropdown list to compare the CCVI category with individual ranks, such as socioeconomic status and essential workers. Which components appear to drive vulnerability in different parts of the city? How well do L lines and stations serve the most vulnerable community areas?*
+
+```{r}
+#| label: define CCVI mapping functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the CCVI mapping functions"
+
+# function for creating the base map shared by the exercise's maps: CARTO
+# basemap, reset and full screen buttons and community area boundaries for
+# reference (added first, so they are drawn beneath the other layers)
+fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
+  leaflet(data = st_transform(map_data, crs = 4326)) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      carto_api_key
+    )) %>%
+    addResetMapButton() %>%
+    addFullscreenControl() %>%
+    addPolygons(
+      fill = FALSE,
+      color = "#555",
+      weight = 1,
+      opacity = 1)
+}
+
+# function for creating community area hover labels with CCVI scores, categories
+# and ranks
+fx_ccvi_labels <- function(community_areas_ccvi) {
+  x <- community_areas_ccvi
+  sprintf(
+    "<strong>%s</strong><br/>
+    <i>CCVI Score:</i> %0.1f<br/>
+    <i>CCVI Category:</i> %s<br/><br/>
+    <em>Ranked scores from least (1) to most (77) vulnerable:</em><br/>
+    <i>Socioeconomic Status:</i> %1.0f<br/>
+    <i>Essential Workers:</i> %1.0f<br/>
+    <i>Mobility Ratio:</i> %1.0f<br/>
+    <i>COVID-19 Incidence Rate:</i> %1.0f<br/>
+    <i>COVID-19 Hospitalization Rate:</i> %1.0f<br/>
+    <i>COVID-19 Crude Mortality Rate:</i> %1.0f<br/>",
+    x$comarea_name,
+    x$`CCVI Score`,
+    x$`CCVI Category`,
+    x$`Rank - Socioeconomic Status`,
+    x$`Rank - Frontline Essential Workers`,
+    x$`Rank - Cumulative Mobility Ratio`,
+    x$`Rank - COVID-19 Incidence Rate`,
+    x$`Rank - COVID-19 Hospital Admission Rate`,
+    x$`Rank - COVID-19 Crude Mortality Rate`) %>%
+    lapply(htmltools::HTML)
+}
+
+# function for adding one community area layer and legend per measure, plus a
+# dropdown list (top right) that shows one measure at a time; the first measure
+# is shown when the map opens. measures and pals are named lists of values and
+# their color palettes.
+fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
+  for (i in seq_along(measures)) {
+    values <- measures[[i]]
+    pal <- pals[[i]]
+    map <- map %>%
+      addPolygons(
+        data = map_data,
+        fillColor = pal(values),
+        label = labels,
+        weight = 2,
+        opacity = 1,
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        group = names(measures)[i]) %>%
+      addLegend("bottomleft",
+                pal = pal,
+                values = values,
+                title = names(measures)[i],
+                opacity = 1,
+                className = paste0("info legend measure-legend measure-legend-", i - 1))
+  }
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        // show the selected measure's layer and legend and hide the others
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) {
+              if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); }
+            }
+          });
+          el.querySelectorAll('.measure-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('measure-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(0);
+      }", data = list(groups = names(measures)))
+}
+
+# function for adding L lines (colored by line) and stations; lines and stations
+# are drawn in their own panes, above the community areas. station_labels are the
+# stations' hover labels; other circle marker options (e.g., radius, fillColor)
+# are passed through ...
+fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
+  map %>%
+    addMapPane("lines", zIndex = 440) %>%
+    addMapPane("stations", zIndex = 450) %>%
+    addPolylines(
+      data = st_transform(rail_lines, crs = 4326),
+      weight = 3,
+      opacity = 1,
+      color = ~unname(pal_line[COLOR]),
+      options = pathOptions(pane = "lines"),
+      group = "L Lines") %>%
+    addCircleMarkers(
+      data = st_transform(rail_stations, crs = 4326),
+      color = "#fff",
+      weight = 1,
+      fillOpacity = 0.9,
+      label = station_labels,
+      options = pathOptions(pane = "stations"),
+      group = "L Stations",
+      ...)
+}
+
+# vulnerability quintile labels, from least to most vulnerable
+vulnerability_labels <- c("Least vulnerable", "Less vulnerable", "Moderate",
+                          "More vulnerable", "Most vulnerable")
+
+# function for mapping CCVI by community area with L lines and stations; the
+# dropdown list switches between CCVI category and quintiles of selected CCVI
+# ranks, and the layer control turns the lines and stations on and off. palette
+# is any RColorBrewer palette name (e.g., "YlOrRd", "Blues", "PuRd")
+fx_map_ccvi <- function(community_areas_ccvi, rail_lines, rail_stations_ccvi, palette = "YlOrRd") {
+  map_data <- st_transform(community_areas_ccvi, crs = 4326)
+
+  # CCVI category and quintiles of selected ranks (1 = least vulnerable)
+  rank_quintile <- function(column) {
+    factor(vulnerability_labels[map_data[[paste0(column, "_ntile")]]], levels = vulnerability_labels)
+  }
+  measures <- list(
+    "CCVI Category" = map_data$`CCVI Category`,
+    "Socioeconomic Status Rank<br>Quintiles" = rank_quintile("Rank - Socioeconomic Status"),
+    "Essential Workers Rank<br>Quintiles" = rank_quintile("Rank - Frontline Essential Workers"),
+    "Mobility Ratio Rank<br>Quintiles" = rank_quintile("Rank - Cumulative Mobility Ratio"),
+    "COVID-19 Incidence Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Incidence Rate"),
+    "COVID-19 Hospitalization Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Hospital Admission Rate"),
+    "COVID-19 Crude Mortality Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Crude Mortality Rate"))
+  pals <- lapply(measures, function(values)
+    colorFactor(palette = palette, domain = values, levels = levels(values), ordered = TRUE))
+  # dropdown list names without the legend line break
+  names(measures) <- names(pals) <- gsub("<br>", " ", names(measures))
+
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s</strong><br/>
+    <i>Line:</i> %s<br/>
+    <i>Community area:</i> %s<br/>
+    <i>CCVI Category:</i> %s",
+    rail_stations_ccvi$station_name,
+    rail_stations_ccvi$station_line,
+    rail_stations_ccvi$comarea_name,
+    rail_stations_ccvi$`CCVI Category`) %>%
+    lapply(htmltools::HTML)
+
+  fx_basemap(map_data) %>%
+    fx_add_measure_layers(map_data,
+                          measures = measures,
+                          pals = pals,
+                          labels = fx_ccvi_labels(map_data)) %>%
+    fx_add_rail_layers(rail_lines, rail_stations_ccvi, station_labels,
+                       radius = 4,
+                       fillColor = "#333") %>%
+    addLayersControl(
+      overlayGroups = c("L Lines", "L Stations"),
+      options = layersControlOptions(collapsed = FALSE, position = "topright"))
+}
+```
+
+```{r}
+#| label: fig-ccvibycommunityarea
+#| fig-cap: COVID-19 Community Vulnerability Index (CCVI) by Community Area, Chicago, Illinois
+
+# map CCVI by community area with L lines and stations
+fx_map_ccvi(community_areas_ccvi, 
+            rail_lines, 
+            rail_stations_ccvi, 
+            palette = "YlOrRd") # EDIT HERE
+
+```
+
+## Ridership by community indicator quintile
 @fig-ridershipbyccvi plots weekday ridership by the CCVI category (low, medium and high) of each station's community area. *In slide 4 of your presentation, paste the plot and describe how ridership trends differ by CCVI category. Which category accounted for the most boardings before the pandemic? Did ridership fall more steeply, or recover more quickly, at stations in more vulnerable communities? Consider who rides transit in these communities, such as essential workers who could not work from home, and what the differences suggest about transit equity.*
 
 ```{r}
