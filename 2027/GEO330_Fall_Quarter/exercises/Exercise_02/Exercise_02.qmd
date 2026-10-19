@@ -16,7 +16,7 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: false
-date: "2026-10-15"
+date: "2026-9-22"
 bibliography: references.bib
 editor_options:
     chunk_output_type: console
@@ -43,13 +43,18 @@ load("data/Exercise_02.RData")
 ```
 
 # Purpose
-This project examines trends in Divvy bike sharing ridership over time (i.e., between 2013 and 2026) and by community area within the city of Chicago. Students will explore how ridership varies across communities with respect to demographic and socioeconomic characteristics. The exercise uses custom summary tables produced from a comprehensive dataset of over 56 million Divvy bike trips logged between the official launch of the program on June 27, 2013 through August 31, 2026.
+Bike sharing has become an important part of sustainable urban transportation. It gives residents a low-cost, low-emission option for short trips, and it helps solve the “first and last mile” problem by linking people to transit lines. By replacing car trips, bikeshare systems can reduce traffic congestion, greenhouse gas emissions, and air pollution while also promoting physical activity. How fairly these benefits are shared across neighborhoods is a key question for planners and policymakers. This project examines trends in Divvy bike sharing ridership over time (i.e., between 2013 and 2026) and by community area within the city of Chicago. Students will explore how ridership varies across communities with respect to demographic and socioeconomic characteristics. The exercise uses custom summary tables produced from a comprehensive dataset of over 56 million Divvy bike trips logged between the official launch of the program on June 27, 2013, and August 31, 2026.
 
 ::: {.callout-note collapse="false"}
 ## Optional readings
 National Association of City Transportation Officials (NACTO) [Half a Billion Trips on Shared Micromobility Since 2010](https://nacto.org/publication/shared-micromobility-report-2020-2021/) report [@nacto_halfbillion], which summarizes changes in municipal bikeshare systems over the past decade along with emerging trends in micromobility programs.
 
 Also, consider reading [Dimensions of Divvy: Exploring the performance of bikesharing in Chicago in a period of growth and expansion](https://las.depaul.edu/centers-and-institutes/chaddick-institute-for-metropolitan-development/research-and-publications/Documents/ChaddickInstitute_DivvyReport_Feb2018.pdf) [@chaddick_dimensionsofdivvy]. This study, published in 2018, characterizes the three initial phases of Chicago’s Divvy system beginning with its initial rollout in 2013 through its first and second expansions, in 2015 and 2016, respectively, paying special attention to service and performance gaps.
+:::
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Introduction
+{{< video videos/exercise_02_00.mp4 >}}
 :::
 
 # Step 1. Open Exercise #2 in Posit Cloud course workspace
@@ -80,20 +85,20 @@ load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_02/data/Exerc
 
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #1 -->
-<!-- {{< video videos/exercise_02_01.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #1
+{{< video videos/exercise_02_01.mp4 >}}
+:::
 
 # Step 2. Download presentation template
 *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_02/slides/Exercise02_Template.pptx).*
 
 This exercise makes use of data from a variety of sources. Custom summary tables of Divvy trip origins and destinations by date and community area between 2013 and 2026 were adapted from raw trip information made available via the City of Chicago's [data portal](https://data.cityofchicago.org/Transportation/Divvy-Trips/fg6s-gzvg) [@chicago_divvytrips] and [Divvy bikeshare system data](https://divvybikes.com/system-data) [@divvy_systemdata] web pages. Frequencies of trips will be mapped by [city of Chicago community area](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas-current-/cauq-8yn6) boundaries [@chicago_communityareas] imported directly from the city of Chicago's data portal. Lastly, variations in trips will be evaluated with respect to neighborhood demographic socioeconomic measures downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org/download) [@chicago_healthatlas]. 
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Step #2 -->
-<!-- {{< video videos/exercise_02_02.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #2
+{{< video videos/exercise_02_02.mp4 >}}
+:::
 
 # Step 3. Explore systemwide trends in Divvy trips over time
 Over the past 13 years, the Divvy system has logged over 56 million trips. @fig-cumulativetrips shows the daily cumulative trips from Divvy's launch in June 2013 through August 2026. Dashed vertical lines mark the dates on which the system reached 10, 20, 30, 40 and 50 million trips. *In slide 1 of your presentation, copy and paste the plot below and describe the cumulative growth of Divvy's systemwide ridership over the past 13 years. How many trips have been logged on the Divvy system since its initial rollout? Approximately how many trips were logged during its first year, and how does this compare with the latest year for which data are available? What does the spacing between the vertical lines suggest about whether the pace of growth has sped up or slowed down over time? Consider whether things like system expansions, e-bikes, pricing or the COVID-19 pandemic might help explain the pattern you observe.*
@@ -323,10 +328,10 @@ fx_plot_duration_by_yearmonth <- function(duration_by_date, duration_by_yearmont
 fx_plot_duration_by_yearmonth(duration_by_date, duration_by_yearmonth)
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Create custom map -->
-<!-- {{< video videos/exercise_02_03.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #3
+{{< video videos/exercise_02_03.mp4 >}}
+:::
 
 # Step 4. Explore total and average trips by community area
 In this step we examine variations in Divvy trip patterns across the city by community area (N=77). @fig-frtripsbycommunityarea below shows average daily Divvy trips per 10,000 residents (i.e., ridership standardized by the community area population) between 2013 and 2026 across the city. Use the dropdown list in the top right corner of the map to switch between average daily trips per 10,000 residents and average trip duration, for trips starting (from) or ending (to) in each community area. Hover over the community area boundaries to observe their respective total (cumulative) and average daily riderships over the past decade, along with these rates and trip durations.
@@ -534,22 +539,20 @@ trips_by_communityarea_ses <- fx_summarise_communityarea_trips(community_areas_s
 fx_map_trips_by_communityarea(trips_by_communityarea_ses, total_days = nrow(trips_by_date))
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Create custom map -->
-<!-- {{< video videos/exercise_02_04.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #4
+{{< video videos/exercise_02_04.mp4 >}}
+:::
 
 # Step 5. Explore trends by socioeconomic status
 In this step we examine trends in Divvy usage across communities with different socioeconomic characteristics. For this step you will need to modify the below R code to create a custom map, plot and table to inform your analysis. An example analysis is summarized here. 
 
 ## Identify and map a community indicator
-First, identify one of the seven community indicators downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org) [@chicago_healthatlas] that you would like to use to explore the equity dimensions of Divvy ridership. Each indicator is stored as a column in the `community_areas_ses` table, which is included in the Divvy summary tables file you loaded in Step 1.
+First, identify one of the five community indicators downloaded from the [Chicago Health Atlas](https://chicagohealthatlas.org) [@chicago_healthatlas] that you would like to use to explore the equity dimensions of Divvy ridership. Each indicator is stored as a column in the `community_areas_ses` table, which is included in the Divvy summary tables file you loaded in Step 1.
 
 | Column | Indicator | Health Atlas topic | Period |
 |:-------|:----------|:-------------------|:-------|
-| `population` | Total population | [POP](https://chicagohealthatlas.org/indicators/POP) | 2020-2024 |
 | `SVI` | Social Vulnerability Index | [SVI](https://chicagohealthatlas.org/indicators/SVI) | 2022 |
-| `poverty` | Poverty rate | [POV](https://chicagohealthatlas.org/indicators/POV) | 2020-2024 |
 | `inactivity` | Adult physical inactivity rate | [HCSPAP](https://chicagohealthatlas.org/indicators/HCSPAP) | 2016-2018 |
 | `mortality` | All-cause mortality rate | [VRDTHR](https://chicagohealthatlas.org/indicators/VRDTHR) | 2020-2024 |
 | `transit` | Ease of walking to transit stop rate | [HCSWTSP](https://chicagohealthatlas.org/indicators/HCSWTSP) | 2023-2024 |
@@ -694,7 +697,7 @@ fx_map_ses_quintiles <- function(trips_by_communityarea_ses, divvy_stations, ses
 
 # Edit the following two lines with the selected indicator's name and column
 ses_name <- "Poverty" # EDIT HERE: indicator name used in map labels and legend
-ses_column <- "poverty" # EDIT HERE: population, SVI, poverty, inactivity, mortality, transit or violence
+ses_column <- "poverty" # EDIT HERE: SVI, inactivity, mortality, transit or violence
 
 # add the selected indicator's values and quintile categories to community areas
 community_areas_ses <- fx_add_ses_quintiles(community_areas_ses, ses_column)
@@ -853,10 +856,10 @@ write.xlsx(trips_by_ses_quintile,
            overwrite = TRUE)
 ```
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Create custom map -->
-<!-- {{< video videos/exercise_02_05.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #5
+{{< video videos/exercise_02_05.mp4 >}}
+:::
 
 # Step 6. Compare select community areas by community indicator
 In this final step you will take a closer look at five individual community areas, one from each of the indicator quintile categories you used in Step 5 (i.e., Lowest, Low, Moderate, High and Highest). Use the map from Step 5 (@fig-mapsesquintile) to choose them. *Copy and paste the following code chunk into your R script. Replace the five community area names with the ones you selected, one from each quintile category, and run the code. Check the table (@tbl-selectedcommunityareas) to make sure each quintile category appears once.*
@@ -998,10 +1001,10 @@ An announcement of the 5th edition of AASHTO's *Guide for the Development of Bic
 
 :::
 
-<!-- ::: {.callout-tip collapse="true"} -->
-<!-- ## VIDEO: Create custom map -->
-<!-- {{< video videos/exercise_02_06.mp4 >}} -->
-<!-- ::: -->
+::: {.callout-tip collapse="true"}
+## VIDEO: Step #6
+{{< video videos/exercise_02_06.mp4 >}}
+:::
 
 # References
 

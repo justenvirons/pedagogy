@@ -11,6 +11,7 @@
 *.jpg
 *.png
 *.jpeg
+*.mkv
 
 # History files
 .Rhistory
