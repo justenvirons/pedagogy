@@ -73,17 +73,7 @@ load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_03/data/Exerc
 
 ```
 
-The load command imports the datasets listed below, along with custom functions (all beginning with "fx_") that create the exercise's tables, plots and maps. The code for each function can be viewed by clicking the "Show" links throughout this document.
-
-- `community_areas_ccvi`: City of Chicago community areas with COVID-19 Community Vulnerability Index (CCVI) scores, categories and ranks
-- `rail_stations`: CTA L stations in Chicago with their line and nearest community area and zip code
-- `rail_stations_ccvi`: L stations with the CCVI attributes of their community area
-- `rail_lines`: CTA L lines
-- `ridership_daily_boardings`: daily rail boardings (all stations)
-- `ridership_attributes`: monthly boardings by L station
-- `rail_stations_ccvi_ridership`: monthly weekday boardings by L station, with station line and CCVI
-- `covid19_cases_summary`: daily COVID-19 cases and deaths in Chicago (daily, 7-day average and cumulative)
-- `CARTO_API_KEY`: key for the CARTO basemap used in the exercise's maps
+The load command imports the required datasets along with custom functions (all beginning with "fx_") that create the exercise's tables, plots and maps. The code for each function can be viewed by clicking the "Show" links throughout this document.
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Step 1

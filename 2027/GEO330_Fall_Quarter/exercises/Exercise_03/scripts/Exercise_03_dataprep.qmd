@@ -48,6 +48,7 @@ url_daily_boardings <- "https://data.cityofchicago.org/api/views/6iiy-9s97/rows.
 url_covid19 <- "https://data.cityofchicago.org/api/views/naz8-j4nc/rows.csv?accessType=DOWNLOAD"
 
 # RTAMS sources (saved in the data directory)
+# https://datahub.nita.illinois.gov/media/datasets/cta-ridership
 file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
 file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
 file_ridership <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
