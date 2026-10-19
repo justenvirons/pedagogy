@@ -536,6 +536,11 @@ fx_map_station_change <- function(station_change, rail_lines, lines = names(pal_
 ```{r}
 #| label: save exercise elements to RData file
 
+CARTO_API_KEY  <- Sys.getenv("CARTO_API_KEY",  unset = "cb1_31xh_1_06fb99adb466f0f5a0392d7d")
+
+if (!exists("CARTO_API_KEY")) CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
+if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_02.qmd need it")
+
 save(community_areas_ccvi, rail_stations, rail_stations_ccvi, rail_lines,
      ridership_daily_boardings, ridership_attributes, rail_stations_ccvi_ridership,
      covid19_cases_summary, ridership_through,
