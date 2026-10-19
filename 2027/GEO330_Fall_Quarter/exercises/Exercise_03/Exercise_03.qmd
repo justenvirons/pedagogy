@@ -49,13 +49,13 @@ Whether people actually ride transit depends on *mode choice*: the decision, for
 
 The COVID-19 pandemic was one of the largest disruptions to mode choice in recent history. Stay-at-home orders, the shift to remote work and school, concerns about the risk of infection in crowded vehicles, and service cuts dramatically reduced transit ridership in Chicago and other cities, while some travelers shifted to driving, biking or walking. Yet not everyone could stop riding: many essential workers, often living in the communities most vulnerable to COVID-19, continued to depend on transit to reach their jobs. How quickly, and where, ridership has recovered since then has important implications for transit agency finances, service planning, equity and the region's climate and congestion goals.
 
-This project examines overall trends in CTA L ridership between 1999 and 2026 and identifies how the COVID-19 pandemic may have influenced train travel--both generally and across specific lines (e.g., Green, Pink, Red) and neighborhood categories--in the City of Chicago throughout the various waves of the pandemic. The sections below step you through the process for creating tables, maps and figures to inform your presentation. *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx) on the course data pages.*
+This exercise examines trends in CTA L ridership between 1999 and 2026 and how the COVID-19 pandemic influenced train travel, both overall and across specific lines (e.g., Green, Pink, Red) and communities with different levels of COVID-19 vulnerability. The steps below walk you through creating the tables, maps and plots for your presentation. *As with previous exercises, combine all materials into a single presentation. Download the presentation template [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx). Each slide includes placeholders for the figures and discussion questions referenced in the steps below.*
 
 # Step 1. Open Exercise #3 in Posit Cloud course workspace
 Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #3 announcement. Open the Exercise #3 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
 
-## Open R script, activate R packages and load data
-In your default exercise #3 project you will find an R script named *Exercise_03.R*. You will use this script to input, manage and execute all code for this exercise. Click the Exercise_03.R file under the "Files" tab to open the empty R script. Click the clipboard icon in the upper right of the code chunk below and paste the code into the empty R script in Posit Cloud. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Also run the line beginning with "options" to simplify the format of the output data tables, and import the necessary data for the exercise by selecting and running the load command.
+## Open R script and load data
+In your default Exercise #3 project you will find an empty R script named *Exercise_03.R*, which you will use to enter and run all code for this exercise. Click Exercise_03.R under the "Files" tab to open it. Click the clipboard icon in the upper right of the code chunk below and paste the code into the script. Then select all of the lines and click the Run button above the script editor panel. This activates the tools used throughout the exercise, simplifies the format of numbers in output tables and loads the exercise data.
 
 ```{r}
 #| label: activate libraries for exercise
@@ -79,7 +79,7 @@ load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_03/data/Exerc
 
 ```
 
-The load command imports the required datasets along with custom functions (all beginning with "fx_") that create the exercise's tables, plots and maps. The code for each function can be viewed by clicking the "Show" links throughout this document.
+The load command imports the datasets and custom functions (all beginning with "fx_") used to create the exercise's tables, plots and maps. You can view the code for each function by clicking the "Show" links throughout this document.
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Step 1
@@ -87,10 +87,10 @@ The load command imports the required datasets along with custom functions (all 
 :::
 
 # Step 2. Explore geographic data 
-This exercise evaluates L ridership and COVID-19 trends for neighborhoods in the city of Chicago. To do this, we need community areas, zip codes and L stations in a spatial (i.e., mappable) format. These datasets, and all data for this exercise, are publicly available via the [Chicago data portal](https://data.cityofchicago.org/) and the Regional Transportation Authority's Mapping and Statistics [(RTAMS)](https://rtams.org/) websites. CTA rail stations and lines were downloaded from the *Shapefiles and Feature Layers* section of the [RTAMS Maps and Data web page](https://rtagis.maps.arcgis.com/home/index.html).
+This exercise evaluates L ridership and COVID-19 trends for neighborhoods in the City of Chicago, which requires community areas, zip codes and L stations in a spatial (i.e., mappable) format. All data for this exercise are publicly available from the [Chicago Data Portal](https://data.cityofchicago.org/) and the Regional Transportation Authority's Mapping and Statistics [(RTAMS)](https://rtams.org/) website. CTA rail stations and lines were downloaded from the *Shapefiles and Feature Layers* section of the [RTAMS Maps and Data web page](https://rtagis.maps.arcgis.com/home/index.html).
 
 ## L stations by community area and zip code
-It is necessary to attribute L stations with community areas and zip codes in order to evaluate CCVI and COVID-19 cases with ridership trends. That is, ridership is reported by L station whereas CCVI and COVID-19 cases are reported by community area and zip code. Therefore each L station in the `rail_stations` dataset was associated with its nearest community area and zip code using a spatial join. @fig-stationbycomareazip below tabulates L stations by community area and zip code.
+Ridership is reported by L station, whereas CCVI scores and COVID-19 cases are reported by community area and zip code. To compare them, each L station was assigned to its nearest community area and zip code. @tbl-stationbycomareazip lists L stations by community area and zip code.
 
 ```{r}
 #| label: define station table functions
@@ -121,8 +121,8 @@ fx_table_stations <- function(rail_stations) {
 ```
 
 ```{r}
-#| label: fig-stationbycomareazip
-#| fig-cap: L Station by Community Area and Zip Code
+#| label: tbl-stationbycomareazip
+#| tbl-cap: L Stations by Community Area and Zip Code
 
 # tabulate L stations by community area and zip code
 fx_table_stations(rail_stations)
@@ -130,10 +130,10 @@ fx_table_stations(rail_stations)
 ```
 
 ## CCVI by Chicago community area
-We will be evaluating L ridership based on a variety of community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted and modified from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., both community areas and zip codes) in Chicago that have been disproportionately impacted by COVID-19. Vulnerability is defined as a combination of: sociodemographic factors; epidemiological factors; occupational factors and other factors related to cumulative COVID burden. These factors are combined and weighted to create a single composite CCVI score. The higher the score, the more vulnerable the geographic area or, in this case, community area. The `community_areas_ccvi` dataset joins the CCVI scores, categories and ranks (from least (1) to most (77) vulnerable) to community areas.
+This exercise evaluates L ridership with respect to community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., community areas and zip codes) in Chicago that have been disproportionately affected by COVID-19. Vulnerability combines sociodemographic, epidemiological and occupational factors with other factors related to cumulative COVID-19 burden. These factors are weighted and combined into a single composite CCVI score: the higher the score, the more vulnerable the community area. The `community_areas_ccvi` dataset joins CCVI scores, categories and ranks (from least (1) to most (77) vulnerable) to each community area.
 
 ## Create map showing CCVI distribution by community area 
-R has several packages devoted to map making. The *leaflet* package can be used to create custom, interactive maps (@fig-ccvibycommunityarea). Modify the color palette ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) in the code below to create a custom map showing variations by CCVI category. Use the "Map" dropdown list in the upper right of the map to switch between CCVI category and quintiles of selected CCVI ranks (from least to most vulnerable), and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Insert the map into slide 1 of your presentation.
+@fig-ccvibycommunityarea maps CCVI by community area. Use the "Map" dropdown list in the upper right of the map to switch between the CCVI category and quintiles of selected CCVI ranks (from least to most vulnerable), and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *In slide 1 of your presentation, paste your custom map and describe the geographic distribution of COVID-19 vulnerability across Chicago. Which parts of the city have the highest and lowest CCVI scores? Use the dropdown list to compare the CCVI category with individual ranks, such as socioeconomic status and essential workers. Which components appear to drive vulnerability in different parts of the city? How well do L lines and stations serve the most vulnerable community areas?*
 
 ```{r}
 #| label: define CCVI mapping functions
@@ -333,7 +333,7 @@ fx_map_ccvi <- function(community_areas_ccvi, rail_lines, rail_stations_ccvi, pa
 
 ```{r}
 #| label: fig-ccvibycommunityarea
-#| fig-cap: CCVI Scores by Community Area
+#| fig-cap: COVID-19 Community Vulnerability Index (CCVI) by Community Area, Chicago, Illinois
 
 # map CCVI by community area with L lines and stations
 fx_map_ccvi(community_areas_ccvi, 
@@ -350,10 +350,10 @@ fx_map_ccvi(community_areas_ccvi,
 
 # Step 3. Evaluate CTA L ridership data before and during the COVID-19 pandemic
 ## Ridership by L station
-The Regional Transportation Authority provides information on the location and performance of the three public transit operators within metropolitan Chicago, namely, PACE Suburban Bus, Chicago Transit Authority (CTA both bus and rail), and Metra commuter rail. The Chicago Data Portal also serves up daily boardings for CTA. For this exercise we focus specifically on CTA rail ridership using two datasets: (1) daily rail boardings for all L stations (`ridership_daily_boardings`, from the Chicago Data Portal); and (2) monthly boardings by L station from January 1999 through `r format(ridership_through, "%B %Y")` (`ridership_attributes`, [downloaded from RTAMS](https://rtams.org/media/datasets/cta-ridership)).
+The Regional Transportation Authority (RTA) reports on the location and performance of the three public transit operators in metropolitan Chicago: Pace Suburban Bus, the Chicago Transit Authority (CTA, both bus and rail) and Metra commuter rail. This exercise focuses on CTA rail ridership using two datasets: (1) daily rail boardings for all L stations (`ridership_daily_boardings`, from the Chicago Data Portal); and (2) monthly boardings by L station from January 1999 through `r format(ridership_through, "%B %Y")` (`ridership_attributes`, [downloaded from RTAMS](https://rtams.org/media/datasets/cta-ridership)).
 
 ## Create plots showing ridership trends over time
-The following code uses the "plotly" package to create charts showing trends in total weekday boardings by month (@fig-railboardingsmonth) between January 1999 and `r format(ridership_through, "%B %Y")` and weekday boardings by day (@fig-railboardingsdaily).
+@fig-railboardingsmonth shows total weekday boardings by month between January 1999 and `r format(ridership_through, "%B %Y")`, and @fig-railboardingsdaily shows weekday boardings by day. Hover over each plot to see values for specific months and days. *In slide 2 of your presentation, paste both plots and describe long-term trends in L ridership. How did ridership change in the two decades before the pandemic? How sharply did ridership fall in spring 2020, and how much has it recovered since? Consider how factors such as remote work, service levels, perceptions of safety and changes in mode choice might explain the patterns you observe.*
 
 ```{r}
 #| label: define ridership plotting functions
@@ -435,7 +435,7 @@ fx_plot_daily_boardings(ridership_daily_boardings, day_type = "W")
 ```
 
 ## L stations by CCVI
-The `rail_stations_ccvi` dataset joins each L station with the CCVI attributes of its community area, and the `rail_stations_ccvi_ridership` dataset adds monthly weekday boardings. These allow us to link trends in ridership by community area with CCVI scores and ranks. @fig-ccvibystation below tabulates L stations by line and CCVI.
+The `rail_stations_ccvi` dataset joins each L station with the CCVI attributes of its community area, and the `rail_stations_ccvi_ridership` dataset adds monthly weekday boardings, linking ridership trends with community vulnerability. @tbl-ccvibystation lists L stations by line and CCVI.
 
 ```{r}
 #| label: define station CCVI table function
@@ -459,8 +459,8 @@ fx_table_stations_ccvi <- function(rail_stations_ccvi) {
 ```
 
 ```{r}
-#| label: fig-ccvibystation
-#| fig-cap: CCVI by L Station
+#| label: tbl-ccvibystation
+#| tbl-cap: CCVI by L Station
 
 # tabulate L stations by line and CCVI
 fx_table_stations_ccvi(rail_stations_ccvi)
@@ -468,9 +468,9 @@ fx_table_stations_ccvi(rail_stations_ccvi)
 ```
 
 ## COVID-19 cases and deaths in Chicago
-The Chicago data portal also makes available COVID-19 case and mortality data. Note that COVID-19 is no longer considered a notifiable disease, meaning that local health departments such as the Chicago Department of Public Health (CDPH) no longer need to report COVID-19 cases to CDC. As a result, the city's COVID-19 data reporting ended in May 2024. These data (`covid19_cases_summary`) can be plotted to identify different waves of the pandemic then compared to trends in rail usage.
+The Chicago Data Portal also provides daily COVID-19 cases and deaths, which can be plotted to identify the waves of the pandemic and compared with trends in rail ridership. Because COVID-19 is no longer a notifiable disease, local health departments such as the Chicago Department of Public Health (CDPH) are no longer required to report cases to the CDC, and the city's reporting ended in May 2024.
 
-Compare trends in rail ridership (above) with COVID-19 trends reported by the city of Chicago shown in the plot below (@fig-covidcases7davg). *Create a customized version of the below plot by changing the layer from 7-day average deaths (i.e., "Deaths7d") to 7-day average cases (i.e., "Cases7d").*
+@fig-covidcases7davg shows the 7-day average of COVID-19 deaths in Chicago. Create a custom version of the plot by changing the layer in the code below from 7-day average deaths ("Deaths7d") to 7-day average cases ("Cases7d"). *In slide 3 of your presentation, paste your custom plot of COVID-19 cases and compare it with the ridership plots in slide 2. Identify the major waves of the pandemic. Did ridership dip during each wave, or did it continue to recover regardless of case counts? What does this suggest about the role of health risk compared with other factors, such as remote work, in shaping transit ridership?*
 
 ```{r}
 #| label: define COVID-19 plotting function
@@ -505,7 +505,7 @@ fx_plot_covid <- function(covid19_cases_summary, layer = "Deaths7d") {
 
 ```{r}
 #| label: fig-covidcases7davg
-#| fig-cap: COVID-19 Deaths (rolling 7-day average) by Day, Chicago Illinois
+#| fig-cap: COVID-19 Deaths (7-day average) by Day, Chicago, Illinois
 
 # plot COVID-19 deaths (7-day average)
 fx_plot_covid(covid19_cases_summary, layer = "Deaths7d") # EDIT HERE
@@ -518,7 +518,7 @@ fx_plot_covid(covid19_cases_summary, layer = "Deaths7d") # EDIT HERE
 :::
 
 # Step 4. Examine ridership by station characteristics
-@fig-ridershipbyccvi plots ridership trends by CCVI category (i.e., Low, Medium, and High) whereas @fig-ridershipbyline shows ridership by CTA L Line.
+@fig-ridershipbyccvi plots weekday ridership by the CCVI category (low, medium and high) of each station's community area. *In slide 4 of your presentation, paste the plot and describe how ridership trends differ by CCVI category. Which category accounted for the most boardings before the pandemic? Did ridership fall more steeply, or recover more quickly, at stations in more vulnerable communities? Consider who rides transit in these communities, such as essential workers who could not work from home, and what the differences suggest about transit equity.*
 
 ```{r}
 #| label: define ridership by station characteristics functions
@@ -585,7 +585,7 @@ fx_plot_ridership_by_ccvi(rail_stations_ccvi_ridership)
 
 ```
 
-Review @fig-ridershipbyline below and identify two CTA rail lines that you'd like to explore further. Create a custom chart comparing the two L lines you selected by editing the list of lines (e.g., replace "Blue" with "Red"). Copy the custom chart into the presentation.
+@fig-ridershipbyline plots weekday ridership by L line ("Multi" refers to stations served by more than one line). Review the plot and identify two lines you'd like to explore further. Create a custom plot comparing them by uncommenting the line beginning with `# a_station_line_list` and replacing the line names (e.g., replace "Blue" with "Green"). The two lines you select are also used in Step 5. *In slide 5 of your presentation, paste your custom plot and compare ridership on the two lines over time. How did each line's ridership change during and after the pandemic? Consider the neighborhoods and destinations each line serves (e.g., downtown, airports, universities) and the CCVI categories of the community areas along each line.*
 
 ```{r}
 #| label: fig-ridershipbyline
@@ -604,8 +604,8 @@ fx_plot_ridership_by_line(rail_stations_ccvi_ridership, lines = a_station_line_l
 {{< video videos/exercise_03_04.mp4 >}}
 :::
 
-# Step 5. Map of stations and ridership by L line
-The final step is to create a custom map that displays changes in ridership by station for the rail lines you selected for further analysis. Stations shown in red have lost ridership between `r format(ridership_through, "%B")` 2019 (before the pandemic) and `r format(ridership_through, "%B %Y")` (the latest month available). Comparing the same month in both years keeps seasonal differences in ridership out of the comparison. Larger circles indicate larger percentage changes. Hover over specific stations to display ridership numbers for the analyzed period as well as the net and percentage changes. Turn on the "CCVI Category" layer in the upper right to compare changes in ridership with community vulnerability. Copy and paste the map into your presentation.
+# Step 5. Map changes in ridership by L station
+The final step is to map changes in weekday ridership at stations on the two lines you selected (@fig-selectstations). Stations shown in red lost riders between `r format(ridership_through, "%B")` 2019 (before the pandemic) and `r format(ridership_through, "%B %Y")` (the latest month available), while stations shown in blue gained riders. Comparing the same month in both years keeps seasonal differences out of the comparison. Larger circles indicate larger percentage changes. Hover over a station to see its boardings in both months and its net and percentage changes, and turn on the "CCVI Category" layer to compare changes in ridership with community vulnerability. *In slide 6 of your presentation, paste your map and describe the geographic pattern of ridership change along the two lines. Which stations have recovered the most and least? Do stations in high-CCVI communities appear to have recovered differently from stations in low-CCVI communities, and what might explain the differences? Consider the land uses around each station, such as downtown offices, residential neighborhoods and major destinations.*
 
 ```{r}
 #| label: define station change functions
