@@ -50,7 +50,7 @@ url_covid19 <- "https://data.cityofchicago.org/api/views/naz8-j4nc/rows.csv?acce
 # RTAMS sources (saved in the data directory)
 file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
 file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
-file_ridership <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2024.csv")
+file_ridership_test <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
 ```
 
 # Functions for data development
