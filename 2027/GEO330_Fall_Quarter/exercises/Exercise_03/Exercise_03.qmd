@@ -43,7 +43,7 @@ load("data/Exercise_03.RData")
 ```
 
 # Purpose
-This project examines overall trends in CTA L ridership between 1999 and 2024 and identifies how the COVID-19 pandemic may have influenced train travel--both generally and across specific lines (e.g., Green, Pink, Red) and neighborhood categories--in the City of Chicago throughout the various waves of the pandemic. The sections below step you through the process for creating tables, maps and figures to inform your presentation. *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx) on the course data pages.*
+This project examines overall trends in CTA L ridership between 1999 and 2026 and identifies how the COVID-19 pandemic may have influenced train travel--both generally and across specific lines (e.g., Green, Pink, Red) and neighborhood categories--in the City of Chicago throughout the various waves of the pandemic. The sections below step you through the process for creating tables, maps and figures to inform your presentation. *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx) on the course data pages.*
 
 # Step 1. Open Exercise #3 in Posit Cloud course workspace
 Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #3 announcement. Open the Exercise #3 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
@@ -213,10 +213,10 @@ fx_map_ccvi(community_areas_ccvi, palette = "YlOrRd") # EDIT HERE
 
 # Step 3. Evaluate CTA L ridership data before and during the COVID-19 pandemic
 ## Ridership by L station
-The Regional Transportation Authority provides information on the location and performance of the three public transit operators within metropolitan Chicago, namely, PACE Suburban Bus, Chicago Transit Authority (CTA both bus and rail), and Metra commuter rail. The Chicago Data Portal also serves up daily boardings for CTA. For this exercise we focus specifically on CTA rail ridership using two datasets: (1) daily rail boardings for all L stations (`ridership_daily_boardings`, from the Chicago Data Portal); and (2) monthly boardings by L station (`ridership_attributes`, [downloaded from RTAMS](https://rtams.org/media/datasets/cta-ridership)).
+The Regional Transportation Authority provides information on the location and performance of the three public transit operators within metropolitan Chicago, namely, PACE Suburban Bus, Chicago Transit Authority (CTA both bus and rail), and Metra commuter rail. The Chicago Data Portal also serves up daily boardings for CTA. For this exercise we focus specifically on CTA rail ridership using two datasets: (1) daily rail boardings for all L stations (`ridership_daily_boardings`, from the Chicago Data Portal); and (2) monthly boardings by L station from January 1999 through `r format(ridership_through, "%B %Y")` (`ridership_attributes`, [downloaded from RTAMS](https://rtams.org/media/datasets/cta-ridership)).
 
 ## Create plots showing ridership trends over time
-The following code uses the "plotly" package to create charts showing trends in total weekday boardings by month (@fig-railboardingsmonth) between January 1999 and November 2024 and weekday boardings by day (@fig-railboardingsdaily).
+The following code uses the "plotly" package to create charts showing trends in total weekday boardings by month (@fig-railboardingsmonth) between January 1999 and `r format(ridership_through, "%B %Y")` and weekday boardings by day (@fig-railboardingsdaily).
 
 ```{r}
 #| label: define ridership plotting functions
@@ -281,7 +281,7 @@ fx_plot_daily_boardings <- function(ridership_daily_boardings, day_type = "W") {
 
 ```{r}
 #| label: fig-railboardingsmonth
-#| fig-cap: Total Weekday CTA L Rail Station Boardings by Month, Chicago, Illinois 1999-2024
+#| fig-cap: !expr paste0("Total Weekday CTA L Rail Station Boardings by Month, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
 
 # plot total weekday rail boardings per month
 fx_plot_ridership_by_month(ridership_attributes, day_type = "Weekday")
@@ -441,7 +441,7 @@ fx_plot_ridership_by_line <- function(rail_stations_ccvi_ridership, lines = name
 
 ```{r}
 #| label: fig-ridershipbyccvi
-#| fig-cap: Weekday Rail Boardings by CTA L Station CCVI Category, Chicago Illinois 1999-2024
+#| fig-cap: !expr paste0("Weekday Rail Boardings by CTA L Station CCVI Category, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
 
 # plot weekday rail boardings per month by station CCVI category
 fx_plot_ridership_by_ccvi(rail_stations_ccvi_ridership)
@@ -452,7 +452,7 @@ Review @fig-ridershipbyline below and identify two CTA rail lines that you'd lik
 
 ```{r}
 #| label: fig-ridershipbyline
-#| fig-cap: Weekday Rail Boardings by CTA L Station Line, Chicago Illinois 1999-2024
+#| fig-cap: !expr paste0("Weekday Rail Boardings by CTA L Station Line, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
 
 a_station_line_list <- c("Blue","Brown","Green","Multi","Orange","Pink","Red") # ALL LINES
 # a_station_line_list <- c("Blue","Red") # EDIT HERE: uncomment and select two lines
@@ -468,7 +468,7 @@ fx_plot_ridership_by_line(rail_stations_ccvi_ridership, lines = a_station_line_l
 :::
 
 # Step 5. Map of stations and ridership by L line
-The final step is to create a custom map that displays changes in ridership by station for the rail lines you selected for further analysis. Stations shown in red have lost ridership between November 2019 and November 2024 (the latest month available). Hover over specific stations to display ridership numbers for the analyzed period as well as the net and percentage changes. Copy and paste the map into your presentation.
+The final step is to create a custom map that displays changes in ridership by station for the rail lines you selected for further analysis. Stations shown in red have lost ridership between `r format(ridership_through, "%B")` 2019 (before the pandemic) and `r format(ridership_through, "%B %Y")` (the latest month available). Comparing the same month in both years keeps seasonal differences in ridership out of the comparison. Hover over specific stations to display ridership numbers for the analyzed period as well as the net and percentage changes. Copy and paste the map into your presentation.
 
 ```{r}
 #| label: define station change functions
@@ -477,12 +477,13 @@ The final step is to create a custom map that displays changes in ridership by s
 #| code-summary: "Show the station change functions"
 
 # function for calculating the change in weekday boardings by station between
-# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default.
-# Only stations on the selected lines are kept.
+# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default and
+# from is the same month in 2019 (before the pandemic) by default, so both months
+# are in the same season. Only stations on the selected lines are kept.
 fx_station_change <- function(ridership_attributes, rail_stations, lines = names(pal_line),
-                              from = "2019-11-01", to = NULL) {
-  from <- as.Date(from)
+                              from = NULL, to = NULL) {
   to <- if (is.null(to)) max(ridership_attributes$year_month) else as.Date(to)
+  from <- if (is.null(from)) lubridate::make_date(2019, lubridate::month(to), 1) else as.Date(from)
 
   ridership_attributes %>%
     filter(day_type == "Weekday", year_month %in% c(from, to)) %>%
@@ -552,13 +553,13 @@ fx_map_station_change <- function(station_change, rail_lines, lines = names(pal_
 
 ```{r}
 #| label: fig-selectstations
-#| fig-cap: Change in Weekday Ridership by L Station, November 2019-2024
+#| fig-cap: !expr paste0("Change in Weekday Ridership by L Station, ", format(ridership_through, "%B"), " 2019-", format(ridership_through, "%Y"))
 
-# calculate the change in weekday boardings by station for the selected lines
+# calculate the change in weekday boardings by station for the selected lines,
+# between the latest month and the same month in 2019
 ridership_attributes_station <- fx_station_change(ridership_attributes, 
                                                   rail_stations, 
-                                                  lines = a_station_line_list,
-                                                  from = "2019-11-01")
+                                                  lines = a_station_line_list)
 
 # map the change in boardings by station and the selected lines
 fx_map_station_change(ridership_attributes_station, rail_lines, lines = a_station_line_list)

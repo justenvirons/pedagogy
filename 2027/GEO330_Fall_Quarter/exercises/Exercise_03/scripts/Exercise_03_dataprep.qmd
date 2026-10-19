@@ -25,7 +25,7 @@ setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330
 This script creates `Exercise_03.RData`, the file loaded when rendering `Exercise_03.qmd` and by students in Posit Cloud. Each run:
 
 1. Downloads community areas, zip codes, the Chicago COVID-19 Community Vulnerability Index (CCVI), daily CTA boardings and weekly COVID-19 cases from the [Chicago Data Portal](https://data.cityofchicago.org/). Each download is also saved as a cache file in the data directory, which is read instead when the portal cannot be reached.
-2. Imports CTA rail stations, rail lines and monthly station ridership ([RTAMS](https://rtams.org/media/datasets/cta-ridership)) from the data directory.
+2. Imports CTA rail stations, rail lines and monthly station ridership, 1999-2026 ([RTAMS](https://rtams.org/media/datasets/cta-ridership)), from the data directory. When RTAMS posts a newer ridership file, save it in the data directory and update `file_ridership` in the settings below.
 3. Attributes L stations with their nearest community area and zip code, and joins stations with CCVI scores and ridership.
 4. Saves the datasets, along with the functions students use to create the exercise's tables, plots and maps, to `Exercise_03.RData`.
 
@@ -50,7 +50,7 @@ url_covid19 <- "https://data.cityofchicago.org/api/views/naz8-j4nc/rows.csv?acce
 # RTAMS sources (saved in the data directory)
 file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
 file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
-file_ridership_test <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
+file_ridership <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
 ```
 
 # Functions for data development
@@ -190,6 +190,9 @@ ridership_attributes <- read_csv(file_ridership, show_col_types = FALSE) %>%
          rides_avg = DAILY_AVG_RIDES) %>%
   mutate(station_id = as.numeric(station_id),
          year_month = make_date(year, month, 1))
+
+# latest month in the ridership data, used to label figures in Exercise_03.qmd
+ridership_through <- max(ridership_attributes$year_month)
 ```
 
 ## Join stations with CCVI and ridership
@@ -454,12 +457,13 @@ fx_plot_ridership_by_line <- function(rail_stations_ccvi_ridership, lines = name
 }
 
 # function for calculating the change in weekday boardings by station between
-# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default.
-# Only stations on the selected lines are kept.
+# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default and
+# from is the same month in 2019 (before the pandemic) by default, so both months
+# are in the same season. Only stations on the selected lines are kept.
 fx_station_change <- function(ridership_attributes, rail_stations, lines = names(pal_line),
-                              from = "2019-11-01", to = NULL) {
-  from <- as.Date(from)
+                              from = NULL, to = NULL) {
   to <- if (is.null(to)) max(ridership_attributes$year_month) else as.Date(to)
+  from <- if (is.null(from)) lubridate::make_date(2019, lubridate::month(to), 1) else as.Date(from)
 
   ridership_attributes %>%
     filter(day_type == "Weekday", year_month %in% c(from, to)) %>%
@@ -534,7 +538,7 @@ fx_map_station_change <- function(station_change, rail_lines, lines = names(pal_
 
 save(community_areas_ccvi, rail_stations, rail_stations_ccvi, rail_lines,
      ridership_daily_boardings, ridership_attributes, rail_stations_ccvi_ridership,
-     covid19_cases_summary,
+     covid19_cases_summary, ridership_through,
      # functions for Exercise #3 (and the colors they use)
      pal_ccvi, pal_line,
      fx_plot_layout, fx_datatable, fx_table_stations, fx_map_ccvi,
