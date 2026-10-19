@@ -1,5 +1,5 @@
 ---
-title: "Exercise #3 data prep: CTA L ridership, CCVI and COVID-19"
+title: "Exercise #3 data prep: CTA L ridership, community indicators and COVID-19"
 output: html_document
 editor_options:
   chunk_output_type: console
@@ -9,6 +9,7 @@ editor_options:
 #| label: activate packages and set working directory
 
 library(tidyverse)
+library(jsonlite) # Chicago Health Atlas API
 library(sf)
 library(lubridate)
 library(zoo) # rolling averages
@@ -24,9 +25,9 @@ setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330
 # Purpose
 This script creates `Exercise_03.RData`, the file loaded when rendering `Exercise_03.qmd` and by students in Posit Cloud. Each run:
 
-1. Downloads community areas, zip codes, the Chicago COVID-19 Community Vulnerability Index (CCVI), daily CTA boardings and weekly COVID-19 cases from the [Chicago Data Portal](https://data.cityofchicago.org/). Each download is also saved as a cache file in the data directory, which is read instead when the portal cannot be reached.
+1. Downloads community areas, daily CTA boardings and daily COVID-19 cases from the [Chicago Data Portal](https://data.cityofchicago.org/), and community indicators from the [Chicago Health Atlas](https://chicagohealthatlas.org) (the same indicators used in Exercise #2). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 2. Imports CTA rail stations, rail lines and monthly station ridership, 1999-2026 ([RTAMS](https://rtams.org/media/datasets/cta-ridership)), from the data directory. When RTAMS posts a newer ridership file, save it in the data directory and update `file_ridership` in the settings below.
-3. Attributes L stations with their nearest community area and zip code, and joins stations with CCVI scores and ridership.
+3. Attributes L stations with their nearest community area, and joins station ridership with station lines and community areas.
 4. Saves the datasets, along with the functions students use to create the exercise's tables, plots and maps, to `Exercise_03.RData`. The CARTO API key used by the basemaps is also saved; it comes from the `CARTO_API_KEY` environment variable (e.g., set in `.Renviron`).
 
 Upload `Exercise_03.RData` to the course data pages (`https://justenvirons.org/pedagogy/GEO330/Exercise_03/data/Exercise_03.RData`) after each run.
@@ -42,10 +43,22 @@ exercise_file <- file.path(data_dir, "Exercise_03.RData")
 
 # Chicago Data Portal sources
 url_community_areas <- "https://data.cityofchicago.org/resource/igwz-8jzy.geojson"
-url_zip_codes <- "https://data.cityofchicago.org/resource/unjd-c2ca.geojson"
-url_ccvi <- "https://data.cityofchicago.org/api/views/rqqg-u7zt/rows.csv?accessType=DOWNLOAD"
 url_daily_boardings <- "https://data.cityofchicago.org/api/views/6iiy-9s97/rows.csv?accessType=DOWNLOAD"
 url_covid19 <- "https://data.cityofchicago.org/api/views/naz8-j4nc/rows.csv?accessType=DOWNLOAD"
+
+# Chicago Health Atlas community indicators (same as Exercise #2): column name,
+# Health Atlas topic key, period, display name and whether higher values signal
+# more or less advantaged conditions
+ses_indicators <- tribble(
+  ~column,      ~topic,    ~period,     ~name,                                  ~higher,
+  "population", "POP",     "2020-2024", "Total population",                     NA,
+  "SVI",        "SVI",     "2022",      "Social Vulnerability Index",           "less advantaged",
+  "poverty",    "POV",     "2020-2024", "Poverty rate",                         "less advantaged",
+  "inactivity", "HCSPAP",  "2016-2018", "Adult physical inactivity rate",       "less advantaged",
+  "mortality",  "VRDTHR",  "2020-2024", "All-cause mortality rate",             "less advantaged",
+  "transit",    "HCSWTSP", "2023-2024", "Ease of walking to transit stop rate", "more advantaged",
+  "violence",   "HCSNVP",  "2023-2024", "Perceived neighborhood violence rate", "less advantaged")
+url_health_atlas <- "https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&population=&period=%s&topic=%s"
 
 # RTAMS sources (saved in the data directory)
 # https://datahub.nita.illinois.gov/media/datasets/cta-ridership
@@ -84,9 +97,9 @@ read_portal_geojson <- function(url, cache) {
 ```
 
 # Geographic data
-## Community areas and zip codes
+## Community areas
 ```{r}
-#| label: community areas and zip codes
+#| label: community areas
 
 # City of Chicago community areas (N=77) in Illinois State Plane East (epsg:3435)
 community_areas <- read_portal_geojson(url_community_areas,
@@ -95,15 +108,10 @@ community_areas <- read_portal_geojson(url_community_areas,
   mutate(comarea_id = as.numeric(area_numbe),
          comarea_name = str_to_title(community)) %>%
   select(comarea_id, comarea_name)
-
-zip_codes <- read_portal_geojson(url_zip_codes,
-                                 file.path(data_dir, "zip_codes_cache.geojson")) %>%
-  st_transform(3435) %>%
-  select(zip)
 ```
 
 ## L stations and lines
-Stations and lines were downloaded from the *Shapefiles and Feature Layers* section of the [RTAMS Maps and Data web page](https://rtagis.maps.arcgis.com/home/index.html). Stations outside the city of Chicago are removed, and each remaining station is attributed with its nearest community area and zip code.
+Stations and lines were downloaded from the *Shapefiles and Feature Layers* section of the [RTAMS Maps and Data web page](https://rtagis.maps.arcgis.com/home/index.html). Stations outside the city of Chicago are removed, and each remaining station is attributed with its nearest community area.
 
 ```{r}
 #| label: rail stations and lines
@@ -120,49 +128,42 @@ rail_stations_all <- st_read(file_rail_stations, quiet = TRUE) %>%
   mutate(station_id = as.numeric(station_id),
          station_line = unname(line_names[station_line]))
 
-# stations within the city of Chicago
-rail_stations_chicago <- rail_stations_all %>%
-  st_filter(community_areas)
-
-# nearest community area and zip code of each station
-rail_stations <- rail_stations_chicago %>%
-  st_join(community_areas, join = st_nearest_feature) %>%
-  st_join(zip_codes, join = st_nearest_feature)
+# stations within the city of Chicago, with their nearest community area
+rail_stations <- rail_stations_all %>%
+  st_filter(community_areas) %>%
+  st_join(community_areas, join = st_nearest_feature)
 
 rail_lines <- st_read(file_rail_lines, quiet = TRUE) %>%
   st_transform(4326) %>%
   select(COLOR)
 
-rm(rail_stations_all, rail_stations_chicago)
+rm(rail_stations_all)
 ```
 
-# CCVI by community area
-The CCVI dataset includes community areas and zip codes; only community areas are kept. One is added to the rank values to adjust their range from 0-76 to 1-77, and each rank is also grouped into quintiles (`_ntile` columns).
+# Community indicators
+Indicators are downloaded from the Chicago Health Atlas API by community area, one topic at a time, and joined to the community areas as columns named in `ses_indicators`.
 
 ```{r}
-#| label: ccvi by community area
+#| label: community indicators
 
-ccvi_attributes <- read_portal_csv(url_ccvi, file.path(data_dir, "ccvi_cache.csv"))
-
-if ("Geography Type" %in% names(ccvi_attributes)) {
-  ccvi_attributes <- ccvi_attributes %>%
-    filter(`Geography Type` == "CA") %>%
-    select(-`Geography Type`)
+read_health_atlas <- function(topic, period, column) {
+  cache <- file.path(data_dir, paste0("health_atlas_", column, "_cache.json"))
+  fromJSON(download_cached(sprintf(url_health_atlas, period, topic), cache))$results %>%
+    as.data.frame() %>%
+    transmute(comarea_id = as.numeric(str_replace(g, "1714000-", "")),
+              column = column,
+              estimate = as.numeric(v)) %>%
+    drop_na(comarea_id)
 }
 
-ccvi_attributes <- ccvi_attributes %>%
-  select(-any_of(c("Location", "Community Area Name"))) %>%
-  rename(comarea_id = 1) %>%
-  mutate(comarea_id = as.numeric(comarea_id))
-
-community_areas_ccvi <- community_areas %>%
-  left_join(ccvi_attributes, by = "comarea_id") %>%
-  mutate(across(`Rank - Socioeconomic Status`:`Rank - COVID-19 Crude Mortality Rate`,
-                ~ ntile(.x, 5), .names = "{.col}_ntile")) %>%
-  mutate(across(`Rank - Socioeconomic Status`:`Rank - COVID-19 Crude Mortality Rate`,
-                ~ .x + 1)) %>%
-  mutate(`CCVI Category` = factor(`CCVI Category`, levels = c("LOW", "MEDIUM", "HIGH"))) %>%
-  arrange(`CCVI Score`)
+community_areas_ses <- pmap(select(ses_indicators, topic, period, column), read_health_atlas) %>%
+  bind_rows() %>%
+  pivot_wider(names_from = column, values_from = estimate) %>%
+  right_join(community_areas, by = "comarea_id") %>%
+  select(comarea_id, comarea_name, all_of(ses_indicators$column), geometry) %>%
+  arrange(comarea_id) %>%
+  st_as_sf() %>%
+  st_transform(crs = 4326)
 ```
 
 # Ridership
@@ -196,24 +197,17 @@ ridership_attributes <- read_csv(file_ridership, show_col_types = FALSE) %>%
 ridership_through <- max(ridership_attributes$year_month)
 ```
 
-## Join stations with CCVI and ridership
+## Join station ridership with lines and community areas
 ```{r}
-#| label: join stations with ccvi and ridership
+#| label: join station ridership with lines and community areas
 
-rail_stations_ccvi <- rail_stations %>%
-  left_join(community_areas_ccvi %>%
-              st_drop_geometry() %>%
-              select(-comarea_name),
-            by = "comarea_id")
-
-# weekday boardings by station and month, with station line and CCVI
-rail_stations_ccvi_ridership <- ridership_attributes %>%
+# weekday boardings by station and month, with station line and community area
+rail_stations_ridership <- ridership_attributes %>%
   filter(day_type == "Weekday") %>%
   select(station_id, year_month, rides_total) %>%
-  inner_join(rail_stations_ccvi %>%
+  inner_join(rail_stations %>%
                st_drop_geometry() %>%
-               select(station_id, station_name, station_line, comarea_id, comarea_name,
-                      `CCVI Score`, `CCVI Category`),
+               select(station_id, station_name, station_line, comarea_id, comarea_name),
              by = "station_id")
 ```
 
@@ -239,12 +233,10 @@ covid19_cases_summary <- read_portal_csv(url_covid19, file.path(data_dir, "covid
 
 # Create Exercise_03.RData file
 ## Functions for Exercise #3
+The functions below are shown, in the same order, in `Exercise_03.qmd`.
 
 ```{r}
-#| label: exercise functions
-
-# CCVI category colors
-pal_ccvi <- c(LOW = "#E2F11A", MEDIUM = "#E0A100", HIGH = "#9F1928")
+#| label: step 2 COVID-19 plotting functions
 
 # L line colors; names match station_line and the rail lines' COLOR column
 pal_line <- c(Blue = "#3498db", Brown = "#964B00", Green = "#1e8449", Multi = "#424949",
@@ -270,25 +262,124 @@ fx_plot_layout <- function(p, y_title, filename, x_title = "") {
       hovermode = "x unified")
 }
 
-# function for formatting a table as an interactive table
-fx_datatable <- function(table) {
-  datatable(table,
-            class = 'cell-border stripe',
-            rownames = FALSE,
-            options = list(pageLength = 5),
-            filter = "top")
+# function for plotting COVID-19 cases or deaths by date; layer is "Cases7d" or
+# "Deaths7d" (7-day averages), "Cases" or "Deaths" (daily) or "Casescm" or
+# "Deathscm" (cumulative)
+fx_plot_covid <- function(covid19_cases_summary, layer = "Deaths7d") {
+  layer_titles <- c(Cases7d = "COVID-19 Cases (7-day average)",
+                    Deaths7d = "COVID-19 Deaths (7-day average)",
+                    Cases = "COVID-19 Cases",
+                    Deaths = "COVID-19 Deaths",
+                    Casescm = "COVID-19 Cases (cumulative)",
+                    Deathscm = "COVID-19 Deaths (cumulative)")
+  title <- layer_titles[[layer]]
+
+  plot_ly(data = filter(covid19_cases_summary, layer == !!layer),
+          x = ~Date,
+          y = ~value,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "#9F1928", width = 0.5),
+          name = title,
+          hovertemplate = paste0(title, ': %{y:,}<extra></extra>')) %>%
+    fx_plot_layout(y_title = title,
+                   filename = paste0("covid19_", tolower(layer), "_chicago"))
+}
+```
+
+```{r}
+#| label: step 2 ridership plotting functions
+
+# function for plotting total boardings (all stations) by month; day_type is
+# "Weekday", "Saturday" or "Sunday/Holiday"
+fx_plot_ridership_by_month <- function(ridership_attributes, day_type = "Weekday") {
+  ridership_by_month <- ridership_attributes %>%
+    filter(day_type == !!day_type) %>%
+    group_by(year_month) %>%
+    summarise(rides_total = sum(rides_total), .groups = "drop")
+
+  plot_ly(data = ridership_by_month,
+          x = ~year_month,
+          y = ~rides_total,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "#080967", width = 0.5),
+          name = 'Total boardings',
+          hovertemplate = 'Rides: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = paste0("Total Rail Station Boardings (", day_type, ")"),
+                   filename = "cta_rail_boardings_by_month")
 }
 
-# function for tabulating L stations by community area and zip code
-fx_table_stations <- function(rail_stations) {
-  rail_stations %>%
-    st_drop_geometry() %>%
-    select(`L Station` = station_name,
-           `Community Area` = comarea_name,
-           `Station Line` = station_line,
-           `Zip Code` = zip) %>%
-    arrange(`L Station`) %>%
-    fx_datatable()
+# function for plotting daily rail boardings (all stations); day_type is "W"
+# (weekday), "A" (Saturday) or "U" (Sunday/holiday)
+fx_plot_daily_boardings <- function(ridership_daily_boardings, day_type = "W") {
+  plot_ly(data = filter(ridership_daily_boardings, day_type == !!day_type),
+          x = ~service_date,
+          y = ~rail_boardings,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "#9F1928", width = 0.5),
+          name = 'Rail boardings',
+          hovertemplate = 'Rail boardings: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = "Daily Rail Station Boardings",
+                   filename = "cta_rail_boardings_by_day")
+}
+```
+
+```{r}
+#| label: step 2 ridership by line plotting function
+
+# function for plotting weekday boardings by month and station line; lines is a
+# list of line names (e.g., c("Blue", "Red")), all lines by default
+fx_plot_ridership_by_line <- function(rail_stations_ridership, lines = names(pal_line)) {
+  ridership_by_line <- rail_stations_ridership %>%
+    filter(station_line %in% lines) %>%
+    group_by(year_month, station_line) %>%
+    summarise(rides_total = sum(rides_total), .groups = "drop")
+
+  plot_ly(data = ridership_by_line,
+          x = ~year_month,
+          y = ~rides_total,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~station_line,
+          colors = pal_line,
+          text = ~station_line,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
+                   filename = "cta_rail_boardings_by_line")
+}
+```
+
+```{r}
+#| label: step 2 station change functions
+
+# function for calculating the change in weekday boardings by station between
+# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default and
+# from is the same month in 2019 (before the pandemic) by default, so both months
+# are in the same season. Only stations on the selected lines are kept.
+fx_station_change <- function(ridership_attributes, rail_stations, lines = names(pal_line),
+                              from = NULL, to = NULL) {
+  to <- if (is.null(to)) max(ridership_attributes$year_month) else as.Date(to)
+  from <- if (is.null(from)) lubridate::make_date(2019, lubridate::month(to), 1) else as.Date(from)
+
+  ridership_attributes %>%
+    filter(day_type == "Weekday", year_month %in% c(from, to)) %>%
+    group_by(station_id) %>%
+    summarise(rides_from = sum(rides_total[year_month == from]),
+              rides_to = sum(rides_total[year_month == to]),
+              .groups = "drop") %>%
+    mutate(net_chg = rides_to - rides_from,
+           pct_chg = net_chg / rides_from * 100,
+           month_from = from,
+           month_to = to) %>%
+    filter(is.finite(pct_chg)) %>%
+    inner_join(rail_stations %>%
+                 select(station_id, station_name, station_line, comarea_id, comarea_name),
+               by = "station_id") %>%
+    st_as_sf() %>%
+    st_transform(crs = 4326) %>%
+    filter(station_line %in% lines)
 }
 
 # function for creating the base map shared by the exercise's maps: CARTO
@@ -309,30 +400,110 @@ fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
       opacity = 1)
 }
 
-# function for creating community area hover labels with CCVI scores, categories
-# and ranks
-fx_ccvi_labels <- function(community_areas_ccvi) {
-  x <- community_areas_ccvi
-  sprintf(
-    "<strong>%s</strong><br/>
-    <i>CCVI Score:</i> %0.1f<br/>
-    <i>CCVI Category:</i> %s<br/><br/>
-    <em>Ranked scores from least (1) to most (77) vulnerable:</em><br/>
-    <i>Socioeconomic Status:</i> %1.0f<br/>
-    <i>Essential Workers:</i> %1.0f<br/>
-    <i>Mobility Ratio:</i> %1.0f<br/>
-    <i>COVID-19 Incidence Rate:</i> %1.0f<br/>
-    <i>COVID-19 Hospitalization Rate:</i> %1.0f<br/>
-    <i>COVID-19 Crude Mortality Rate:</i> %1.0f<br/>",
-    x$comarea_name,
-    x$`CCVI Score`,
-    x$`CCVI Category`,
-    x$`Rank - Socioeconomic Status`,
-    x$`Rank - Frontline Essential Workers`,
-    x$`Rank - Cumulative Mobility Ratio`,
-    x$`Rank - COVID-19 Incidence Rate`,
-    x$`Rank - COVID-19 Hospital Admission Rate`,
-    x$`Rank - COVID-19 Crude Mortality Rate`) %>%
+# function for adding L lines (colored by line) and stations; lines and stations
+# are drawn in their own panes, above the community areas. station_labels are the
+# stations' hover labels; other circle marker options (e.g., radius, fillColor)
+# are passed through ...
+fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
+  map %>%
+    addMapPane("lines", zIndex = 440) %>%
+    addMapPane("stations", zIndex = 450) %>%
+    addPolylines(
+      data = st_transform(rail_lines, crs = 4326),
+      weight = 3,
+      opacity = 1,
+      color = ~unname(pal_line[COLOR]),
+      options = pathOptions(pane = "lines"),
+      group = "L Lines") %>%
+    addCircleMarkers(
+      data = st_transform(rail_stations, crs = 4326),
+      color = "#fff",
+      weight = 1,
+      fillOpacity = 0.9,
+      label = station_labels,
+      options = pathOptions(pane = "stations"),
+      group = "L Stations",
+      ...)
+}
+
+# function for adding L lines and stations colored by the change in weekday
+# boardings (red: loss, blue: gain; larger circles for larger percentage changes),
+# with hover labels and a legend that is shown along with the stations
+fx_add_station_change_layers <- function(map, station_change, rail_lines) {
+  month_from <- format(station_change$month_from[1], "%b %Y")
+  month_to <- format(station_change$month_to[1], "%b %Y")
+  change_colors <- c(Loss = "#d7301f", Gain = "#2171b5")
+
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s Station</strong><br/>
+    <i>Line:</i> %s<br/>
+    <i>Community area:</i> %s<br/>
+    <i>%s weekday boardings:</i> %s<br/>
+    <i>%s weekday boardings:</i> %s<br/>
+    <i>Net change:</i> %s<br/>
+    <i>Percent change:</i> %0.1f%%<br/>",
+    station_change$station_name,
+    station_change$station_line,
+    station_change$comarea_name,
+    month_from, format(station_change$rides_from, big.mark = ","),
+    month_to, format(station_change$rides_to, big.mark = ","),
+    format(station_change$net_chg, big.mark = ","),
+    station_change$pct_chg) %>%
+    lapply(htmltools::HTML)
+
+  map %>%
+    fx_add_rail_layers(rail_lines,
+                       station_change,
+                       station_labels,
+                       radius = rescale(abs(station_change$pct_chg), to = c(4, 12)),
+                       fillColor = unname(change_colors[if_else(station_change$pct_chg < 0, "Loss", "Gain")])) %>%
+    addLegend("bottomright",
+              colors = unname(change_colors),
+              labels = c("Loss", "Gain"),
+              title = paste0("Change in Weekday Boardings<br>", month_from, " to ", month_to),
+              opacity = 0.9,
+              className = "info legend circle-legend",
+              group = "L Stations")
+}
+
+# function for mapping the change in boardings by station along the selected
+# lines; the layer control turns the lines and stations on and off
+fx_map_station_change <- function(station_change, rail_lines, community_areas_ses,
+                                  lines = names(pal_line)) {
+  fx_basemap(community_areas_ses) %>%
+    fx_add_station_change_layers(station_change, filter(rail_lines, COLOR %in% lines)) %>%
+    addLayersControl(
+      overlayGroups = c("L Lines", "L Stations"),
+      options = layersControlOptions(collapsed = FALSE, position = "topright"))
+}
+```
+
+```{r}
+#| label: step 3 indicator mapping functions
+
+# function for creating a quintile color palette; when repeated values make some
+# quintile breaks identical, the remaining distinct breaks are used instead.
+# The legend shows the range of values in each quintile.
+fx_quintile_pal <- function(values, palette = "YlGn") {
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) < 2) breaks <- c(breaks, breaks + 1)
+  colorBin(palette = palette, domain = values, bins = breaks, na.color = "#cccccc")
+}
+
+# function for creating community area hover labels with the value of every
+# community indicator
+fx_ses_labels <- function(community_areas_ses, indicators = ses_indicators) {
+  values <- sapply(seq_len(nrow(indicators)), function(i) {
+    sprintf("<i>%s:</i> %s<br/>",
+            indicators$name[i],
+            formatC(community_areas_ses[[indicators$column[i]]], format = "f",
+                    digits = if (indicators$column[i] == "population") 0 else 1,
+                    big.mark = ","))
+  })
+  values <- matrix(values, nrow = nrow(community_areas_ses))
+  paste0("<strong>", community_areas_ses$comarea_name, "</strong><br/>",
+         apply(values, 1, paste, collapse = "")) %>%
     lapply(htmltools::HTML)
 }
 
@@ -401,292 +572,183 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
       }", data = list(groups = names(measures)))
 }
 
-# function for adding L lines (colored by line) and stations; lines and stations
-# are drawn in their own panes, above the community areas. station_labels are the
-# stations' hover labels; other circle marker options (e.g., radius, fillColor)
-# are passed through ...
-fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
-  map %>%
-    addMapPane("lines", zIndex = 440) %>%
-    addMapPane("stations", zIndex = 450) %>%
-    addPolylines(
-      data = st_transform(rail_lines, crs = 4326),
-      weight = 3,
-      opacity = 1,
-      color = ~unname(pal_line[COLOR]),
-      options = pathOptions(pane = "lines"),
-      group = "L Lines") %>%
-    addCircleMarkers(
-      data = st_transform(rail_stations, crs = 4326),
-      color = "#fff",
-      weight = 1,
-      fillOpacity = 0.9,
-      label = station_labels,
-      options = pathOptions(pane = "stations"),
-      group = "L Stations",
-      ...)
-}
+# function for mapping community indicators by community area (quintiles) with L
+# lines and stations colored by the change in weekday boardings (all lines); the
+# dropdown list switches between indicators and the layer control turns the lines
+# and stations on and off. palette is any RColorBrewer palette name (e.g., "YlGn",
+# "Purples", "Greys")
+fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
+                       indicators = ses_indicators, palette = "YlGn") {
+  map_data <- st_transform(community_areas_ses, crs = 4326)
+  indicators <- filter(indicators, column != "population")
 
-# vulnerability quintile labels, from least to most vulnerable
-vulnerability_labels <- c("Least vulnerable", "Less vulnerable", "Moderate",
-                          "More vulnerable", "Most vulnerable")
-
-# function for mapping CCVI by community area with L lines and stations; the
-# dropdown list switches between CCVI category and quintiles of selected CCVI
-# ranks, and the layer control turns the lines and stations on and off. palette
-# is any RColorBrewer palette name (e.g., "YlOrRd", "Blues", "PuRd")
-fx_map_ccvi <- function(community_areas_ccvi, rail_lines, rail_stations_ccvi, palette = "YlOrRd") {
-  map_data <- st_transform(community_areas_ccvi, crs = 4326)
-
-  # CCVI category and quintiles of selected ranks (1 = least vulnerable)
-  rank_quintile <- function(column) {
-    factor(vulnerability_labels[map_data[[paste0(column, "_ntile")]]], levels = vulnerability_labels)
-  }
-  measures <- list(
-    "CCVI Category" = map_data$`CCVI Category`,
-    "Socioeconomic Status Rank<br>Quintiles" = rank_quintile("Rank - Socioeconomic Status"),
-    "Essential Workers Rank<br>Quintiles" = rank_quintile("Rank - Frontline Essential Workers"),
-    "Mobility Ratio Rank<br>Quintiles" = rank_quintile("Rank - Cumulative Mobility Ratio"),
-    "COVID-19 Incidence Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Incidence Rate"),
-    "COVID-19 Hospitalization Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Hospital Admission Rate"),
-    "COVID-19 Crude Mortality Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Crude Mortality Rate"))
-  pals <- lapply(measures, function(values)
-    colorFactor(palette = palette, domain = values, levels = levels(values), ordered = TRUE))
-  # dropdown list names without the legend line break
-  names(measures) <- names(pals) <- gsub("<br>", " ", names(measures))
-
-  # station hover labels
-  station_labels <- sprintf(
-    "<strong>%s</strong><br/>
-    <i>Line:</i> %s<br/>
-    <i>Community area:</i> %s<br/>
-    <i>CCVI Category:</i> %s",
-    rail_stations_ccvi$station_name,
-    rail_stations_ccvi$station_line,
-    rail_stations_ccvi$comarea_name,
-    rail_stations_ccvi$`CCVI Category`) %>%
-    lapply(htmltools::HTML)
+  measures <- setNames(lapply(indicators$column, function(column) map_data[[column]]),
+                       paste(indicators$name, "Quintiles"))
+  pals <- lapply(measures, fx_quintile_pal, palette = palette)
 
   fx_basemap(map_data) %>%
     fx_add_measure_layers(map_data,
                           measures = measures,
                           pals = pals,
-                          labels = fx_ccvi_labels(map_data)) %>%
-    fx_add_rail_layers(rail_lines, rail_stations_ccvi, station_labels,
-                       radius = 4,
-                       fillColor = "#333") %>%
+                          labels = fx_ses_labels(map_data)) %>%
+    fx_add_station_change_layers(station_change, rail_lines) %>%
     addLayersControl(
       overlayGroups = c("L Lines", "L Stations"),
       options = layersControlOptions(collapsed = FALSE, position = "topright"))
 }
+```
 
-# function for plotting total boardings (all stations) by month; day_type is
-# "Weekday", "Saturday" or "Sunday/Holiday"
-fx_plot_ridership_by_month <- function(ridership_attributes, day_type = "Weekday") {
-  ridership_by_month <- ridership_attributes %>%
-    filter(day_type == !!day_type) %>%
-    group_by(year_month) %>%
+```{r}
+#| label: step 3 indicator quintile plotting functions
+
+# quintile category colors, from Highest to Lowest (as in Exercise #2)
+quintile_colors <- c(Highest = "darkred",
+                     High = "orange",
+                     Moderate = "yellow",
+                     Low = "lightblue",
+                     Lowest = "darkblue")
+
+# function for adding the selected indicator's values (ses_value) and quintile
+# categories (ses_ntile) to community areas
+fx_add_ses_quintiles <- function(community_areas_ses, ses_column) {
+  quintile_labels <- c("Lowest", "Low", "Moderate", "High", "Highest")
+  community_areas_ses %>%
+    mutate(ses_value = .data[[ses_column]],
+           ses_ntile = factor(quintile_labels[ntile(ses_value, 5)],
+                              levels = names(quintile_colors)))
+}
+
+# function for plotting weekday boardings by month and quintile category of the
+# selected indicator in each station's community area; ses_name labels the legend
+fx_plot_ridership_by_ses <- function(rail_stations_ridership, community_areas_ses, ses_name = "Indicator") {
+  ridership_by_ses <- rail_stations_ridership %>%
+    left_join(community_areas_ses %>%
+                st_drop_geometry() %>%
+                select(comarea_id, ses_ntile),
+              by = "comarea_id") %>%
+    drop_na(ses_ntile) %>%
+    group_by(year_month, ses_ntile) %>%
     summarise(rides_total = sum(rides_total), .groups = "drop")
 
-  plot_ly(data = ridership_by_month,
+  plot_ly(data = ridership_by_ses,
           x = ~year_month,
           y = ~rides_total,
           type = 'scatter',
           mode = 'lines',
-          line = list(color = "#080967", width = 0.5),
-          name = 'Total boardings',
-          hovertemplate = 'Rides: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = paste0("Total Rail Station Boardings (", day_type, ")"),
-                   filename = "cta_rail_boardings_by_month")
+          color = ~ses_ntile,
+          colors = quintile_colors,
+          text = ~ses_ntile,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
+                   filename = paste0("cta_rail_boardings_by_", tolower(gsub("[^A-Za-z0-9]+", "_", ses_name)), "_quintile")) %>%
+    layout(legend = list(title = list(text = paste0(ses_name, " Quintile  "))))
 }
+```
 
-# function for plotting daily rail boardings (all stations); day_type is "W"
-# (weekday), "A" (Saturday) or "U" (Sunday/holiday)
-fx_plot_daily_boardings <- function(ridership_daily_boardings, day_type = "W") {
-  plot_ly(data = filter(ridership_daily_boardings, day_type == !!day_type),
-          x = ~service_date,
-          y = ~rail_boardings,
-          type = 'scatter',
-          mode = 'lines',
-          line = list(color = "#9F1928", width = 0.5),
-          name = 'Rail boardings',
-          hovertemplate = 'Rail boardings: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = "Daily Rail Station Boardings",
-                   filename = "cta_rail_boardings_by_day")
-}
+```{r}
+#| label: step 3 quintile summary table functions
 
-# function for tabulating L stations by line and CCVI
-fx_table_stations_ccvi <- function(rail_stations_ccvi) {
-  rail_stations_ccvi %>%
+# function for summarizing community areas, population, L stations and the change
+# in weekday boardings by quintile category of the selected indicator, from Highest
+# to Lowest, along with each category's share of the city's population, stations
+# and latest boardings; stations without boardings in both months are left out
+fx_summarise_ses_quintiles <- function(station_change, community_areas_ses) {
+  stations <- station_change %>%
     st_drop_geometry() %>%
-    select(`L Station` = station_name,
-           `L Station ID` = station_id,
-           `Community Area` = comarea_name,
-           `Station Line` = station_line,
-           `CCVI Score`,
-           `CCVI Category`) %>%
-    arrange(`L Station`) %>%
-    fx_datatable()
-}
+    left_join(community_areas_ses %>%
+                st_drop_geometry() %>%
+                select(comarea_id, ses_ntile),
+              by = "comarea_id") %>%
+    group_by(ses_ntile) %>%
+    summarise(stations = n(),
+              rides_from = sum(rides_from),
+              rides_to = sum(rides_to),
+              .groups = "drop")
 
-# function for plotting COVID-19 cases or deaths by date; layer is "Cases7d" or
-# "Deaths7d" (7-day averages), "Cases" or "Deaths" (daily) or "Casescm" or
-# "Deathscm" (cumulative)
-fx_plot_covid <- function(covid19_cases_summary, layer = "Deaths7d") {
-  layer_titles <- c(Cases7d = "COVID-19 Cases (7-day average)",
-                    Deaths7d = "COVID-19 Deaths (7-day average)",
-                    Cases = "COVID-19 Cases",
-                    Deaths = "COVID-19 Deaths",
-                    Casescm = "COVID-19 Cases (cumulative)",
-                    Deathscm = "COVID-19 Deaths (cumulative)")
-  title <- layer_titles[[layer]]
-
-  plot_ly(data = filter(covid19_cases_summary, layer == !!layer),
-          x = ~Date,
-          y = ~value,
-          type = 'scatter',
-          mode = 'lines',
-          line = list(color = "#9F1928", width = 0.5),
-          name = title,
-          hovertemplate = paste0(title, ': %{y:,}<extra></extra>')) %>%
-    fx_plot_layout(y_title = title,
-                   filename = paste0("covid19_", tolower(layer), "_chicago"))
-}
-
-# function for plotting weekday boardings by month and station CCVI category
-fx_plot_ridership_by_ccvi <- function(rail_stations_ccvi_ridership) {
-  ridership_by_ccvi <- rail_stations_ccvi_ridership %>%
-    drop_na(`CCVI Category`) %>%
-    group_by(year_month, `CCVI Category`) %>%
-    summarise(rides_total = sum(rides_total), .groups = "drop")
-
-  plot_ly(data = ridership_by_ccvi,
-          x = ~year_month,
-          y = ~rides_total,
-          type = 'scatter',
-          mode = 'lines',
-          color = ~`CCVI Category`,
-          colors = pal_ccvi,
-          text = ~`CCVI Category`,
-          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
-                   filename = "cta_rail_boardings_by_ccvi")
-}
-
-# function for plotting weekday boardings by month and station line; lines is a
-# list of line names (e.g., c("Blue", "Red")), all lines by default
-fx_plot_ridership_by_line <- function(rail_stations_ccvi_ridership, lines = names(pal_line)) {
-  ridership_by_line <- rail_stations_ccvi_ridership %>%
-    filter(station_line %in% lines) %>%
-    group_by(year_month, station_line) %>%
-    summarise(rides_total = sum(rides_total), .groups = "drop")
-
-  plot_ly(data = ridership_by_line,
-          x = ~year_month,
-          y = ~rides_total,
-          type = 'scatter',
-          mode = 'lines',
-          color = ~station_line,
-          colors = pal_line,
-          text = ~station_line,
-          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
-                   filename = "cta_rail_boardings_by_line")
-}
-
-# function for calculating the change in weekday boardings by station between
-# two months (from and to, as "YYYY-MM-DD"); to is the latest month by default and
-# from is the same month in 2019 (before the pandemic) by default, so both months
-# are in the same season. Only stations on the selected lines are kept.
-fx_station_change <- function(ridership_attributes, rail_stations, lines = names(pal_line),
-                              from = NULL, to = NULL) {
-  to <- if (is.null(to)) max(ridership_attributes$year_month) else as.Date(to)
-  from <- if (is.null(from)) lubridate::make_date(2019, lubridate::month(to), 1) else as.Date(from)
-
-  ridership_attributes %>%
-    filter(day_type == "Weekday", year_month %in% c(from, to)) %>%
-    group_by(station_id) %>%
-    summarise(rides_from = sum(rides_total[year_month == from]),
-              rides_to = sum(rides_total[year_month == to]),
+  community_areas_ses %>%
+    st_drop_geometry() %>%
+    group_by(ses_ntile) %>%
+    summarise(communityareas = n(),
+              population = sum(population, na.rm = TRUE),
               .groups = "drop") %>%
-    mutate(net_chg = rides_to - rides_from,
-           pct_chg = net_chg / rides_from * 100,
-           month_from = from,
-           month_to = to) %>%
-    filter(is.finite(pct_chg)) %>%
-    inner_join(rail_stations %>%
-                 select(station_id, station_name, station_line, comarea_id, comarea_name),
-               by = "station_id") %>%
-    st_as_sf() %>%
-    st_transform(crs = 4326) %>%
-    filter(station_line %in% lines)
+    left_join(stations, by = "ses_ntile") %>%
+    mutate(across(c(stations, rides_from, rides_to), ~ replace_na(.x, 0)),
+           pct_chg = (rides_to - rides_from) / rides_from) %>%
+    drop_na(ses_ntile) %>%
+    mutate(population_pct = population / sum(population),
+           stations_pct = stations / sum(stations),
+           rides_to_pct = rides_to / sum(rides_to),
+           month_from = station_change$month_from[1],
+           month_to = station_change$month_to[1]) %>%
+    arrange(ses_ntile)
 }
 
-# function for mapping the change in boardings by station along with the selected
-# lines; stations that lost riders are red and stations that gained riders are
-# blue, with larger circles for larger percentage changes. The layer control turns
-# the lines, stations and community area CCVI categories (hidden when the map
-# opens) on and off.
-fx_map_station_change <- function(station_change, rail_lines, community_areas_ccvi,
-                                  lines = names(pal_line)) {
-  map_data <- st_transform(community_areas_ccvi, crs = 4326)
-  month_from <- format(station_change$month_from[1], "%b %Y")
-  month_to <- format(station_change$month_to[1], "%b %Y")
-  change_colors <- c(Loss = "#d7301f", Gain = "#2171b5")
+# function for formatting the quintile summary as an interactive table; ses_name
+# labels the quintile column
+fx_table_ses_quintiles <- function(ridership_by_ses_quintile, ses_name = "Indicator") {
+  month_from <- format(ridership_by_ses_quintile$month_from[1], "%b %Y")
+  month_to <- format(ridership_by_ses_quintile$month_to[1], "%b %Y")
+  ridership_by_ses_quintile %>%
+    select(-month_from, -month_to) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              colnames = c(paste(ses_name, "Quintile"), "Community Areas", "Population", "L Stations",
+                           paste(month_from, "Weekday Boardings"), paste(month_to, "Weekday Boardings"),
+                           "Percent Change", "Percent of Population", "Percent of L Stations",
+                           paste("Percent of", month_to, "Weekday Boardings")),
+              options = list(searching = FALSE,
+                             lengthChange = FALSE,
+                             paging = FALSE)) %>%
+    formatPercentage(c("pct_chg", "population_pct", "stations_pct", "rides_to_pct"), digits = 1) %>%
+    formatRound(c("population", "rides_from", "rides_to"), mark = ",", digits = 0)
+}
+```
 
-  # station hover labels
-  station_labels <- sprintf(
-    "<strong>%s Station</strong><br/>
-    <i>Line:</i> %s<br/>
-    <i>Community area:</i> %s<br/>
-    <i>%s weekday boardings:</i> %s<br/>
-    <i>%s weekday boardings:</i> %s<br/>
-    <i>Net change:</i> %s<br/>
-    <i>Percent change:</i> %0.1f%%<br/>",
-    station_change$station_name,
-    station_change$station_line,
-    station_change$comarea_name,
-    month_from, format(station_change$rides_from, big.mark = ","),
-    month_to, format(station_change$rides_to, big.mark = ","),
-    format(station_change$net_chg, big.mark = ","),
-    station_change$pct_chg) %>%
-    lapply(htmltools::HTML)
+```{r}
+#| label: step 4 community area summary table functions
 
-  ccvi_pal <- colorFactor(palette = "YlOrRd", domain = map_data$`CCVI Category`, ordered = TRUE)
+# function for summarizing L stations and the change in weekday boardings by
+# community area, along with every community indicator; community areas without
+# stations are included with 0 stations
+fx_summarise_communityareas <- function(station_change, community_areas_ses, indicators = ses_indicators) {
+  stations <- station_change %>%
+    st_drop_geometry() %>%
+    group_by(comarea_id) %>%
+    summarise(stations = n(),
+              rides_from = sum(rides_from),
+              rides_to = sum(rides_to),
+              .groups = "drop")
 
-  fx_basemap(map_data) %>%
-    addPolygons(
-      data = map_data,
-      fillColor = ~ccvi_pal(`CCVI Category`),
-      label = fx_ccvi_labels(map_data),
-      weight = 2,
-      opacity = 1,
-      color = "white",
-      dashArray = "3",
-      fillOpacity = 0.5,
-      group = "CCVI Category") %>%
-    addLegend("bottomleft",
-              pal = ccvi_pal,
-              values = map_data$`CCVI Category`,
-              title = "CCVI Category",
-              opacity = 1,
-              group = "CCVI Category") %>%
-    fx_add_rail_layers(filter(rail_lines, COLOR %in% lines),
-                       station_change,
-                       station_labels,
-                       radius = rescale(abs(station_change$pct_chg), to = c(4, 12)),
-                       fillColor = unname(change_colors[if_else(station_change$pct_chg < 0, "Loss", "Gain")])) %>%
-    addLegend("bottomleft",
-              colors = unname(change_colors),
-              labels = c("Loss", "Gain"),
-              title = paste0("Change in Weekday Boardings<br>", month_from, " to ", month_to),
-              opacity = 0.9,
-              className = "info legend circle-legend",
-              group = "L Stations") %>%
-    addLayersControl(
-      overlayGroups = c("L Lines", "L Stations", "CCVI Category"),
-      options = layersControlOptions(collapsed = FALSE, position = "topright")) %>%
-    hideGroup("CCVI Category")
+  community_areas_ses %>%
+    st_drop_geometry() %>%
+    select(comarea_id, comarea_name, all_of(indicators$column)) %>%
+    left_join(stations, by = "comarea_id") %>%
+    mutate(stations = replace_na(stations, 0),
+           pct_chg = (rides_to - rides_from) / rides_from,
+           month_from = station_change$month_from[1],
+           month_to = station_change$month_to[1]) %>%
+    arrange(comarea_name)
+}
+
+# function for formatting the community area summary as an interactive table that
+# can be sorted (click a column name) and filtered (boxes under the column names)
+fx_table_communityareas <- function(ridership_by_communityarea, indicators = ses_indicators) {
+  month_from <- format(ridership_by_communityarea$month_from[1], "%b %Y")
+  month_to <- format(ridership_by_communityarea$month_to[1], "%b %Y")
+  ridership_by_communityarea %>%
+    select(comarea_name, stations, rides_from, rides_to, pct_chg, all_of(indicators$column)) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              filter = "top",
+              colnames = c("Community Area", "L Stations",
+                           paste(month_from, "Weekday Boardings"), paste(month_to, "Weekday Boardings"),
+                           "Percent Change", indicators$name),
+              options = list(pageLength = 10, scrollX = TRUE)) %>%
+    formatPercentage("pct_chg", digits = 1) %>%
+    formatRound(c("rides_from", "rides_to", "population"), mark = ",", digits = 0) %>%
+    formatRound(setdiff(indicators$column, "population"), digits = 1)
 }
 ```
 
@@ -700,15 +762,19 @@ CARTO_API_KEY  <- Sys.getenv("CARTO_API_KEY",  unset = "cb1_31xh_1_06fb99adb466f
 if (!exists("CARTO_API_KEY")) CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
 if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_03.qmd need it")
 
-save(community_areas_ccvi, rail_stations, rail_stations_ccvi, rail_lines,
-     ridership_daily_boardings, ridership_attributes, rail_stations_ccvi_ridership,
+save(community_areas_ses, ses_indicators, rail_stations, rail_lines,
+     ridership_daily_boardings, ridership_attributes, rail_stations_ridership,
      covid19_cases_summary, ridership_through, CARTO_API_KEY,
-     # functions for Exercise #3 (and the colors and labels they use)
-     pal_ccvi, pal_line, vulnerability_labels,
-     fx_plot_layout, fx_datatable, fx_table_stations,
-     fx_basemap, fx_ccvi_labels, fx_add_measure_layers, fx_add_rail_layers, fx_map_ccvi,
-     fx_plot_ridership_by_month, fx_plot_daily_boardings, fx_table_stations_ccvi,
-     fx_plot_covid, fx_plot_ridership_by_ccvi, fx_plot_ridership_by_line,
-     fx_station_change, fx_map_station_change,
+     # functions for Exercise #3 (and the colors they use)
+     pal_line, quintile_colors,
+     fx_plot_layout, fx_plot_covid,
+     fx_plot_ridership_by_month, fx_plot_daily_boardings,
+     fx_plot_ridership_by_line,
+     fx_station_change, fx_basemap, fx_add_rail_layers, fx_add_station_change_layers,
+     fx_map_station_change,
+     fx_quintile_pal, fx_ses_labels, fx_add_measure_layers, fx_map_ses,
+     fx_add_ses_quintiles, fx_plot_ridership_by_ses,
+     fx_summarise_ses_quintiles, fx_table_ses_quintiles,
+     fx_summarise_communityareas, fx_table_communityareas,
      file = exercise_file)
 ```
