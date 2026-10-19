@@ -42,7 +42,7 @@ load("data/Exercise_03.RData")
 
 ```
 
-# Purpose
+# Background
 This project examines overall trends in CTA L ridership between 1999 and 2026 and identifies how the COVID-19 pandemic may have influenced train travel--both generally and across specific lines (e.g., Green, Pink, Red) and neighborhood categories--in the City of Chicago throughout the various waves of the pandemic. The sections below step you through the process for creating tables, maps and figures to inform your presentation. *As with previous exercises, you are asked to combine and submit all materials into a single presentation. The basic template for this exercise can be downloaded [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx) on the course data pages.*
 
 # Step 1. Open Exercise #3 in Posit Cloud course workspace
