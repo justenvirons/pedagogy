@@ -86,273 +86,56 @@ The load command imports the datasets and custom functions (all beginning with "
 {{< video videos/exercise_03_01.mp4 >}}
 :::
 
-# Step 2. Explore geographic data 
-This exercise evaluates L ridership and COVID-19 trends for neighborhoods in the City of Chicago, which requires community areas, zip codes and L stations in a spatial (i.e., mappable) format. All data for this exercise are publicly available from the [Chicago Data Portal](https://data.cityofchicago.org/) and the Regional Transportation Authority's Mapping and Statistics [(RTAMS)](https://rtams.org/) website. CTA rail stations and lines were downloaded from the *Shapefiles and Feature Layers* section of the [RTAMS Maps and Data web page](https://rtagis.maps.arcgis.com/home/index.html).
+# Step 2. Evaluate CTA L ridership data before and during the COVID-19 pandemic
+## COVID-19 trends
+The Chicago Data Portal also provides daily COVID-19 cases and deaths, which can be plotted to identify the waves of the pandemic and compared with trends in rail ridership. Because COVID-19 is no longer a notifiable disease, local health departments such as the Chicago Department of Public Health (CDPH) are no longer required to report cases to the CDC, and the city's reporting ended in May 2024.
 
-## L stations by community area and zip code
-Ridership is reported by L station, whereas CCVI scores and COVID-19 cases are reported by community area and zip code. To compare them, each L station was assigned to its nearest community area and zip code. @tbl-stationbycomareazip lists L stations by community area and zip code.
+@fig-covidcases7davg shows the 7-day average of COVID-19 deaths in Chicago. Create a custom version of the plot by changing the layer in the code below from 7-day average deaths ("Deaths7d") to 7-day average cases ("Cases7d"). *In slide 3 of your presentation, paste your custom plot of COVID-19 cases and compare it with the ridership plots in slide 2. Identify the major waves of the pandemic. Did ridership dip during each wave, or did it continue to recover regardless of case counts? What does this suggest about the role of health risk compared with other factors, such as remote work, in shaping transit ridership?*
 
 ```{r}
-#| label: define station table functions
+#| label: define COVID-19 plotting function
 #| echo: true
 #| code-fold: true
-#| code-summary: "Show the station table functions"
+#| code-summary: "Show the COVID-19 plotting function"
 
-# function for formatting a table as an interactive table
-fx_datatable <- function(table) {
-  datatable(table,
-            class = 'cell-border stripe',
-            rownames = FALSE,
-            options = list(pageLength = 5),
-            filter = "top")
-}
+# function for plotting COVID-19 cases or deaths by date; layer is "Cases7d" or
+# "Deaths7d" (7-day averages), "Cases" or "Deaths" (daily) or "Casescm" or
+# "Deathscm" (cumulative)
+fx_plot_covid <- function(covid19_cases_summary, layer = "Deaths7d") {
+  layer_titles <- c(Cases7d = "COVID-19 Cases (7-day average)",
+                    Deaths7d = "COVID-19 Deaths (7-day average)",
+                    Cases = "COVID-19 Cases",
+                    Deaths = "COVID-19 Deaths",
+                    Casescm = "COVID-19 Cases (cumulative)",
+                    Deathscm = "COVID-19 Deaths (cumulative)")
+  title <- layer_titles[[layer]]
 
-# function for tabulating L stations by community area and zip code
-fx_table_stations <- function(rail_stations) {
-  rail_stations %>%
-    st_drop_geometry() %>%
-    select(`L Station` = station_name,
-           `Community Area` = comarea_name,
-           `Station Line` = station_line,
-           `Zip Code` = zip) %>%
-    arrange(`L Station`) %>%
-    fx_datatable()
-}
-```
-
-```{r}
-#| label: tbl-stationbycomareazip
-#| tbl-cap: L Stations by Community Area and Zip Code
-
-# tabulate L stations by community area and zip code
-fx_table_stations(rail_stations)
-
-```
-
-## CCVI by Chicago community area
-This exercise evaluates L ridership with respect to community characteristics included in the Chicago COVID-19 Community Vulnerability Index (CCVI). The index was adapted from [Surgo Ventures](https://precisionforcovid.org/ccvi) and the [CDC Social Vulnerability Index](https://www.atsdr.cdc.gov/placeandhealth/svi/index.html) to identify communities (i.e., community areas and zip codes) in Chicago that have been disproportionately affected by COVID-19. Vulnerability combines sociodemographic, epidemiological and occupational factors with other factors related to cumulative COVID-19 burden. These factors are weighted and combined into a single composite CCVI score: the higher the score, the more vulnerable the community area. The `community_areas_ccvi` dataset joins CCVI scores, categories and ranks (from least (1) to most (77) vulnerable) to each community area.
-
-## Create map showing CCVI distribution by community area 
-@fig-ccvibycommunityarea maps CCVI by community area. Use the "Map" dropdown list in the upper right of the map to switch between the CCVI category and quintiles of selected CCVI ranks (from least to most vulnerable), and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *In slide 1 of your presentation, paste your custom map and describe the geographic distribution of COVID-19 vulnerability across Chicago. Which parts of the city have the highest and lowest CCVI scores? Use the dropdown list to compare the CCVI category with individual ranks, such as socioeconomic status and essential workers. Which components appear to drive vulnerability in different parts of the city? How well do L lines and stations serve the most vulnerable community areas?*
-
-```{r}
-#| label: define CCVI mapping functions
-#| echo: true
-#| code-fold: true
-#| code-summary: "Show the CCVI mapping functions"
-
-# function for creating the base map shared by the exercise's maps: CARTO
-# basemap, reset and full screen buttons and community area boundaries for
-# reference (added first, so they are drawn beneath the other layers)
-fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
-  leaflet(data = st_transform(map_data, crs = 4326)) %>%
-    addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      carto_api_key
-    )) %>%
-    addResetMapButton() %>%
-    addFullscreenControl() %>%
-    addPolygons(
-      fill = FALSE,
-      color = "#555",
-      weight = 1,
-      opacity = 1)
-}
-
-# function for creating community area hover labels with CCVI scores, categories
-# and ranks
-fx_ccvi_labels <- function(community_areas_ccvi) {
-  x <- community_areas_ccvi
-  sprintf(
-    "<strong>%s</strong><br/>
-    <i>CCVI Score:</i> %0.1f<br/>
-    <i>CCVI Category:</i> %s<br/><br/>
-    <em>Ranked scores from least (1) to most (77) vulnerable:</em><br/>
-    <i>Socioeconomic Status:</i> %1.0f<br/>
-    <i>Essential Workers:</i> %1.0f<br/>
-    <i>Mobility Ratio:</i> %1.0f<br/>
-    <i>COVID-19 Incidence Rate:</i> %1.0f<br/>
-    <i>COVID-19 Hospitalization Rate:</i> %1.0f<br/>
-    <i>COVID-19 Crude Mortality Rate:</i> %1.0f<br/>",
-    x$comarea_name,
-    x$`CCVI Score`,
-    x$`CCVI Category`,
-    x$`Rank - Socioeconomic Status`,
-    x$`Rank - Frontline Essential Workers`,
-    x$`Rank - Cumulative Mobility Ratio`,
-    x$`Rank - COVID-19 Incidence Rate`,
-    x$`Rank - COVID-19 Hospital Admission Rate`,
-    x$`Rank - COVID-19 Crude Mortality Rate`) %>%
-    lapply(htmltools::HTML)
-}
-
-# function for adding one community area layer and legend per measure, plus a
-# dropdown list (top right) that shows one measure at a time; the first measure
-# is shown when the map opens. measures and pals are named lists of values and
-# their color palettes.
-fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
-  for (i in seq_along(measures)) {
-    values <- measures[[i]]
-    pal <- pals[[i]]
-    map <- map %>%
-      addPolygons(
-        data = map_data,
-        fillColor = pal(values),
-        label = labels,
-        weight = 2,
-        opacity = 1,
-        color = "white",
-        dashArray = "3",
-        fillOpacity = 0.7,
-        group = names(measures)[i]) %>%
-      addLegend("bottomleft",
-                pal = pal,
-                values = values,
-                title = names(measures)[i],
-                opacity = 1,
-                className = paste0("info legend measure-legend measure-legend-", i - 1))
-  }
-  map %>%
-    htmlwidgets::onRender("
-      function(el, x, data) {
-        var map = this;
-        var groups = [].concat(data.groups);
-        // show the selected measure's layer and legend and hide the others
-        function show(i) {
-          groups.forEach(function(g, j) {
-            var layer = map.layerManager.getLayerGroup(g, false);
-            if (layer) {
-              if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); }
-            }
-          });
-          el.querySelectorAll('.measure-legend').forEach(function(d) {
-            d.style.display = d.classList.contains('measure-legend-' + i) ? '' : 'none';
-          });
-        }
-        var control = L.control({position: 'topright'});
-        control.onAdd = function() {
-          var div = L.DomUtil.create('div', 'leaflet-bar');
-          div.style.background = 'white';
-          div.style.padding = '4px 6px';
-          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Map</label>';
-          var select = L.DomUtil.create('select', '', div);
-          groups.forEach(function(g, j) {
-            var option = L.DomUtil.create('option', '', select);
-            option.value = j;
-            option.text = g;
-          });
-          select.onchange = function() { show(parseInt(select.value)); };
-          L.DomEvent.disableClickPropagation(div);
-          L.DomEvent.disableScrollPropagation(div);
-          return div;
-        };
-        control.addTo(map);
-        show(0);
-      }", data = list(groups = names(measures)))
-}
-
-# function for adding L lines (colored by line) and stations; lines and stations
-# are drawn in their own panes, above the community areas. station_labels are the
-# stations' hover labels; other circle marker options (e.g., radius, fillColor)
-# are passed through ...
-fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
-  map %>%
-    addMapPane("lines", zIndex = 440) %>%
-    addMapPane("stations", zIndex = 450) %>%
-    addPolylines(
-      data = st_transform(rail_lines, crs = 4326),
-      weight = 3,
-      opacity = 1,
-      color = ~unname(pal_line[COLOR]),
-      options = pathOptions(pane = "lines"),
-      group = "L Lines") %>%
-    addCircleMarkers(
-      data = st_transform(rail_stations, crs = 4326),
-      color = "#fff",
-      weight = 1,
-      fillOpacity = 0.9,
-      label = station_labels,
-      options = pathOptions(pane = "stations"),
-      group = "L Stations",
-      ...)
-}
-
-# vulnerability quintile labels, from least to most vulnerable
-vulnerability_labels <- c("Least vulnerable", "Less vulnerable", "Moderate",
-                          "More vulnerable", "Most vulnerable")
-
-# function for mapping CCVI by community area with L lines and stations; the
-# dropdown list switches between CCVI category and quintiles of selected CCVI
-# ranks, and the layer control turns the lines and stations on and off. palette
-# is any RColorBrewer palette name (e.g., "YlOrRd", "Blues", "PuRd")
-fx_map_ccvi <- function(community_areas_ccvi, rail_lines, rail_stations_ccvi, palette = "YlOrRd") {
-  map_data <- st_transform(community_areas_ccvi, crs = 4326)
-
-  # CCVI category and quintiles of selected ranks (1 = least vulnerable)
-  rank_quintile <- function(column) {
-    factor(vulnerability_labels[map_data[[paste0(column, "_ntile")]]], levels = vulnerability_labels)
-  }
-  measures <- list(
-    "CCVI Category" = map_data$`CCVI Category`,
-    "Socioeconomic Status Rank<br>Quintiles" = rank_quintile("Rank - Socioeconomic Status"),
-    "Essential Workers Rank<br>Quintiles" = rank_quintile("Rank - Frontline Essential Workers"),
-    "Mobility Ratio Rank<br>Quintiles" = rank_quintile("Rank - Cumulative Mobility Ratio"),
-    "COVID-19 Incidence Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Incidence Rate"),
-    "COVID-19 Hospitalization Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Hospital Admission Rate"),
-    "COVID-19 Crude Mortality Rate Rank<br>Quintiles" = rank_quintile("Rank - COVID-19 Crude Mortality Rate"))
-  pals <- lapply(measures, function(values)
-    colorFactor(palette = palette, domain = values, levels = levels(values), ordered = TRUE))
-  # dropdown list names without the legend line break
-  names(measures) <- names(pals) <- gsub("<br>", " ", names(measures))
-
-  # station hover labels
-  station_labels <- sprintf(
-    "<strong>%s</strong><br/>
-    <i>Line:</i> %s<br/>
-    <i>Community area:</i> %s<br/>
-    <i>CCVI Category:</i> %s",
-    rail_stations_ccvi$station_name,
-    rail_stations_ccvi$station_line,
-    rail_stations_ccvi$comarea_name,
-    rail_stations_ccvi$`CCVI Category`) %>%
-    lapply(htmltools::HTML)
-
-  fx_basemap(map_data) %>%
-    fx_add_measure_layers(map_data,
-                          measures = measures,
-                          pals = pals,
-                          labels = fx_ccvi_labels(map_data)) %>%
-    fx_add_rail_layers(rail_lines, rail_stations_ccvi, station_labels,
-                       radius = 4,
-                       fillColor = "#333") %>%
-    addLayersControl(
-      overlayGroups = c("L Lines", "L Stations"),
-      options = layersControlOptions(collapsed = FALSE, position = "topright"))
+  plot_ly(data = filter(covid19_cases_summary, layer == !!layer),
+          x = ~Date,
+          y = ~value,
+          type = 'scatter',
+          mode = 'lines',
+          line = list(color = "#9F1928", width = 0.5),
+          name = title,
+          hovertemplate = paste0(title, ': %{y:,}<extra></extra>')) %>%
+    fx_plot_layout(y_title = title,
+                   filename = paste0("covid19_", tolower(layer), "_chicago"))
 }
 ```
 
 ```{r}
-#| label: fig-ccvibycommunityarea
-#| fig-cap: COVID-19 Community Vulnerability Index (CCVI) by Community Area, Chicago, Illinois
+#| label: fig-covidcases7davg
+#| fig-cap: COVID-19 Deaths (7-day average) by Day, Chicago, Illinois
 
-# map CCVI by community area with L lines and stations
-fx_map_ccvi(community_areas_ccvi, 
-            rail_lines, 
-            rail_stations_ccvi, 
-            palette = "YlOrRd") # EDIT HERE
+# plot COVID-19 deaths (7-day average)
+fx_plot_covid(covid19_cases_summary, layer = "Deaths7d") # EDIT HERE
 
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step 2
-{{< video videos/exercise_03_02.mp4 >}}
-:::
-
-# Step 3. Evaluate CTA L ridership data before and during the COVID-19 pandemic
-## Ridership by L station
+## CTA L ridership 
 The Regional Transportation Authority (RTA) reports on the location and performance of the three public transit operators in metropolitan Chicago: Pace Suburban Bus, the Chicago Transit Authority (CTA, both bus and rail) and Metra commuter rail. This exercise focuses on CTA rail ridership using two datasets: (1) daily rail boardings for all L stations (`ridership_daily_boardings`, from the Chicago Data Portal); and (2) monthly boardings by L station from January 1999 through `r format(ridership_through, "%B %Y")` (`ridership_attributes`, [downloaded from RTAMS](https://rtams.org/media/datasets/cta-ridership)).
 
-## Create plots showing ridership trends over time
+### Ridership by month
 @fig-railboardingsmonth shows total weekday boardings by month between January 1999 and `r format(ridership_through, "%B %Y")`, and @fig-railboardingsdaily shows weekday boardings by day. Hover over each plot to see values for specific months and days. *In slide 2 of your presentation, paste both plots and describe long-term trends in L ridership. How did ridership change in the two decades before the pandemic? How sharply did ridership fall in spring 2020, and how much has it recovered since? Consider how factors such as remote work, service levels, perceptions of safety and changes in mode choice might explain the patterns you observe.*
 
 ```{r}
@@ -425,6 +208,8 @@ fx_plot_ridership_by_month(ridership_attributes, day_type = "Weekday")
 
 ```
 
+### Ridership by day
+
 ```{r}
 #| label: fig-railboardingsdaily
 #| fig-cap: Weekday CTA L Rail Station Boardings by Day, Chicago, Illinois
@@ -434,156 +219,7 @@ fx_plot_daily_boardings(ridership_daily_boardings, day_type = "W")
 
 ```
 
-## L stations by CCVI
-The `rail_stations_ccvi` dataset joins each L station with the CCVI attributes of its community area, and the `rail_stations_ccvi_ridership` dataset adds monthly weekday boardings, linking ridership trends with community vulnerability. @tbl-ccvibystation lists L stations by line and CCVI.
-
-```{r}
-#| label: define station CCVI table function
-#| echo: true
-#| code-fold: true
-#| code-summary: "Show the station CCVI table function"
-
-# function for tabulating L stations by line and CCVI
-fx_table_stations_ccvi <- function(rail_stations_ccvi) {
-  rail_stations_ccvi %>%
-    st_drop_geometry() %>%
-    select(`L Station` = station_name,
-           `L Station ID` = station_id,
-           `Community Area` = comarea_name,
-           `Station Line` = station_line,
-           `CCVI Score`,
-           `CCVI Category`) %>%
-    arrange(`L Station`) %>%
-    fx_datatable()
-}
-```
-
-```{r}
-#| label: tbl-ccvibystation
-#| tbl-cap: CCVI by L Station
-
-# tabulate L stations by line and CCVI
-fx_table_stations_ccvi(rail_stations_ccvi)
-
-```
-
-## COVID-19 cases and deaths in Chicago
-The Chicago Data Portal also provides daily COVID-19 cases and deaths, which can be plotted to identify the waves of the pandemic and compared with trends in rail ridership. Because COVID-19 is no longer a notifiable disease, local health departments such as the Chicago Department of Public Health (CDPH) are no longer required to report cases to the CDC, and the city's reporting ended in May 2024.
-
-@fig-covidcases7davg shows the 7-day average of COVID-19 deaths in Chicago. Create a custom version of the plot by changing the layer in the code below from 7-day average deaths ("Deaths7d") to 7-day average cases ("Cases7d"). *In slide 3 of your presentation, paste your custom plot of COVID-19 cases and compare it with the ridership plots in slide 2. Identify the major waves of the pandemic. Did ridership dip during each wave, or did it continue to recover regardless of case counts? What does this suggest about the role of health risk compared with other factors, such as remote work, in shaping transit ridership?*
-
-```{r}
-#| label: define COVID-19 plotting function
-#| echo: true
-#| code-fold: true
-#| code-summary: "Show the COVID-19 plotting function"
-
-# function for plotting COVID-19 cases or deaths by date; layer is "Cases7d" or
-# "Deaths7d" (7-day averages), "Cases" or "Deaths" (daily) or "Casescm" or
-# "Deathscm" (cumulative)
-fx_plot_covid <- function(covid19_cases_summary, layer = "Deaths7d") {
-  layer_titles <- c(Cases7d = "COVID-19 Cases (7-day average)",
-                    Deaths7d = "COVID-19 Deaths (7-day average)",
-                    Cases = "COVID-19 Cases",
-                    Deaths = "COVID-19 Deaths",
-                    Casescm = "COVID-19 Cases (cumulative)",
-                    Deathscm = "COVID-19 Deaths (cumulative)")
-  title <- layer_titles[[layer]]
-
-  plot_ly(data = filter(covid19_cases_summary, layer == !!layer),
-          x = ~Date,
-          y = ~value,
-          type = 'scatter',
-          mode = 'lines',
-          line = list(color = "#9F1928", width = 0.5),
-          name = title,
-          hovertemplate = paste0(title, ': %{y:,}<extra></extra>')) %>%
-    fx_plot_layout(y_title = title,
-                   filename = paste0("covid19_", tolower(layer), "_chicago"))
-}
-```
-
-```{r}
-#| label: fig-covidcases7davg
-#| fig-cap: COVID-19 Deaths (7-day average) by Day, Chicago, Illinois
-
-# plot COVID-19 deaths (7-day average)
-fx_plot_covid(covid19_cases_summary, layer = "Deaths7d") # EDIT HERE
-
-```
-
-::: {.callout-tip collapse="true"}
-## VIDEO: Step 3
-{{< video videos/exercise_03_03.mp4 >}}
-:::
-
-# Step 4. Examine ridership by station characteristics
-@fig-ridershipbyccvi plots weekday ridership by the CCVI category (low, medium and high) of each station's community area. *In slide 4 of your presentation, paste the plot and describe how ridership trends differ by CCVI category. Which category accounted for the most boardings before the pandemic? Did ridership fall more steeply, or recover more quickly, at stations in more vulnerable communities? Consider who rides transit in these communities, such as essential workers who could not work from home, and what the differences suggest about transit equity.*
-
-```{r}
-#| label: define ridership by station characteristics functions
-#| echo: true
-#| code-fold: true
-#| code-summary: "Show the ridership by CCVI and line plotting functions"
-
-# CCVI category colors
-pal_ccvi <- c(LOW = "#E2F11A", MEDIUM = "#E0A100", HIGH = "#9F1928")
-
-# L line colors; names match station_line and the rail lines' COLOR column
-pal_line <- c(Blue = "#3498db", Brown = "#964B00", Green = "#1e8449", Multi = "#424949",
-              Orange = "#e67e22", Pink = "#f5b7b1", Purple = "#7d3c98", Red = "#e74c3c",
-              Yellow = "#f4d03f")
-
-# function for plotting weekday boardings by month and station CCVI category
-fx_plot_ridership_by_ccvi <- function(rail_stations_ccvi_ridership) {
-  ridership_by_ccvi <- rail_stations_ccvi_ridership %>%
-    drop_na(`CCVI Category`) %>%
-    group_by(year_month, `CCVI Category`) %>%
-    summarise(rides_total = sum(rides_total), .groups = "drop")
-
-  plot_ly(data = ridership_by_ccvi,
-          x = ~year_month,
-          y = ~rides_total,
-          type = 'scatter',
-          mode = 'lines',
-          color = ~`CCVI Category`,
-          colors = pal_ccvi,
-          text = ~`CCVI Category`,
-          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
-                   filename = "cta_rail_boardings_by_ccvi")
-}
-
-# function for plotting weekday boardings by month and station line; lines is a
-# list of line names (e.g., c("Blue", "Red")), all lines by default
-fx_plot_ridership_by_line <- function(rail_stations_ccvi_ridership, lines = names(pal_line)) {
-  ridership_by_line <- rail_stations_ccvi_ridership %>%
-    filter(station_line %in% lines) %>%
-    group_by(year_month, station_line) %>%
-    summarise(rides_total = sum(rides_total), .groups = "drop")
-
-  plot_ly(data = ridership_by_line,
-          x = ~year_month,
-          y = ~rides_total,
-          type = 'scatter',
-          mode = 'lines',
-          color = ~station_line,
-          colors = pal_line,
-          text = ~station_line,
-          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
-    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
-                   filename = "cta_rail_boardings_by_line")
-}
-```
-
-```{r}
-#| label: fig-ridershipbyccvi
-#| fig-cap: !expr paste0("Weekday Rail Boardings by CTA L Station CCVI Category, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
-
-# plot weekday rail boardings per month by station CCVI category
-fx_plot_ridership_by_ccvi(rail_stations_ccvi_ridership)
-
-```
+### Ridership by line
 
 @fig-ridershipbyline plots weekday ridership by L line ("Multi" refers to stations served by more than one line). Review the plot and identify two lines you'd like to explore further. Create a custom plot comparing them by uncommenting the line beginning with `# a_station_line_list` and replacing the line names (e.g., replace "Blue" with "Green"). The two lines you select are also used in Step 5. *In slide 5 of your presentation, paste your custom plot and compare ridership on the two lines over time. How did each line's ridership change during and after the pandemic? Consider the neighborhoods and destinations each line serves (e.g., downtown, airports, universities) and the CCVI categories of the community areas along each line.*
 
@@ -599,13 +235,8 @@ fx_plot_ridership_by_line(rail_stations_ccvi_ridership, lines = a_station_line_l
 
 ```
 
-::: {.callout-tip collapse="true"}
-## VIDEO: Step 4
-{{< video videos/exercise_03_04.mp4 >}}
-:::
-
-# Step 5. Map changes in ridership by L station
-The final step is to map changes in weekday ridership at stations on the two lines you selected (@fig-selectstations). Stations shown in red lost riders between `r format(ridership_through, "%B")` 2019 (before the pandemic) and `r format(ridership_through, "%B %Y")` (the latest month available), while stations shown in blue gained riders. Comparing the same month in both years keeps seasonal differences out of the comparison. Larger circles indicate larger percentage changes. Hover over a station to see its boardings in both months and its net and percentage changes, and turn on the "CCVI Category" layer to compare changes in ridership with community vulnerability. *In slide 6 of your presentation, paste your map and describe the geographic pattern of ridership change along the two lines. Which stations have recovered the most and least? Do stations in high-CCVI communities appear to have recovered differently from stations in low-CCVI communities, and what might explain the differences? Consider the land uses around each station, such as downtown offices, residential neighborhoods and major destinations.*
+### Ridership by L station
+The final activity in this step is to map changes in weekday ridership at stations on the two lines you selected (@fig-selectstations). Stations shown in red lost riders between `r format(ridership_through, "%B")` 2019 (before the pandemic) and `r format(ridership_through, "%B %Y")` (the latest month available), while stations shown in blue gained riders. Comparing the same month in both years keeps seasonal differences out of the comparison. Larger circles indicate larger percentage changes. Hover over a station to see its boardings in both months and its net and percentage changes, and turn on the "CCVI Category" layer to compare changes in ridership with community vulnerability. *In slide 6 of your presentation, paste your map and describe the geographic pattern of ridership change along the two lines. Which stations have recovered the most and least? Do stations in high-CCVI communities appear to have recovered differently from stations in low-CCVI communities, and what might explain the differences? Consider the land uses around each station, such as downtown offices, residential neighborhoods and major destinations.*
 
 ```{r}
 #| label: define station change functions
@@ -728,6 +359,83 @@ fx_map_station_change(ridership_attributes_station,
 ```
 
 ::: {.callout-tip collapse="true"}
-## VIDEO: Step 5
-{{< video videos/exercise_03_05.mp4 >}}
+## VIDEO: Step 3
+{{< video videos/exercise_03_03.mp4 >}}
 :::
+
+# Step 3. Ridership by community characteristics
+@fig-ridershipbyccvi plots weekday ridership by the CCVI category (low, medium and high) of each station's community area. *In slide 4 of your presentation, paste the plot and describe how ridership trends differ by CCVI category. Which category accounted for the most boardings before the pandemic? Did ridership fall more steeply, or recover more quickly, at stations in more vulnerable communities? Consider who rides transit in these communities, such as essential workers who could not work from home, and what the differences suggest about transit equity.*
+
+```{r}
+#| label: define ridership by station characteristics functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the ridership by CCVI and line plotting functions"
+
+# CCVI category colors
+pal_ccvi <- c(LOW = "#E2F11A", MEDIUM = "#E0A100", HIGH = "#9F1928")
+
+# L line colors; names match station_line and the rail lines' COLOR column
+pal_line <- c(Blue = "#3498db", Brown = "#964B00", Green = "#1e8449", Multi = "#424949",
+              Orange = "#e67e22", Pink = "#f5b7b1", Purple = "#7d3c98", Red = "#e74c3c",
+              Yellow = "#f4d03f")
+
+# function for plotting weekday boardings by month and station CCVI category
+fx_plot_ridership_by_ccvi <- function(rail_stations_ccvi_ridership) {
+  ridership_by_ccvi <- rail_stations_ccvi_ridership %>%
+    drop_na(`CCVI Category`) %>%
+    group_by(year_month, `CCVI Category`) %>%
+    summarise(rides_total = sum(rides_total), .groups = "drop")
+
+  plot_ly(data = ridership_by_ccvi,
+          x = ~year_month,
+          y = ~rides_total,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~`CCVI Category`,
+          colors = pal_ccvi,
+          text = ~`CCVI Category`,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
+                   filename = "cta_rail_boardings_by_ccvi")
+}
+
+# function for plotting weekday boardings by month and station line; lines is a
+# list of line names (e.g., c("Blue", "Red")), all lines by default
+fx_plot_ridership_by_line <- function(rail_stations_ccvi_ridership, lines = names(pal_line)) {
+  ridership_by_line <- rail_stations_ccvi_ridership %>%
+    filter(station_line %in% lines) %>%
+    group_by(year_month, station_line) %>%
+    summarise(rides_total = sum(rides_total), .groups = "drop")
+
+  plot_ly(data = ridership_by_line,
+          x = ~year_month,
+          y = ~rides_total,
+          type = 'scatter',
+          mode = 'lines',
+          color = ~station_line,
+          colors = pal_line,
+          text = ~station_line,
+          hovertemplate = '%{text}: %{y:,}<extra></extra>') %>%
+    fx_plot_layout(y_title = "Total Weekday Rail Station Boardings",
+                   filename = "cta_rail_boardings_by_line")
+}
+```
+
+```{r}
+#| label: fig-ridershipbyccvi
+#| fig-cap: !expr paste0("Weekday Rail Boardings by CTA L Station CCVI Category, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
+
+# plot weekday rail boardings per month by station CCVI category
+fx_plot_ridership_by_ccvi(rail_stations_ccvi_ridership)
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Step 4
+{{< video videos/exercise_03_04.mp4 >}}
+:::
+
+# Step 4. Strategies for improving ridership
+
+Draw from Jarret Walker's Human Transit, and related sources to consider how you may increase transit usage across lower ridership communities and the city of Chicago as a whole?
