@@ -150,6 +150,7 @@ read_health_atlas <- function(topic, period, column) {
   cache <- file.path(data_dir, paste0("health_atlas_", column, "_cache.json"))
   fromJSON(download_cached(sprintf(url_health_atlas, period, topic), cache))$results %>%
     as.data.frame() %>%
+    filter(str_starts(g, "1714000-")) %>% # Chicago community areas (results include other cities)
     transmute(comarea_id = as.numeric(str_replace(g, "1714000-", "")),
               column = column,
               estimate = as.numeric(v)) %>%
@@ -508,6 +509,12 @@ fx_ses_labels <- function(community_areas_ses, indicators = ses_indicators) {
     lapply(htmltools::HTML)
 }
 
+# function for formatting legend values (bin ranges) to one decimal place
+fx_legend_format <- function(type, cuts, p) {
+  values <- formatC(cuts, format = "f", digits = 1, big.mark = ",")
+  paste0(values[-length(values)], " &ndash; ", values[-1])
+}
+
 # function for adding one community area layer and legend per measure, plus a
 # dropdown list (top right) that shows one measure at a time; the first measure
 # is shown when the map opens. measures and pals are named lists of values and
@@ -532,6 +539,7 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
                 values = values,
                 title = names(measures)[i],
                 opacity = 1,
+                labFormat = fx_legend_format,
                 className = paste0("info legend measure-legend measure-legend-", i - 1))
   }
   map %>%
@@ -573,10 +581,64 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
       }", data = list(groups = names(measures)))
 }
 
+# function for adding a search box (top left) for finding community areas by name;
+# selecting a name zooms to the community area and outlines it in black. The
+# outlines are drawn in their own pane and do not respond to the mouse, so the
+# hover labels of the layers beneath them still work.
+fx_add_communityarea_search <- function(map, map_data) {
+  map %>%
+    addMapPane("search", zIndex = 430) %>%
+    addPolygons(
+      data = map_data,
+      layerId = ~paste0("search-", comarea_name),
+      fill = FALSE,
+      color = "#000",
+      weight = 4,
+      opacity = 0,
+      options = pathOptions(pane = "search", interactive = FALSE)) %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var names = [].concat(data.names).sort();
+        var selected = null;
+        // zoom to the named community area and outline it
+        function find(name) {
+          var match = names.filter(function(n) { return n.toLowerCase() === name.trim().toLowerCase(); })[0];
+          if (selected) { selected.setStyle({opacity: 0}); selected = null; }
+          if (!match) return;
+          selected = map.layerManager.getLayer('shape', 'search-' + match);
+          if (selected) {
+            selected.setStyle({opacity: 1});
+            map.fitBounds(selected.getBounds(), {maxZoom: 14});
+          }
+        }
+        var control = L.control({position: 'topleft'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          var listId = 'comarea-list-' + el.id;
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Find</label>' +
+            '<input type=\"search\" list=\"' + listId + '\" placeholder=\"Community area\" style=\"width: 150px;\">' +
+            '<datalist id=\"' + listId + '\">' +
+            names.map(function(n) { return '<option value=\"' + n + '\">'; }).join('') +
+            '</datalist>';
+          var input = div.querySelector('input');
+          input.addEventListener('input', function() { find(input.value); });
+          input.addEventListener('keydown', function(e) { if (e.key === 'Enter') find(input.value); });
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+      }", data = list(names = map_data$comarea_name))
+}
+
 # function for mapping community indicators by community area (quintiles) with L
 # lines and stations (white circles); the dropdown list switches between
-# indicators and the layer control turns the lines and stations on and off.
-# palette is any RColorBrewer palette name (e.g., "YlGn", "Purples", "Greys")
+# indicators, the layer control turns the lines and stations on and off and the
+# search box finds community areas by name. palette is any RColorBrewer palette
+# name (e.g., "YlGn", "Purples", "Greys")
 fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        indicators = ses_indicators, palette = "YlGn") {
   map_data <- st_transform(community_areas_ses, crs = 4326)
@@ -605,6 +667,7 @@ fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        color = "#808080",
                        radius = 4,
                        fillColor = "#fff") %>%
+    fx_add_communityarea_search(map_data) %>%
     addLayersControl(
       overlayGroups = c("L Lines", "L Stations"),
       options = layersControlOptions(collapsed = FALSE, position = "topright"))
@@ -784,7 +847,8 @@ save(community_areas_ses, ses_indicators, rail_stations, rail_lines,
      fx_plot_ridership_by_line,
      fx_station_change, fx_basemap, fx_add_rail_layers, fx_add_station_change_layers,
      fx_map_station_change,
-     fx_quintile_pal, fx_ses_labels, fx_add_measure_layers, fx_map_ses,
+     fx_quintile_pal, fx_ses_labels, fx_legend_format, fx_add_measure_layers,
+     fx_add_communityarea_search, fx_map_ses,
      fx_add_ses_quintiles, fx_plot_ridership_by_ses,
      fx_summarise_ses_quintiles, fx_table_ses_quintiles,
      fx_summarise_communityareas, fx_table_communityareas,

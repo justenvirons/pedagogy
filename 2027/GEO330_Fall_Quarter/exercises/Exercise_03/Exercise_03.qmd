@@ -443,7 +443,7 @@ In this step you will examine how L ridership, and its recovery since the pandem
 Follow the topic links for a full description of each indicator, including its units and data source. Before interpreting your results, note whether higher values of an indicator signal more or less advantaged conditions. For example, a higher poverty rate or Social Vulnerability Index signals less advantaged conditions, whereas a higher rate of residents who can easily walk to a transit stop signals more advantaged conditions.
 
 ## Map community indicators with L stations
-@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator and the location of L lines and stations. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them? Which community areas are farthest from an L station?*
+@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. To find a community area, type its name in the "Find" box in the upper left of the map and select it from the list; the map zooms to the community area and outlines it in black. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator and the location of L lines and stations. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them? Which community areas are farthest from an L station?*
 
 ```{r}
 #| label: define indicator mapping functions
@@ -476,6 +476,12 @@ fx_ses_labels <- function(community_areas_ses, indicators = ses_indicators) {
     lapply(htmltools::HTML)
 }
 
+# function for formatting legend values (bin ranges) to one decimal place
+fx_legend_format <- function(type, cuts, p) {
+  values <- formatC(cuts, format = "f", digits = 1, big.mark = ",")
+  paste0(values[-length(values)], " &ndash; ", values[-1])
+}
+
 # function for adding one community area layer and legend per measure, plus a
 # dropdown list (top right) that shows one measure at a time; the first measure
 # is shown when the map opens. measures and pals are named lists of values and
@@ -500,6 +506,7 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
                 values = values,
                 title = names(measures)[i],
                 opacity = 1,
+                labFormat = fx_legend_format,
                 className = paste0("info legend measure-legend measure-legend-", i - 1))
   }
   map %>%
@@ -541,10 +548,64 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
       }", data = list(groups = names(measures)))
 }
 
+# function for adding a search box (top left) for finding community areas by name;
+# selecting a name zooms to the community area and outlines it in black. The
+# outlines are drawn in their own pane and do not respond to the mouse, so the
+# hover labels of the layers beneath them still work.
+fx_add_communityarea_search <- function(map, map_data) {
+  map %>%
+    addMapPane("search", zIndex = 430) %>%
+    addPolygons(
+      data = map_data,
+      layerId = ~paste0("search-", comarea_name),
+      fill = FALSE,
+      color = "#000",
+      weight = 4,
+      opacity = 0,
+      options = pathOptions(pane = "search", interactive = FALSE)) %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var names = [].concat(data.names).sort();
+        var selected = null;
+        // zoom to the named community area and outline it
+        function find(name) {
+          var match = names.filter(function(n) { return n.toLowerCase() === name.trim().toLowerCase(); })[0];
+          if (selected) { selected.setStyle({opacity: 0}); selected = null; }
+          if (!match) return;
+          selected = map.layerManager.getLayer('shape', 'search-' + match);
+          if (selected) {
+            selected.setStyle({opacity: 1});
+            map.fitBounds(selected.getBounds(), {maxZoom: 14});
+          }
+        }
+        var control = L.control({position: 'topleft'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          var listId = 'comarea-list-' + el.id;
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Find</label>' +
+            '<input type=\"search\" list=\"' + listId + '\" placeholder=\"Community area\" style=\"width: 150px;\">' +
+            '<datalist id=\"' + listId + '\">' +
+            names.map(function(n) { return '<option value=\"' + n + '\">'; }).join('') +
+            '</datalist>';
+          var input = div.querySelector('input');
+          input.addEventListener('input', function() { find(input.value); });
+          input.addEventListener('keydown', function(e) { if (e.key === 'Enter') find(input.value); });
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+      }", data = list(names = map_data$comarea_name))
+}
+
 # function for mapping community indicators by community area (quintiles) with L
 # lines and stations (white circles); the dropdown list switches between
-# indicators and the layer control turns the lines and stations on and off.
-# palette is any RColorBrewer palette name (e.g., "YlGn", "Purples", "Greys")
+# indicators, the layer control turns the lines and stations on and off and the
+# search box finds community areas by name. palette is any RColorBrewer palette
+# name (e.g., "YlGn", "Purples", "Greys")
 fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        indicators = ses_indicators, palette = "YlGn") {
   map_data <- st_transform(community_areas_ses, crs = 4326)
@@ -573,6 +634,7 @@ fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        color = "#808080",
                        radius = 4,
                        fillColor = "#fff") %>%
+    fx_add_communityarea_search(map_data) %>%
     addLayersControl(
       overlayGroups = c("L Lines", "L Stations"),
       options = layersControlOptions(collapsed = FALSE, position = "topright"))
