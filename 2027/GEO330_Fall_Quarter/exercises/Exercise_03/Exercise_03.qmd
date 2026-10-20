@@ -587,7 +587,7 @@ fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
 fx_map_ses(community_areas_ses, 
            rail_lines, 
            rail_stations, 
-           palette = "YlGn") # EDIT HERE
+           palette = "viridis") # EDIT HERE
 
 ```
 
