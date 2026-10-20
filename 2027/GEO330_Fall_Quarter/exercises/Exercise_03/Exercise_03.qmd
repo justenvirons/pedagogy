@@ -327,9 +327,9 @@ fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
 
 # function for adding L lines (colored by line) and stations; lines and stations
 # are drawn in their own panes, above the community areas. station_labels are the
-# stations' hover labels; other circle marker options (e.g., radius, fillColor)
-# are passed through ...
-fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
+# stations' hover labels and color is the stations' outline color; other circle
+# marker options (e.g., radius, fillColor) are passed through ...
+fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, color = "#fff", ...) {
   map %>%
     addMapPane("lines", zIndex = 440) %>%
     addMapPane("stations", zIndex = 450) %>%
@@ -342,8 +342,9 @@ fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, .
       group = "L Lines") %>%
     addCircleMarkers(
       data = st_transform(rail_stations, crs = 4326),
-      color = "#fff",
+      color = color,
       weight = 1,
+      opacity = 1,
       fillOpacity = 0.9,
       label = station_labels,
       options = pathOptions(pane = "stations"),
@@ -442,7 +443,7 @@ In this step you will examine how L ridership, and its recovery since the pandem
 Follow the topic links for a full description of each indicator, including its units and data source. Before interpreting your results, note whether higher values of an indicator signal more or less advantaged conditions. For example, a higher poverty rate or Social Vulnerability Index signals less advantaged conditions, whereas a higher rate of residents who can easily walk to a transit stop signals more advantaged conditions.
 
 ## Map community indicators with L stations
-@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. Stations are colored and sized by the change in weekday boardings between `r format(ridership_through, "%B")` 2019 and `r format(ridership_through, "%B %Y")`, as in Step 2, but for all lines. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map; palettes without red or blue keep the stations easy to see. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator, the location of L lines and stations, and the change in ridership at each station. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them? Have stations in less advantaged communities recovered more or less than stations elsewhere?*
+@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator and the location of L lines and stations. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them? Which community areas are farthest from an L station?*
 
 ```{r}
 #| label: define indicator mapping functions
@@ -541,11 +542,10 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
 }
 
 # function for mapping community indicators by community area (quintiles) with L
-# lines and stations colored by the change in weekday boardings (all lines); the
-# dropdown list switches between indicators and the layer control turns the lines
-# and stations on and off. palette is any RColorBrewer palette name (e.g., "YlGn",
-# "Purples", "Greys")
-fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
+# lines and stations (white circles); the dropdown list switches between
+# indicators and the layer control turns the lines and stations on and off.
+# palette is any RColorBrewer palette name (e.g., "YlGn", "Purples", "Greys")
+fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        indicators = ses_indicators, palette = "YlGn") {
   map_data <- st_transform(community_areas_ses, crs = 4326)
   indicators <- filter(indicators, column != "population")
@@ -554,12 +554,25 @@ fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
                        paste(indicators$name, "Quintiles"))
   pals <- lapply(measures, fx_quintile_pal, palette = palette)
 
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s Station</strong><br/>
+    <i>Line:</i> %s<br/>
+    <i>Community area:</i> %s",
+    rail_stations$station_name,
+    rail_stations$station_line,
+    rail_stations$comarea_name) %>%
+    lapply(htmltools::HTML)
+
   fx_basemap(map_data) %>%
     fx_add_measure_layers(map_data,
                           measures = measures,
                           pals = pals,
                           labels = fx_ses_labels(map_data)) %>%
-    fx_add_station_change_layers(station_change, rail_lines) %>%
+    fx_add_rail_layers(rail_lines, rail_stations, station_labels,
+                       color = "#808080",
+                       radius = 4,
+                       fillColor = "#fff") %>%
     addLayersControl(
       overlayGroups = c("L Lines", "L Stations"),
       options = layersControlOptions(collapsed = FALSE, position = "topright"))
@@ -568,16 +581,12 @@ fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
 
 ```{r}
 #| label: fig-mapses
-#| fig-cap: Community Indicators by Community Area (Quintiles) with Change in Weekday Ridership by L Station
-
-# calculate the change in weekday boardings by station for all lines, between
-# the latest month and the same month in 2019
-station_change_all <- fx_station_change(ridership_attributes, rail_stations)
+#| fig-cap: Community Indicators by Community Area (Quintiles) with L Lines and Stations
 
 # map community indicators with L lines and stations
 fx_map_ses(community_areas_ses, 
            rail_lines, 
-           station_change_all, 
+           rail_stations, 
            palette = "YlGn") # EDIT HERE
 
 ```
@@ -718,6 +727,10 @@ fx_table_ses_quintiles <- function(ridership_by_ses_quintile, ses_name = "Indica
 #| label: tbl-ridershipbyses
 #| tbl-cap: !expr paste0("Community Areas, Population, L Stations and Change in Weekday Boardings (", format(ridership_through, "%B"), " 2019-", format(ridership_through, "%Y"), ") by Quintile Category of the Selected Community Indicator")
 
+# calculate the change in weekday boardings by station for all lines, between
+# the latest month and the same month in 2019
+station_change_all <- fx_station_change(ridership_attributes, rail_stations)
+
 # summarize stations and the change in weekday boardings by quintile category
 ridership_by_ses_quintile <- fx_summarise_ses_quintiles(station_change_all, community_areas_ses_q)
 fx_table_ses_quintiles(ridership_by_ses_quintile, ses_name)
@@ -738,7 +751,7 @@ Walker argues that transit is useful only when it meets the needs of the people 
 :::
 
 ## Identify focus community areas
-@tbl-communityareas lists every community area with its number of L stations, the change in weekday boardings at those stations and its community indicators. Click a column name to sort the table, or type in the boxes below the column names to filter it (e.g., to show only community areas without L stations). Use the table together with the map in @fig-mapses to choose **three focus community areas**:
+@tbl-communityareas lists every community area with at least one L station, along with its number of stations, the change in weekday boardings at those stations and its community indicators. Click a column name to sort the table, or type in the boxes below the column names to filter it (e.g., to show only community areas with a poverty rate in a given range). Community areas without L stations are not listed; use the map in @fig-mapses to find them. Use the table together with the map to choose **three focus community areas**:
 
 1. a community area with less advantaged conditions where ridership has recovered slowly;
 2. a community area where ridership has recovered strongly, which may offer lessons for others; and
@@ -754,7 +767,7 @@ Walker argues that transit is useful only when it meets the needs of the people 
 
 # function for summarizing L stations and the change in weekday boardings by
 # community area, along with every community indicator; community areas without
-# stations are included with 0 stations
+# L stations (with boardings in both months) are left out
 fx_summarise_communityareas <- function(station_change, community_areas_ses, indicators = ses_indicators) {
   stations <- station_change %>%
     st_drop_geometry() %>%
@@ -767,9 +780,8 @@ fx_summarise_communityareas <- function(station_change, community_areas_ses, ind
   community_areas_ses %>%
     st_drop_geometry() %>%
     select(comarea_id, comarea_name, all_of(indicators$column)) %>%
-    left_join(stations, by = "comarea_id") %>%
-    mutate(stations = replace_na(stations, 0),
-           pct_chg = (rides_to - rides_from) / rides_from,
+    inner_join(stations, by = "comarea_id") %>%
+    mutate(pct_chg = (rides_to - rides_from) / rides_from,
            month_from = station_change$month_from[1],
            month_to = station_change$month_to[1]) %>%
     arrange(comarea_name)

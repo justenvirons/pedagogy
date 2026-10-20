@@ -402,9 +402,9 @@ fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
 
 # function for adding L lines (colored by line) and stations; lines and stations
 # are drawn in their own panes, above the community areas. station_labels are the
-# stations' hover labels; other circle marker options (e.g., radius, fillColor)
-# are passed through ...
-fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, ...) {
+# stations' hover labels and color is the stations' outline color; other circle
+# marker options (e.g., radius, fillColor) are passed through ...
+fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, color = "#fff", ...) {
   map %>%
     addMapPane("lines", zIndex = 440) %>%
     addMapPane("stations", zIndex = 450) %>%
@@ -417,8 +417,9 @@ fx_add_rail_layers <- function(map, rail_lines, rail_stations, station_labels, .
       group = "L Lines") %>%
     addCircleMarkers(
       data = st_transform(rail_stations, crs = 4326),
-      color = "#fff",
+      color = color,
       weight = 1,
+      opacity = 1,
       fillOpacity = 0.9,
       label = station_labels,
       options = pathOptions(pane = "stations"),
@@ -573,11 +574,10 @@ fx_add_measure_layers <- function(map, map_data, measures, pals, labels) {
 }
 
 # function for mapping community indicators by community area (quintiles) with L
-# lines and stations colored by the change in weekday boardings (all lines); the
-# dropdown list switches between indicators and the layer control turns the lines
-# and stations on and off. palette is any RColorBrewer palette name (e.g., "YlGn",
-# "Purples", "Greys")
-fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
+# lines and stations (white circles); the dropdown list switches between
+# indicators and the layer control turns the lines and stations on and off.
+# palette is any RColorBrewer palette name (e.g., "YlGn", "Purples", "Greys")
+fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
                        indicators = ses_indicators, palette = "YlGn") {
   map_data <- st_transform(community_areas_ses, crs = 4326)
   indicators <- filter(indicators, column != "population")
@@ -586,12 +586,25 @@ fx_map_ses <- function(community_areas_ses, rail_lines, station_change,
                        paste(indicators$name, "Quintiles"))
   pals <- lapply(measures, fx_quintile_pal, palette = palette)
 
+  # station hover labels
+  station_labels <- sprintf(
+    "<strong>%s Station</strong><br/>
+    <i>Line:</i> %s<br/>
+    <i>Community area:</i> %s",
+    rail_stations$station_name,
+    rail_stations$station_line,
+    rail_stations$comarea_name) %>%
+    lapply(htmltools::HTML)
+
   fx_basemap(map_data) %>%
     fx_add_measure_layers(map_data,
                           measures = measures,
                           pals = pals,
                           labels = fx_ses_labels(map_data)) %>%
-    fx_add_station_change_layers(station_change, rail_lines) %>%
+    fx_add_rail_layers(rail_lines, rail_stations, station_labels,
+                       color = "#808080",
+                       radius = 4,
+                       fillColor = "#fff") %>%
     addLayersControl(
       overlayGroups = c("L Lines", "L Stations"),
       options = layersControlOptions(collapsed = FALSE, position = "topright"))
@@ -710,7 +723,7 @@ fx_table_ses_quintiles <- function(ridership_by_ses_quintile, ses_name = "Indica
 
 # function for summarizing L stations and the change in weekday boardings by
 # community area, along with every community indicator; community areas without
-# stations are included with 0 stations
+# L stations (with boardings in both months) are left out
 fx_summarise_communityareas <- function(station_change, community_areas_ses, indicators = ses_indicators) {
   stations <- station_change %>%
     st_drop_geometry() %>%
@@ -723,9 +736,8 @@ fx_summarise_communityareas <- function(station_change, community_areas_ses, ind
   community_areas_ses %>%
     st_drop_geometry() %>%
     select(comarea_id, comarea_name, all_of(indicators$column)) %>%
-    left_join(stations, by = "comarea_id") %>%
-    mutate(stations = replace_na(stations, 0),
-           pct_chg = (rides_to - rides_from) / rides_from,
+    inner_join(stations, by = "comarea_id") %>%
+    mutate(pct_chg = (rides_to - rides_from) / rides_from,
            month_from = station_change$month_from[1],
            month_to = station_change$month_to[1]) %>%
     arrange(comarea_name)
