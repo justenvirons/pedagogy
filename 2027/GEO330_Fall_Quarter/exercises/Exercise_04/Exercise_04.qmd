@@ -673,8 +673,8 @@ fx_map_bivariate <- function(indicators_geo, x, y, xlab = x, ylab = y, palette =
 #| label: fig-bivariate_maps
 #| fig-cap: Bivariate Maps
 #| fig-subcap: 
-#|   - "Overall health status by ease of walking to transit stop"
-#|   - "Physical inactivity by neighborhood sidewalk quality"
+#|   - "Example bivariate map 1"
+#|   - "Example bivariate map 2"
 #| layout-ncol: 2
 
 # bivariate map 1
@@ -688,11 +688,11 @@ fx_map_bivariate(indicators_geo,
 
 # bivariate map 2
 fx_map_bivariate(indicators_geo,
-                 x = "inactivity", # EDIT HERE
-                 y = "sidewalk", # EDIT HERE
-                 xlab = "Inactivity", # EDIT HERE
-                 ylab = "Sidewalk Quality", # EDIT HERE
-                 palette = "PurpleOr",
+                 x = "health", # EDIT HERE
+                 y = "transit", # EDIT HERE
+                 xlab = "Health", # EDIT HERE
+                 ylab = "Transit Access", # EDIT HERE
+                 palette = "BlueGold",
                  chicago_boundary = chicago_boundary)
 
 ```
