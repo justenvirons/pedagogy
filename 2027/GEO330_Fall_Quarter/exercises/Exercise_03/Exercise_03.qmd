@@ -43,13 +43,19 @@ load("data/Exercise_03.RData")
 ```
 
 # Background
-Public transit is central to sustainable urban transportation. A full train or bus carries many more people per unit of road or track space, energy and emissions than private vehicles carrying the same number of travelers, reducing traffic congestion, greenhouse gas emissions, air pollution and the land devoted to roads and parking. Transit also widens access to jobs, schools, health care and other destinations for residents who cannot drive or do not own a car, including many lower-income, older, younger and disabled residents [@toddlitman2017; @litman2014]. Rail systems such as the CTA L do this at a scale few other modes can match, and their stations help shape denser, walkable neighborhoods where walking, biking and transit together are practical alternatives to driving.
+Public transit is central to sustainable urban transportation. A full train or bus carries many more people per unit of road space, energy and emissions than private vehicles carrying the same number of travelers, reducing traffic congestion, greenhouse gas emissions, air pollution and the land devoted to roads and parking. Transit also widens access to jobs, schools, health care and other destinations for residents who cannot drive or do not own a car, including many lower-income, older, younger and disabled residents [@toddlitman2017; @litman2014]. Rail systems such as the CTA L do this at a scale few other modes can match, and their stations help shape denser, walkable neighborhoods where walking, biking and transit together are practical alternatives to driving.
 
 Whether people actually ride transit depends on *mode choice*: the decision, for each trip, to drive, take transit, bike, walk or not travel at all. Travelers weigh travel time (including walking to and waiting at stations), cost, reliability, safety, comfort and convenience against the alternatives available to them. These factors vary by neighborhood and by person. Residents who live near frequent rail service, who do not own a car, or whose jobs require them to be on site tend to rely more on transit, while those with cars, flexible schedules or the ability to work from home have more options. Changes in any of these factors, whether in service, fares, land use, employment or perceptions of risk, can shift travelers from one mode to another, and the effects are often uneven across communities [@litman2009].
 
 The COVID-19 pandemic was one of the largest disruptions to mode choice in recent history. Stay-at-home orders, the shift to remote work and school, concerns about the risk of infection in crowded vehicles, and service cuts dramatically reduced transit ridership in Chicago and other cities, while some travelers shifted to driving, biking or walking. Yet not everyone could stop riding: many essential workers, often living in the communities most vulnerable to COVID-19, continued to depend on transit to reach their jobs. How quickly, and where, ridership has recovered since then has important implications for transit agency finances, service planning, equity and the region's climate and congestion goals.
 
 This exercise examines trends in CTA L ridership between 1999 and 2026 and how the COVID-19 pandemic influenced train travel, both overall and across specific lines (e.g., Green, Pink, Red), stations and communities with different socioeconomic and health characteristics. It concludes by asking you to propose strategies for improving ridership across the city. The steps below walk you through creating the tables, maps and plots for your presentation. *As with previous exercises, combine all materials into a single presentation. Download the presentation template [via this link to the PowerPoint slides](https://justenvirons.org/pedagogy/GEO330/Exercise_03/slides/Exercise03_Template.pptx). Each slide includes placeholders for the figures and discussion questions referenced in the steps below.*
+
+::: {.callout-tip collapse="true"}
+## VIDEO: Background
+{{< video videos/exercise_03_00.mp4 >}}
+:::
+
 
 # Step 1. Open Exercise #3 in Posit Cloud course workspace
 Log into the course Posit Cloud “Sustainable Urban Transportation" workspace using the invitation link on the week #3 announcement. Open the Exercise #3 workspace by clicking the corresponding link. A cloud R session will deploy and launch in your web browser.
@@ -209,6 +215,7 @@ fx_plot_daily_boardings <- function(ridership_daily_boardings, day_type = "W") {
 ```{r}
 #| label: fig-railboardingsmonth
 #| fig-cap: !expr paste0("Total Weekday CTA L Rail Station Boardings by Month, Chicago, Illinois, January 1999-", format(ridership_through, "%B %Y"))
+#| echo: false
 
 # plot total weekday rail boardings per month
 fx_plot_ridership_by_month(ridership_attributes, day_type = "Weekday")
@@ -221,6 +228,7 @@ fx_plot_ridership_by_month(ridership_attributes, day_type = "Weekday")
 ```{r}
 #| label: fig-railboardingsdaily
 #| fig-cap: Weekday CTA L Rail Station Boardings by Day, Chicago, Illinois
+#| echo: false
 
 # plot weekday rail boardings per day
 fx_plot_daily_boardings(ridership_daily_boardings, day_type = "W")
@@ -443,7 +451,7 @@ In this step you will examine how L ridership, and its recovery since the pandem
 Follow the topic links for a full description of each indicator, including its units and data source. Before interpreting your results, note whether higher values of an indicator signal more or less advantaged conditions. For example, a higher poverty rate or Social Vulnerability Index signals less advantaged conditions, whereas a higher rate of residents who can easily walk to a transit stop signals more advantaged conditions.
 
 ## Map community indicators with L stations
-@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. To find a community area, type its name in the "Find" box in the upper left of the map and select it from the list; the map zooms to the community area and outlines it in black. Hover over community areas and stations for more details. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator and the location of L lines and stations. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them? Which community areas are farthest from an L station?*
+@fig-mapses maps the community indicators by community area, grouped into quintiles, along with L lines and stations. Use the "Map" dropdown list in the upper right of the map to switch between indicators, and the checkboxes below it to turn L lines and stations on and off. To find a community area, type its name in the "Find" box in the upper left of the map and select it from the list; the map zooms to the community area and outlines it in black. Hover over community areas and stations for more details. *Choose one indicator for the remainder of this step. In slide 5 of your presentation, paste your custom map showing that indicator and describe any visual relationship you see (or don't see) between the indicator and the location of L lines and stations. Which parts of the city have the least advantaged conditions, and how well do L lines and stations serve them?*
 
 ```{r}
 #| label: define indicator mapping functions
@@ -644,6 +652,7 @@ fx_map_ses <- function(community_areas_ses, rail_lines, rail_stations,
 ```{r}
 #| label: fig-mapses
 #| fig-cap: Community Indicators by Community Area (Quintiles) with L Lines and Stations
+#| echo: false
 
 # map community indicators with L lines and stations
 fx_map_ses(community_areas_ses, 
@@ -873,6 +882,7 @@ fx_table_communityareas <- function(ridership_by_communityarea, indicators = ses
 ```{r}
 #| label: tbl-communityareas
 #| tbl-cap: !expr paste0("L Stations, Change in Weekday Boardings (", format(ridership_through, "%B"), " 2019-", format(ridership_through, "%Y"), ") and Community Indicators by Community Area")
+#| echo: false
 
 # summarize stations, the change in weekday boardings and indicators by community area
 ridership_by_communityarea <- fx_summarise_communityareas(station_change_all, community_areas_ses)
@@ -893,7 +903,7 @@ For each focus community area, use Walker's seven demands and seven phases of a 
 
 As you weigh your proposals, consider their costs and tradeoffs. Resources spent on frequent service in busy corridors can attract the most riders, while resources spent covering every neighborhood ensure access for those who depend on transit most. Consider also how your proposals would affect the benefits of transit for different groups of residents [@toddlitman2017; @litman2014].
 
-*In slide 8 of your presentation, complete the strategy table for your three focus community areas, naming the barrier (by Walker's demand or trip phase), your proposed strategy and its expected effect and tradeoffs. Then propose one citywide strategy that you believe would do the most to increase L ridership in Chicago as a whole. Why did you choose it, who would benefit most, and what would it take to implement?*
+*In slide 8 of your presentation, complete the strategy table for your three focus community areas, naming the barrier (by Walker's demand or trip phase), your proposed strategy and its expected effect and tradeoffs. Then propose one citywide strategy that you believe would do the most to increase L ridership in Chicago as a whole. Who would benefit most, and what would it take to implement?*
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO: Step 4
