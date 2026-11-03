@@ -6,11 +6,8 @@ email: c.scott.smith@depaul.edu
 format: 
   html:
     warning: false
-    error: false
     code-tools: true
     code-fold: false
-    eval: false
-    echo: true
     theme: [flatly, styles.scss]
     toc: true
     toc-depth: 3
@@ -19,100 +16,130 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: false
-date: 2026-11-3
+date: 2026-11-03
 bibliography: references.bib
 editor_options: 
   chunk_output_type: console
 ---
 
 ```{r}
-#| eval: true
+#| label: activate packages for rendering
 #| echo: false
 
-library(DT) # making tables
-library(data.table) # data wrangling
-library(scales) # used for rescaling data
-library(leaflet) # interactive map
-library(leaflet.extras)
+library(dplyr) # data wrangling with pipe syntax
+library(tidyverse) # data wrangling
+library(sf) # simple features geometry data
+library(leaflet) # interactive maps
+library(leaflet.extras) # map reset and full screen buttons
+library(DT) # interactive tables
+library(corrplot) # correlation plots
+library(biscale) # bivariate mapping
+library(cowplot) # combining bivariate maps with their legends
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/exercises/Exercise_04")
+
+# created by scripts/Exercise_04_dataprep.qmd
+load("data/Exercise_04.RData")
+
 ```
 
 # Introduction
 
-This exercise utilizes the [suburban Cook County Health Atlas](https://cookcountyhealthatlas.org) and [Chicago Health Atlas](https://chicagohealthatlas.org) indicators to evaluate select public health outcomes relative to transportation access and quality across Cook County. The exercise will make use of indicators derived from local surveys (i.e., [Cook County Health Survey](https://cookcountypublichealth.org/health-survey/) and the [Healthy Chicago Survey](https://www.chicago.gov/city/en/depts/cdph/supp_info/healthy-communities/healthy-chicago-survey.html)) that are administered annually by the two local health departments. Both surveys are designed to collect neighborhood-level information from residents on such things as health status, risk behaviors, and access to health care to inform and monitor the health status of communities. [Download the exercise #4 presentation](slides/Exercise04_Template.pptx) template to organize data elements and summaries. Submit the completed presentation to the appropriate submission folder on D2L.
+This exercise utilizes the [suburban Cook County Health Atlas](https://cookcountyhealthatlas.org) and [Chicago Health Atlas](https://chicagohealthatlas.org) indicators to evaluate select public health outcomes relative to transportation access and quality across Cook County. The exercise will make use of indicators derived from local surveys (i.e., [Cook County Health Survey](https://cookcountypublichealth.org/health-survey/) and the [Healthy Chicago Survey](https://www.chicago.gov/city/en/depts/cdph/supp_info/healthy-communities/healthy-chicago-survey.html)) that are administered annually by the two local health departments. Both surveys are designed to collect neighborhood-level information from residents on such things as health status, risk behaviors, and access to health care to inform and monitor the health status of communities. [Download the exercise #4 presentation](https://justenvirons.org/pedagogy/GEO330/Exercise_04/slides/Exercise04_Template.pptx) template to organize data elements and summaries. Submit the completed presentation to the appropriate submission folder on D2L.
 
 # Step 1. Open Exercise #4 in Posit Cloud course workspace
-Log into the course Posit Cloud “Sustainable Urban Transportation" work space using the invitation link on the exercise announcement. Open the Exercise #4 workspace by clicking the corresponding assignment link. A cloud R session will deploy and launch in your web browser.
+Log into the course Posit Cloud "Sustainable Urban Transportation" workspace using the invitation link on the exercise announcement. Open the Exercise #4 workspace by clicking the corresponding assignment link. A cloud R session will deploy and launch in your web browser.
 
-## Open R script and activate R packages
-In your default exercise #4 project you will find an R script named *exercise04.R*. You will use this script to input, manage and execute all code for this exercise. The pre-loaded code below is used to activate custom packages that are needed to complete  exercise #4. Activate the R packages by selecting all lines of code beginning with "library" and clicking the Run button located above the top left source/script editor panel. Also run the line beginning with "options" to simplify the format of the output data tables.
+## Open R script and load data
+In your default Exercise #4 project you will find an empty R script named *Exercise_04.R*, which you will use to enter and run all code for this exercise. Click Exercise_04.R under the "Files" tab to open it. Click the clipboard icon in the upper right of the code chunk below and paste the code into the script. Then select all of the lines and click the Run button above the script editor panel. This activates the tools used throughout the exercise, simplifies the format of numbers in output tables and loads the exercise data.
 
 ```{r}
-#| eval: true
-#| echo: true
-#| label: Activate R packages
+#| label: activate libraries for exercise
+#| eval: false
 
-
+# Activate R packages and load data
 library(dplyr) # data wrangling with pipe syntax
-library(httr) # tools for Working with URLs and HTTP
-library(jsonlite) # managing JSON data 
 library(tidyverse) # data wrangling
 library(sf) # simple features geometry data
-library(nngeo) # perform nearest neighbor analysis
-library(scales) # used for rescaling data
-library(data.table) # data wrangling
-library(tigris) # downloading TIGER/Line geographies from US Census
+library(leaflet) # interactive maps
+library(leaflet.extras) # map reset and full screen buttons
+library(DT) # interactive tables
+library(corrplot) # correlation plots
 library(biscale) # bivariate mapping
-library(ggplot2) # needed for bivariate mapping
-library(cowplot) # needed to combine bivariate map with legend
-library(corrplot) # used for creating correlation matrices
+library(cowplot) # combining bivariate maps with their legends
 
-options(scipen=999, digits = 2) # format output for data tables
+# Set default options for numerical display
+options(scipen=999, digits = 2)
+
+# Load project data
+load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_04/data/Exercise_04.RData"))
 
 ```
+
+The load command imports the datasets and custom functions (all beginning with "fx_") used to create the exercise's tables, plots and maps. You can view the code for each function by clicking the "Show" links throughout this document.
 
 # Step 2. Create health and transportation indicator dataset
 
 ## Combine countywide geographies
-
-Use the following code to create a novel geography (N=202) that combines city of Chicago community areas (N=77) and suburban Cook County municipalities (N=125 using 4 square mile threshold area) using GEOJSON data imported from the two health atlases.
+Health indicators on the Chicago atlas are reported by community area, whereas those on the suburban Cook County atlas are reported by municipality. To map and compare indicators across the county, the two have been combined into a novel geography (`novel_geo_cook`, N=202) of city of Chicago community areas (N=77) and suburban Cook County municipalities of at least 4 square miles (N=125), using GeoJSON data imported from the two health atlases. The geography was loaded in Step 1; the function used to create it is shown below for reference. @tbl-novel_geo summarizes the areas in the new geography.
 
 ```{r}
-#| eval: true
+#| label: define county-wide geography functions
 #| echo: true
-#| warning: false
+#| code-fold: true
+#| code-summary: "Show the county-wide geography functions"
 
-# import City of Chicago community areas (N=77) GEOJSON and transform to local projection for spatial analysis (epsg:3435)
+# function for combining Chicago community areas and suburban Cook County
+# municipalities of at least min_sqmi square miles into a single county-wide
+# ("novel") geography; community area geoids drop the Chicago place prefix
+# ("1714000-") so they match the indicator data
+fx_create_novel_geo <- function(community_areas, places_cook_county, min_sqmi = 4) {
+  community_areas <- community_areas %>%
+    transmute(geoid = str_replace(id, "^1714000-", ""),
+              name,
+              location = "Chicago, IL",
+              type = "community area")
 
-community_areas <- st_read("https://metopio.blob.core.windows.net/lalage/atlas/3/shapes/communityareas.topo.json", quiet=TRUE) %>% 
-  st_as_sf() %>% 
-  st_set_crs(4326) %>% 
-  st_transform(3435) %>% 
-  rename(geoid = id) %>% 
-  mutate(geoid= str_replace(geoid,"1714000-",""),
-         location = "Chicago, IL",
-         type = "community area")
+  places_cook_county <- places_cook_county %>%
+    mutate(sqmi = as.numeric(st_area(geometry)) * 0.0000003861) %>%
+    filter(sqmi >= min_sqmi) %>%
+    transmute(geoid = id,
+              name,
+              location = "suburban Cook County",
+              type = "municipality")
 
-# import places within suburban Cook County (N=125) and transform to local projection for spatial analysis (epsg:3435)
+  bind_rows(places_cook_county, community_areas) %>%
+    st_make_valid()
+}
 
-places_cook_county <- st_read("https://metopio.blob.core.windows.net/lalage/atlas/6/shapes/SCC-place.topo.json", quiet=TRUE) %>% 
-  st_as_sf() %>% 
-  st_set_crs(4326) %>% 
-  st_transform(3435) %>% 
-  rename(geoid = id) %>% 
-  mutate(sqmi = as.numeric(st_area(geometry)) * 0.0000003861,
-         location = "suburban Cook County",
-         type = "municipality") %>% 
-  filter(sqmi >= 4) %>% 
-  select(-sqmi)
+# function for summarizing the county-wide geography by type: number of areas
+# and total, smallest and largest areas (square miles)
+fx_table_novel_geo <- function(novel_geo_cook) {
+  novel_geo_cook %>%
+    mutate(sqmi = as.numeric(st_area(st_transform(geometry, 3435))) * 0.0000003861) %>%
+    st_drop_geometry() %>%
+    group_by(location, type) %>%
+    summarise(areas = n(),
+              sqmi_total = sum(sqmi),
+              sqmi_min = min(sqmi),
+              sqmi_max = max(sqmi),
+              .groups = "drop") %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              colnames = c("Location", "Type", "Areas", "Total Square Miles",
+                           "Smallest (Square Miles)", "Largest (Square Miles)"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
+    formatRound(c("sqmi_total", "sqmi_min", "sqmi_max"), digits = 1)
+}
+```
 
-# create a novel geography in Cook County which combines both municipalities in suburban Cook County and communities areas in Chicago
+```{r}
+#| label: tbl-novel_geo
+#| tbl-cap: Novel Cook County Geography by Location and Type
 
-novel_geo_cook <- places_cook_county %>% 
-  bind_rows(community_areas) %>% 
-  st_as_sf() %>% 
-  st_make_valid()
+# summarize the county-wide geography
+fx_table_novel_geo(novel_geo_cook)
 
 ```
 
@@ -120,7 +147,7 @@ novel_geo_cook <- places_cook_county %>%
 
 The next step is to download and merge similar indicator data from the two atlases for statistical analysis and mapping. Both suburban Cook County and the city of Chicago regularly survey their residents about health. Indicators derived from these surveys are shared on the atlases. Many indicators on the two atlases are aligned so that they can be compared across jurisdictions, including those below.
 
-The following code downloads and combines a selection of health survey indicators that are comparable across both atlases. Below are links to each jurisdiction's charts and thematic maps for the selected indicators. Before running any statistics, review the indicators and form your own hypotheses about how they relate to one another and to active transportation: walking, bicycling, and public transit use.
+The selected health survey indicators, which are comparable across both atlases, were downloaded and combined for you and loaded in Step 1 (`indicators_all`). @tbl-health_indicators lists each indicator's column name, its topic keys and the survey periods used for each jurisdiction. Below are links to each jurisdiction's charts and thematic maps for the selected indicators. Before running any statistics, review the indicators and form your own hypotheses about how they relate to one another and to active transportation: walking, bicycling, and public transit use.
 
 -   Adult obesity rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8YZKL) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSOBP))
 -   Neighborhood safety rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8SRFE) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNSP))
@@ -141,77 +168,75 @@ On **slide 1** of your presentation, speculate about the relationships between *
 You will test these hypotheses with the merged data in the steps that follow, so treat this slide as a set of predictions that you will revisit.
 
 ```{r}
-#| eval: true
+#| label: tbl-health_indicators
+#| tbl-cap: Selected Health Survey Indicators, Topic Keys and Survey Periods
+
+# show the selected health survey indicators
+fx_table_health_indicators(health_indicators)
+
+```
+
+```{r}
+#| label: define indicator download functions
 #| echo: true
+#| code-fold: true
+#| code-summary: "Show the indicator download functions"
 
-a_topic_list <- c("obesity", "safety", "sidewalk", "ambulatory", "transit", "health", "inactivity") # edit here
-a_scc_topic_keys <- c("JG8YZKL","JG8SRFE","JG8IQGF","AMBDHSR","JG8OWII","JG8OLNB","JG8MIQE") # edit here
-a_scc_topic_period <- c("2026","2026","2026","2026","2026","2026","2026") # edit here
-a_chicago_topic_keys <- c("HCSOBP", "HCSNSP","HCSNSQP","HCSIDQZ","HCSWTSP","HCSOHSP","HCSPAP") # edit here
-a_chicago_topic_period <- c("2023-2024","2023-2024","2023-2024","2022-2024","2023-2024","2023-2024","2023-2024") # edit here
+# function for downloading one health survey indicator from one atlas ("scc" for
+# suburban Cook County municipalities or "chicago" for Chicago community areas);
+# key is the atlas topic key, period the survey period and column the indicator's
+# (one word) column name. Chicago results also include other cities, so only
+# community areas are kept, and their geoids drop the Chicago place prefix.
+fx_read_atlas_indicator <- function(atlas, key, period, column, read = jsonlite::fromJSON) {
+  results <- read(sprintf(atlas_urls[[atlas]], period, key))$results %>%
+    as.data.frame()
+  if (atlas == "chicago") results <- filter(results, str_starts(g, "1714000-"))
 
-# download SCC health survey indicators
-for (i in 1:length(a_scc_topic_keys)){
-
-  atopic_key <- a_scc_topic_keys[i]
-  atopic_name <- a_topic_list[i]
-  atopic_period <- a_scc_topic_period[i]
-  
-  #print(atopic_name)
-  
-  a_table_name <- paste0("scc_indicator_",atopic_name)
-
-  a_topic_url <- paste0("https://cookcountyhealthatlas.org/api/v1/data/?format=json&layer=place&period=",atopic_period,"&population=&topic=",atopic_key)
-  
-  a_topic_json <- fromJSON(a_topic_url)
-
-  a_topic_df <- a_topic_json$results %>% 
-    as.data.frame() %>% 
-   select(estimate = v,
-          se = se,
-          geoid = g,
-          layer = l) %>%
-    mutate(topic = atopic_name)
-
-  assign(a_table_name, a_topic_df)
-  
+  results %>%
+    transmute(geoid = str_replace(g, "^1714000-", ""),
+              atlas = !!atlas,
+              topic = !!column,
+              estimate = as.numeric(v),
+              se = if ("se" %in% names(results)) as.numeric(se) else NA_real_)
 }
 
-# download Chicago health survey indicators
-for (i in 1:length(a_chicago_topic_keys)){
-
-  atopic_key <- a_chicago_topic_keys[i]
-  atopic_name <- a_topic_list[i]
-  atopic_period <- a_chicago_topic_period[i]
-  
-  #print(atopic_name)
-  
-  a_table_name <- paste0("chicago_indicator_",atopic_name)
-
-  a_topic_url <- paste0("https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&period=",atopic_period,"&population=&topic=",atopic_key)
-  
-  a_topic_json <- fromJSON(a_topic_url)
-
-  a_topic_df <- a_topic_json$results %>% 
-    as.data.frame() %>% 
-  select(estimate = v,
-         se = se,
-         geoid = g,
-         layer = l) %>%
-    mutate(topic = atopic_name,
-           geoid= str_replace(geoid,"1714000-",""))
-
-  assign(a_table_name, a_topic_df)
-  
+# function for downloading every indicator in the indicators table (columns
+# column, scc_key, scc_period, chicago_key and chicago_period) from both atlases
+# and combining them into one long table (one row per area and indicator)
+fx_download_indicators <- function(indicators, read = jsonlite::fromJSON) {
+  bind_rows(
+    pmap(list(indicators$scc_key, indicators$scc_period, indicators$column),
+         function(key, period, column) fx_read_atlas_indicator("scc", key, period, column, read)),
+    pmap(list(indicators$chicago_key, indicators$chicago_period, indicators$column),
+         function(key, period, column) fx_read_atlas_indicator("chicago", key, period, column, read)))
 }
 
-# bind SCC and Chicago indicators together
-apattern <- "_indicator_"
-alist_indicators <- mget(ls(pattern=apattern))
-indicators_all <- rbindlist(alist_indicators)
+# function for formatting the indicators table, with links to each indicator's
+# page on the two atlases
+fx_table_health_indicators <- function(indicators) {
+  indicators %>%
+    mutate(scc_key = sprintf('<a href="https://cookcountyhealthatlas.org/indicators/%s" target="_blank">%s</a>', scc_key, scc_key),
+           chicago_key = sprintf('<a href="https://chicagohealthatlas.org/indicators/%s" target="_blank">%s</a>', chicago_key, chicago_key)) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              escape = FALSE,
+              colnames = c("Column", "Indicator", "SCC Key", "SCC Period", "Chicago Key", "Chicago Period"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE))
+}
+```
 
-# remove unneeded tables
-rm(list=ls(pattern=apattern))
+To swap in different indicators later, edit the topic keys and periods in `health_indicators` (use the links above, or the atlases' data dictionaries, to find them) and download the indicators again with the code below. The download takes a minute or so. *Optional: you do not need to run this code to complete the exercise.*
+
+```{r}
+#| label: download indicators
+#| eval: false
+
+# optional: replace one indicator (EDIT HERE: row number, column name, display name, keys and periods)
+# health_indicators[4, ] <- list("ambulatory", "Ambulatory difficulty rate", "AMBDHSR", "2026", "HCSIDQZ", "2022-2024")
+
+# download all indicators from both atlases
+indicators_all <- fx_download_indicators(health_indicators)
 
 ```
 
@@ -220,27 +245,60 @@ rm(list=ls(pattern=apattern))
 {{< video videos/Exercise_04_02.mp4 >}}
 :::
 
-# Step #3 Map and explore indicators
+# Step 3. Map and explore indicators
 
 ## Join indicator attributes with county-wide geographies
 
-Next, use the code below to join the indicator attributes to the county-wide geography layer. The result is a spatially enabled table that you will use to make custom maps in the steps that follow.
+Next, use the code below to join the indicator attributes to the county-wide geography layer. The result (`indicators_geo`) is a spatially enabled table, with one row per area and one column per indicator, that you will use to make custom maps in the steps that follow. @tbl-indicators shows the joined indicators; click a column name to sort the table, or type in the boxes below the column names to filter it.
 
 ```{r}
-#| warning: false
-#| eval: true
-#| output: true
+#| label: define indicator join and table functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the indicator join and table functions"
 
-# reformat indicators in wide format
-indicators_all_long <- indicators_all %>% 
-  pivot_wider(names_from = "topic", values_from = c("estimate","se")) %>% 
-  rename_with(~str_remove(., 'estimate_'))
+# function for joining the downloaded indicators (one column per indicator, plus
+# its standard error, se_<column>) to the county-wide geography; areas without
+# indicator data are left out
+fx_join_indicators <- function(indicators_all, novel_geo_cook) {
+  indicators_wide <- indicators_all %>%
+    pivot_wider(id_cols = c(geoid, atlas),
+                names_from = topic,
+                values_from = c(estimate, se)) %>%
+    rename_with(~ str_remove(.x, "^estimate_"))
 
-# join indicator data with county-wide "novel" geography layer
-indicators_all_long_geo <- novel_geo_cook %>% 
-  left_join(indicators_all_long, by="geoid") %>% 
-  st_as_sf() %>% 
-  drop_na(layer)
+  novel_geo_cook %>%
+    inner_join(indicators_wide, by = "geoid") %>%
+    st_as_sf()
+}
+
+# function for formatting the joined indicators as an interactive table that can
+# be sorted (click a column name) and filtered (boxes under the column names)
+fx_table_indicators <- function(indicators_geo, indicators = health_indicators) {
+  indicators <- filter(indicators, column %in% names(indicators_geo))
+  indicators_geo %>%
+    st_drop_geometry() %>%
+    select(name, type, all_of(indicators$column)) %>%
+    arrange(type, name) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              filter = "top",
+              colnames = c("Name", "Type", indicators$name),
+              options = list(pageLength = 10, scrollX = TRUE)) %>%
+    formatRound(indicators$column, digits = 1)
+}
+```
+
+```{r}
+#| label: tbl-indicators
+#| tbl-cap: Health Survey Indicators by Chicago Community Area and Suburban Cook County Municipality
+
+# join indicators to the county-wide geography
+indicators_geo <- fx_join_indicators(indicators_all, novel_geo_cook)
+
+# show the joined indicators
+fx_table_indicators(indicators_geo, health_indicators)
 
 ```
 
@@ -248,7 +306,7 @@ indicators_all_long_geo <- novel_geo_cook %>%
 
 Before measuring how indicators relate to one another, look at each indicator on its own. A univariate map shows one variable at a time and answers a simple question: *where* are rates high or low? It's easier to read correlations and bivariate maps once you know how each variable is distributed across the county.
 
-@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the "Indicator" dropdown list in the upper right of the map to display it as a thematic map, grouped into quintiles (each about 20 percent of places); places without data for the selected indicator are shown in light gray. The city of Chicago boundary (dashed black line) and Cook County boundary (dark red line) make it easier to see where Chicago ends and suburban Cook County begins. Hover over or click individual places to see their values for every indicator.
+@fig-communityarea_sccplaces is an interactive map of the new geography (`novel_geo_cook`). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the "Indicator" dropdown list in the upper right of the map to display it as a thematic map, grouped into quintiles (each about 20 percent of places); places without data for the selected indicator are shown in light gray. The city of Chicago boundary (dashed black line) and Cook County boundary (dark red line) make it easier to see where Chicago ends and suburban Cook County begins. Hover over or click individual places to see their values for every indicator. Change the color palette in the code below ([see this reference for palette names](https://i0.wp.com/1.bp.blogspot.com/-3VQwNXWga9s/UICXF7rbvLI/AAAAAAAAAUg/UQBmpUO9kVA/s1600/display-brewer-all.png)) to create a custom version of the map.
 
 Explore **at least two** of the indicators you discussed on slide 1. For each one, consider:
 
@@ -267,189 +325,206 @@ On **slides 2 and 3** of your presentation, paste one univariate map per slide, 
 Then compare your two maps. Do high (or low) values of the two indicators seem to show up in the same places? Note your impressions. You'll test them formally with correlations and bivariate maps in the next step.
 
 ```{r}
-#| echo: false
-#| eval: true
-#| label: fig-communityarea_sccplaces
-#| fig-cap: Health Survey Indicators by Novel Cook County Geography (Quintiles)
-#| warning: false
+#| label: define indicator mapping functions
+#| echo: true
+#| code-fold: true
+#| code-summary: "Show the indicator mapping functions"
 
-# display names for the indicators in the spatially enabled dataset (columns
-# named in a_topic_list); indicators without a name here use their column name
-indicator_names <- c(obesity = "Adult obesity rate",
-                     safety = "Neighborhood safety rate",
-                     sidewalk = "Neighborhood sidewalk quality rate",
-                     ambulatory = "Ambulatory difficulty rate",
-                     transit = "Ease of walking to transit stop rate",
-                     health = "Overall health status rate",
-                     inactivity = "Physical inactivity rate")
-map_indicators <- intersect(a_topic_list, names(indicators_all_long_geo))
-map_indicator_names <- ifelse(map_indicators %in% names(indicator_names),
-                              indicator_names[map_indicators],
-                              map_indicators)
+# function for creating the base map shared by the exercise's interactive maps:
+# CARTO basemap and reset and full screen buttons
+fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
+  leaflet(data = st_transform(map_data, crs = 4326)) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      carto_api_key
+    )) %>%
+    addResetMapButton() %>%
+    addFullscreenControl()
+}
 
-# all county-wide geographies, with indicator values attached (places without
-# data for an indicator are shown in grey)
-map_data <- novel_geo_cook %>% 
-  left_join(indicators_all_long_geo %>% 
-              st_drop_geometry() %>% 
-              select(geoid, all_of(map_indicators)),
-            by = "geoid") %>% 
-  st_transform(crs = 4326)
+# function for creating a quintile color palette; when repeated values make some
+# quintile breaks identical, the remaining distinct breaks are used instead.
+# Areas without data are shown in light grey.
+fx_quintile_pal <- function(values, palette = "YlGnBu") {
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) < 2) breaks <- c(breaks, breaks + 1)
+  colorBin(palette = palette, domain = values, bins = breaks, na.color = "#e0e0e0")
+}
 
-# borders: light grey for community areas and dark grey for municipalities
-border_pal <- 
-   colorFactor(palette = c("lightgrey", "darkgrey"), 
-               levels = c("community area", "municipality"))
-
-# hover (and click) labels with every indicator value
-indicator_values <- sapply(seq_along(map_indicators), function(i) {
-  x <- map_data[[map_indicators[i]]]
-  sprintf("<i>%s:</i> %s<br/>", map_indicator_names[i],
-          ifelse(is.na(x), "no data", formatC(x, format = "f", digits = 1)))
-})
-indicator_values <- matrix(indicator_values, nrow = nrow(map_data))
-novel_geography_labels <- paste0(
-  "<strong>", map_data$name, "</strong><br/>",
-  "<i>geoid:</i> ", map_data$geoid, "<br/>",
-  "<i>type:</i> ", map_data$type, "<br/>",
-  "<i>location:</i> ", map_data$location, "<hr style='margin: 3px 0;'/>",
-  apply(indicator_values, 1, paste, collapse = ""))
-
-# legend values (quintile ranges) to one decimal place
-legend_format <- function(type, cuts, p) {
-  values <- formatC(cuts, format = "f", digits = 1)
+# function for formatting legend values (quintile ranges) to one decimal place
+fx_legend_format <- function(type, cuts, p) {
+  values <- formatC(cuts, format = "f", digits = 1, big.mark = ",")
   paste0(values[-length(values)], " &ndash; ", values[-1])
 }
 
-# city of Chicago boundary (all community areas merged) and Cook County boundary
-# (US Census Bureau cartographic boundary file, via tigris)
-options(tigris_use_cache = TRUE)
-chicago_boundary <- novel_geo_cook %>% 
-  filter(type == "community area") %>% 
-  st_union() %>% 
-  st_sf(name = "City of Chicago", geometry = .) %>% 
-  st_transform(crs = 4326)
-cook_county_boundary <- counties(state = "IL", cb = TRUE, progress_bar = FALSE) %>% 
-  filter(NAME == "Cook") %>% 
-  st_transform(crs = 4326)
-
-# interactive map
-indicator_map <-
-leaflet() %>% 
-  addTiles(urlTemplate = paste0(
-      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
-      "cb1_31xh_1_06fb99adb466f0f5a0392d7d")) %>% 
-  addResetMapButton() %>%
-    addFullscreenControl() %>%
-  # addProviderTiles(
-  #   "CartoDB.Positron",
-  #   group = "CartoDB.Positron") %>% 
-  addPolygons(
-    data = map_data,
-    label = lapply(novel_geography_labels, htmltools::HTML),
-    popup = novel_geography_labels,
-    weight = 1,
-    opacity = 1,
-    fillColor = "white",
-    color = border_pal(map_data$type),
-    fillOpacity = 0.2,
-    group = "None (geography only)"
-    ) %>% 
-  addLegend("bottomright",
-            colors = c("lightgrey", "darkgrey", "#000000", "#7a0019"),
-            labels = c("Community area (Chicago)", "Municipality (suburban Cook County)",
-                       "City of Chicago boundary", "Cook County boundary"),
-            title = "Boundaries",
-            opacity = 1)
-
-# one layer (and legend) per indicator, grouped into quintiles
-for (i in seq_along(map_indicators)) {
-  values <- map_data[[map_indicators[i]]]
-  if (all(is.na(values))) next # skip indicators without any data
-  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
-  indicator_pal <- colorBin(palette = "YlGnBu", domain = values, bins = breaks, na.color = "#e0e0e0")
-  indicator_map <- indicator_map %>% 
-    addPolygons(
-      data = map_data,
-      label = lapply(novel_geography_labels, htmltools::HTML),
-      popup = novel_geography_labels,
-      weight = 1,
-      opacity = 1,
-      fillColor = indicator_pal(values),
-      color = border_pal(map_data$type),
-      fillOpacity = 0.7,
-      group = map_indicator_names[i]) %>% 
-    addLegend("bottomleft",
-              pal = indicator_pal,
-              values = values,
-              title = paste0(map_indicator_names[i], "<br/>(quintiles)"),
-              labFormat = legend_format,
-              opacity = 0.7,
-              className = paste0("info legend indicator-legend indicator-legend-", i))
+# function for creating hover (and click) labels with each area's name, geoid,
+# type and location, and its value for every indicator ("no data" when missing)
+fx_indicator_labels <- function(map_data, indicators = health_indicators) {
+  values <- sapply(seq_len(nrow(indicators)), function(i) {
+    x <- map_data[[indicators$column[i]]]
+    sprintf("<i>%s:</i> %s<br/>",
+            indicators$name[i],
+            ifelse(is.na(x), "no data", formatC(x, format = "f", digits = 1)))
+  })
+  values <- matrix(values, nrow = nrow(map_data))
+  paste0("<strong>", map_data$name, "</strong><br/>",
+         "<i>geoid:</i> ", map_data$geoid, "<br/>",
+         "<i>type:</i> ", map_data$type, "<br/>",
+         "<i>location:</i> ", map_data$location, "<hr style='margin: 3px 0;'/>",
+         apply(values, 1, paste, collapse = ""))
 }
 
-# city of Chicago and Cook County boundaries, drawn above the indicator layers
-# in their own pane; they do not respond to the mouse, so the hover labels of
-# the places beneath them still work
-indicator_map <- indicator_map %>% 
-  addMapPane("boundaries", zIndex = 450) %>% 
-  addPolygons(
-    data = cook_county_boundary,
-    fill = FALSE,
-    color = "#7a0019",
-    weight = 3,
-    opacity = 0.9,
-    options = pathOptions(pane = "boundaries", interactive = FALSE)) %>% 
-  addPolygons(
-    data = chicago_boundary,
-    fill = FALSE,
-    color = "#000000",
-    weight = 2.5,
-    opacity = 0.9,
-    dashArray = "6 4",
-    options = pathOptions(pane = "boundaries", interactive = FALSE))
+# function for adding the city of Chicago (dashed black line) and Cook County
+# (dark red line) boundaries; they are drawn above the other layers in their own
+# pane and do not respond to the mouse, so the hover labels beneath them work
+fx_add_boundaries <- function(map, chicago_boundary, cook_county_boundary) {
+  map %>%
+    addMapPane("boundaries", zIndex = 450) %>%
+    addPolygons(
+      data = st_transform(cook_county_boundary, crs = 4326),
+      fill = FALSE,
+      color = "#7a0019",
+      weight = 3,
+      opacity = 0.9,
+      options = pathOptions(pane = "boundaries", interactive = FALSE)) %>%
+    addPolygons(
+      data = st_transform(chicago_boundary, crs = 4326),
+      fill = FALSE,
+      color = "#000000",
+      weight = 2.5,
+      opacity = 0.9,
+      dashArray = "6 4",
+      options = pathOptions(pane = "boundaries", interactive = FALSE))
+}
 
-# dropdown list (top right) that shows one indicator layer and legend at a time;
-# the first indicator is shown when the map opens (choose "None" to show
-# only the geography)
-indicator_map %>% 
-  htmlwidgets::onRender("
-    function(el, x, data) {
-      var map = this;
-      var groups = [].concat(data.groups);
-      function show(i) {
-        groups.forEach(function(g, j) {
-          var layer = map.layerManager.getLayerGroup(g, false);
-          if (layer) { if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); } }
-        });
-        el.querySelectorAll('.indicator-legend').forEach(function(d) {
-          d.style.display = d.classList.contains('indicator-legend-' + i) ? '' : 'none';
-        });
-      }
-      var control = L.control({position: 'topright'});
-      control.onAdd = function() {
-        var div = L.DomUtil.create('div', 'leaflet-bar');
-        div.style.background = 'white';
-        div.style.padding = '4px 6px';
-        div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Indicator</label>';
-        var select = L.DomUtil.create('select', '', div);
-        groups.forEach(function(g, j) {
-          var option = L.DomUtil.create('option', '', select);
-          option.value = j;
-          option.text = g;
-        });
-        select.value = groups.length > 1 ? 1 : 0;
-        select.onchange = function() { show(parseInt(select.value)); };
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.disableScrollPropagation(div);
-        return div;
-      };
-      control.addTo(map);
-      show(groups.length > 1 ? 1 : 0);
-    }", data = list(groups = c("None (geography only)", map_indicator_names)))
+# function for adding a dropdown list (top right) that shows one map layer (and
+# its legend) at a time; groups are the layers' group names, in dropdown order,
+# and each layer's legend carries the class "indicator-legend-<position in
+# groups, from 0>". The layer at position selected (from 0) is shown first.
+fx_add_layer_dropdown <- function(map, groups, selected = 0) {
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        // show the selected layer and legend and hide the others
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) { if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); } }
+          });
+          el.querySelectorAll('.indicator-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('indicator-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Indicator</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.value = data.selected;
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(data.selected);
+      }", data = list(groups = groups, selected = selected))
+}
 
+# function for mapping the county-wide geography with a dropdown list of the
+# indicators in indicators_geo, each grouped into quintiles (the first indicator
+# is shown when the map opens; "None" shows only the geography). Community areas
+# have light grey borders and municipalities dark grey borders, and the city of
+# Chicago and Cook County boundaries are drawn on top. palette is any
+# RColorBrewer palette name (e.g., "YlGnBu", "Purples", "Greys")
+fx_map_indicators <- function(novel_geo_cook, indicators_geo, chicago_boundary, cook_county_boundary,
+                              indicators = health_indicators, palette = "YlGnBu") {
+  indicators <- filter(indicators, column %in% names(indicators_geo))
+
+  # all county-wide areas, with indicator values attached
+  map_data <- novel_geo_cook %>%
+    left_join(indicators_geo %>%
+                st_drop_geometry() %>%
+                select(geoid, all_of(indicators$column)),
+              by = "geoid") %>%
+    st_transform(crs = 4326)
+
+  labels <- fx_indicator_labels(map_data, indicators)
+  border_pal <- colorFactor(palette = c("lightgrey", "darkgrey"),
+                            levels = c("community area", "municipality"))
+  groups <- c("None (geography only)", indicators$name)
+
+  # geography only
+  map <- fx_basemap(map_data) %>%
+    addPolygons(
+      data = map_data,
+      label = lapply(labels, htmltools::HTML),
+      popup = labels,
+      weight = 1,
+      opacity = 1,
+      color = border_pal(map_data$type),
+      fillColor = "white",
+      fillOpacity = 0.2,
+      group = groups[1]) %>%
+    addLegend("bottomright",
+              colors = c("lightgrey", "darkgrey", "#000000", "#7a0019"),
+              labels = c("Community area (Chicago)", "Municipality (suburban Cook County)",
+                         "City of Chicago boundary", "Cook County boundary"),
+              title = "Boundaries",
+              opacity = 1)
+
+  # one layer (and legend) per indicator, grouped into quintiles
+  for (i in seq_len(nrow(indicators))) {
+    values <- map_data[[indicators$column[i]]]
+    if (all(is.na(values))) next # skip indicators without any data
+    pal <- fx_quintile_pal(values, palette = palette)
+    map <- map %>%
+      addPolygons(
+        data = map_data,
+        label = lapply(labels, htmltools::HTML),
+        popup = labels,
+        weight = 1,
+        opacity = 1,
+        color = border_pal(map_data$type),
+        fillColor = pal(values),
+        fillOpacity = 0.7,
+        group = groups[i + 1]) %>%
+      addLegend("bottomleft",
+                pal = pal,
+                values = values,
+                title = paste0(indicators$name[i], "<br/>(quintiles)"),
+                labFormat = fx_legend_format,
+                opacity = 0.7,
+                className = paste0("info legend indicator-legend indicator-legend-", i))
+  }
+
+  map %>%
+    fx_add_boundaries(chicago_boundary, cook_county_boundary) %>%
+    fx_add_layer_dropdown(groups, selected = if (length(groups) > 1) 1 else 0)
+}
 ```
 
+```{r}
+#| label: fig-communityarea_sccplaces
+#| fig-cap: Health Survey Indicators by Novel Cook County Geography (Quintiles)
+
+# map indicators by county-wide geography, with city and county boundaries
+fx_map_indicators(novel_geo_cook,
+                  indicators_geo,
+                  chicago_boundary,
+                  cook_county_boundary,
+                  palette = "YlGnBu") # EDIT HERE
+
+```
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO Step #3
@@ -458,44 +533,77 @@ indicator_map %>%
 
 # Step 4. Examine statistical relationships between selected variables
 
-Use the code below to create a bivariate correlation plot to explore the statistical relationships between the seven downloaded indicator variables. Pearson's bivariate correlation (or Pearson's r) quantifies the strength and direction of the linear relationship between each pair of variables. The coefficients ranges from -1 to +1 with values greater than 0 indicating positive linear relationships (i.e., as one variable increases, the other variable also increases) and values less than 0 indicating a negative linear relationship (i.e., as one variable decreases, the other variable also decreases). @fig-correlation_plots shows two plots based on the same correlation matrix: Plot 1 shows explicit correlation statistics and plot 2 shows graduated circles.
+Use the code below to create a bivariate correlation plot to explore the statistical relationships between the seven downloaded indicator variables (`indicators_geo`). Only areas with data for every indicator are included. Pearson's bivariate correlation (or Pearson's r) quantifies the strength and direction of the linear relationship between each pair of variables. The coefficients range from -1 to +1 with values greater than 0 indicating positive linear relationships (i.e., as one variable increases, the other variable also increases) and values less than 0 indicating a negative linear relationship (i.e., as one variable increases, the other variable decreases). @fig-correlation_plots shows two plots based on the same correlation matrix: Plot 1 shows explicit correlation statistics and plot 2 shows graduated circles (larger circles for stronger relationships; black for negative and white for positive relationships). Indicators are ordered so that closely related indicators are next to each other. @tbl-correlations lists the same coefficients.
 
 ```{r}
-#| warning: false
-#| eval: false
+#| label: define correlation functions
 #| echo: true
-#| label: fig-bivariate_correlation_plots
+#| code-fold: true
+#| code-summary: "Show the correlation functions"
 
-# subset indicator data for statistical analysis
-indicators_all_long_sub <- indicators_all_long_geo %>%
-  st_drop_geometry() %>% 
-  drop_na() %>% 
-  select(-starts_with("se"), -c(geoid,name,type, location,layer))
-  
-# calculate bivariate correlations between all numeric variables
-variable_biv_correlations <- cor(indicators_all_long_sub, method="pearson")
+# function for calculating Pearson's bivariate correlations between every pair of
+# indicators; areas missing any indicator are left out
+fx_correlations <- function(indicators_geo, indicators = health_indicators) {
+  indicators_geo %>%
+    st_drop_geometry() %>%
+    select(any_of(indicators$column)) %>%
+    drop_na() %>%
+    cor(method = "pearson")
+}
 
-# create correlation plot option 1 with correlation values
-corrplot_1 <- corrplot(variable_biv_correlations, method="number", col=c("black","white"), order="hclust", bg="lightgrey", tl.col = "grey")
+# function for plotting a correlation matrix, with indicators ordered so that
+# closely related indicators are next to each other; method is "number"
+# (correlation coefficients) or "circle" (graduated circles)
+fx_plot_correlations <- function(indicator_correlations, method = "number") {
+  corrplot(indicator_correlations,
+           method = method,
+           col = c("black", "white"),
+           order = "hclust",
+           bg = "lightgrey",
+           tl.col = "grey")
+}
 
-# create correlation plot option 2 with graduated circles
-corrplot_2 <- corrplot(variable_biv_correlations, col=c("black","white"), order="hclust", bg="lightgrey", tl.col = "grey")
-
-# display correlation plot option 1
-corrplot_1
-
-# display correlation plot option 2
-corrplot_2
+# function for formatting a correlation matrix as an interactive table
+fx_table_correlations <- function(indicator_correlations) {
+  indicator_correlations %>%
+    as.data.frame() %>%
+    rownames_to_column("indicator") %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              colnames = c("Indicator" = "indicator"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
+    formatRound(rownames(indicator_correlations), digits = 2)
+}
 ```
 
-::: {#fig-correlation_plots layout-ncol=2}
+```{r}
+#| label: fig-correlation_plots
+#| fig-cap: Bivariate Correlation Plots (Pearson)
+#| fig-subcap: 
+#|   - "Correlation coefficients"
+#|   - "Graduated circles"
+#| layout-ncol: 2
 
-![Correlation coefficients](images/cor_plot_01.png)
+# calculate bivariate correlations between all indicators
+indicator_correlations <- fx_correlations(indicators_geo, health_indicators)
 
-![Graduated circles](images/cor_plot_02.png)
+# plot 1: correlation coefficients
+fx_plot_correlations(indicator_correlations, method = "number")
 
-Bivariate Correlation Plots (Pearson)
-:::
+# plot 2: graduated circles
+fx_plot_correlations(indicator_correlations, method = "circle")
+
+```
+
+```{r}
+#| label: tbl-correlations
+#| tbl-cap: Bivariate Correlation Coefficients (Pearson) Between Health Survey Indicators
+
+# show the correlation coefficients
+fx_table_correlations(indicator_correlations)
+
+```
 
 On **slide 4** of your presentation, copy and paste your bivariate correlation plot (either the correlation coefficients or the graduated circles version, or both). Below the plot, write a short paragraph (4–6 sentences) explaining the results:
 
@@ -511,63 +619,83 @@ On **slide 4** of your presentation, copy and paste your bivariate correlation p
 :::
 
 # Step 5. Create two custom bivariate maps
+A bivariate map shows two indicators at once. Each indicator is split into three categories (terciles: low, medium and high, each about a third of the areas mapped), and each area is colored by its combination of the two categories, for nine colors in all. Areas that are high on both indicators are shown in the darkest color, areas that are low on both in the lightest color, and areas that are high on one but low on the other in the colors at the opposite corners of the legend. Areas without data for either indicator are shown in light grey, and the dashed line marks the city of Chicago boundary. @fig-bivariate_maps shows two examples.
 
-Adapt the code below (i.e.., look for the "edit here" comments) to create two custom single variable (univariate) and bivariate thematic / choropleth maps similar to those displayed in @fig-univariate_maps and @fig-bivariate_map. The univariate maps are categorized into quintiles from quintile 1 (representing the lowest performing areas) to quintile 5 (the highest performing areas). Each quintile represents about 20 percent of the geographies mapped (i.e., about 40). *Add your custom maps to slides 2-4 of your presentation and describe the spatial patterns you see in each map.*
+Adapt the code below (look for the `EDIT HERE` comments) to create two custom bivariate maps, each combining a health outcome with a transportation-related indicator. Choose pairs based on your hypotheses (slide 1) and the correlations in Step 4; optionally, change the palette (the list of palettes is in the bivariate mapping function). *Add your custom maps to slides 5 and 6 of your presentation and describe the spatial patterns you see in each map. Where do the two indicators coincide (high-high or low-low), and where do they diverge? Do the patterns differ between Chicago and suburban Cook County?*
 
 ```{r}
-#| eval: false
+#| label: define bivariate mapping function
 #| echo: true
-#| output: true
+#| code-fold: true
+#| code-summary: "Show the bivariate mapping function"
 
-# Create two bivariate thematic/choropleth maps 
-# modify variable(s) to be mapped and legend names/titles for all maps
+# function for mapping two indicators together (bivariate map) in three
+# categories (terciles) each, with a legend; x and y are indicator columns and
+# xlab and ylab label the legend. Areas without data are shown in light grey.
+# palette is a biscale palette: "Bluegill", "BlueGold", "BlueOr", "BlueYl",
+# "Brown"/"Brown2", "DkBlue"/"DkBlue2", "DkCyan"/"DkCyan2",
+# "DkViolet"/"DkViolet2", "GrPink"/"GrPink2", "PinkGrn", "PurpleGrn" or "PurpleOr"
+fx_map_bivariate <- function(indicators_geo, x, y, xlab = x, ylab = y, palette = "BlueGold",
+                             chicago_boundary = NULL) {
+  map_data <- indicators_geo %>%
+    drop_na(all_of(c(x, y))) %>%
+    bi_class(x = !!sym(x), y = !!sym(y), style = "quantile", dim = 3)
 
-# bivariate map 1 legend
-map1.legend <- bi_legend(pal = "BlueGold",
-                    dim = 3,
-                    xlab = "Health", # edit here
-                    ylab = "Access", # edit here
-                    size = 8,
-                    pad_width = 1)
+  map <- ggplot() +
+    geom_sf(data = indicators_geo, fill = "grey90", color = "white", linewidth = 0.1) +
+    geom_sf(data = map_data,
+            mapping = aes(fill = bi_class),
+            color = "white",
+            linewidth = 0.1,
+            show.legend = FALSE) +
+    bi_scale_fill(pal = palette, dim = 3) +
+    bi_theme()
 
-map1.bivariate <- ggdraw() +
-  draw_plot(map1, 0, 0, 1, 1) +
-  draw_plot(map1.legend, 0.2, 0.45, 0.35, 0.2)
+  # optional city of Chicago boundary (dashed black line)
+  if (!is.null(chicago_boundary)) {
+    map <- map + geom_sf(data = chicago_boundary, fill = NA, color = "black",
+                         linewidth = 0.5, linetype = "dashed")
+  }
 
-# display bivariate map
-map1.bivariate
+  legend <- bi_legend(pal = palette,
+                      dim = 3,
+                      xlab = paste("Higher", xlab),
+                      ylab = paste("Higher", ylab),
+                      size = 8)
 
-# bivariate map 2 legend
-map2.legend <- bi_legend(pal = "BlueGold",
-                    dim = 3,
-                    xlab = "Health", # edit here
-                    ylab = "Access", # edit here
-                    size = 8,
-                    pad_width = 1)
-
-map2.bivariate <- ggdraw() +
-  draw_plot(map1, 0, 0, 1, 1) +
-  draw_plot(map1.legend, 0.2, 0.45, 0.35, 0.2)
-
-# display bivariate map 2
-map2.bivariate
+  ggdraw() +
+    draw_plot(map, 0, 0, 1, 1) +
+    draw_plot(legend, 0.05, 0.05, 0.3, 0.3)
+}
 ```
 
-::: {#fig-univariate_maps layout-ncol=2}
+```{r}
+#| label: fig-bivariate_maps
+#| fig-cap: Bivariate Maps
+#| fig-subcap: 
+#|   - "Overall health status by ease of walking to transit stop"
+#|   - "Physical inactivity by neighborhood sidewalk quality"
+#| layout-ncol: 2
 
-![Overall health status rate](images/map_health.png)
+# bivariate map 1
+fx_map_bivariate(indicators_geo,
+                 x = "health", # EDIT HERE
+                 y = "transit", # EDIT HERE
+                 xlab = "Health", # EDIT HERE
+                 ylab = "Transit Access", # EDIT HERE
+                 palette = "BlueGold",
+                 chicago_boundary = chicago_boundary)
 
-![Ease of walking to transit stop rate](images/map_transit.png)
+# bivariate map 2
+fx_map_bivariate(indicators_geo,
+                 x = "inactivity", # EDIT HERE
+                 y = "sidewalk", # EDIT HERE
+                 xlab = "Inactivity", # EDIT HERE
+                 ylab = "Sidewalk Quality", # EDIT HERE
+                 palette = "PurpleOr",
+                 chicago_boundary = chicago_boundary)
 
-Univariate Maps (Quintile categorizations)
-:::
-
-::: {#fig-bivariate_map layout-ncol=1}
-
-![Health Status by Transit Stop Access](images/map_bivariate.png)
-
-Bivariate Map
-:::
+```
 
 ::: {.callout-tip collapse="true"}
 ## VIDEO Step #5

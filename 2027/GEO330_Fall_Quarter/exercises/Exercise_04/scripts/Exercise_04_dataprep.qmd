@@ -1,0 +1,585 @@
+---
+title: "Exercise #4 data prep: Cook County and Chicago health survey indicators"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#| label: activate packages and set working directory
+
+library(tidyverse)
+library(jsonlite) # Cook County and Chicago Health Atlas APIs
+library(sf)
+library(tigris) # Cook County boundary
+library(leaflet) # used by the exercise functions saved below
+library(leaflet.extras)
+library(DT)
+library(corrplot)
+library(biscale)
+library(cowplot)
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
+```
+
+# Purpose
+This script creates `Exercise_04.RData`, the file loaded when rendering `Exercise_04.qmd` and by students in Posit Cloud. Each run:
+
+1. Downloads Chicago community areas (N=77) and suburban Cook County municipalities from the [Chicago Health Atlas](https://chicagohealthatlas.org) and [suburban Cook County Health Atlas](https://cookcountyhealthatlas.org), and combines them into a "novel" county-wide geography of community areas and municipalities of at least 4 square miles (N=202).
+2. Creates city of Chicago (merged community areas) and Cook County ([tigris](https://github.com/walkerke/tigris)) boundaries for reference on the exercise's maps.
+3. Downloads the exercise's health survey indicators for both jurisdictions (Cook County Health Survey and Healthy Chicago Survey) and joins them to the county-wide geography.
+4. Saves the datasets, along with the functions students use to create the exercise's tables, plots and maps, to `Exercise_04.RData`. The CARTO API key used by the basemaps is also saved; it comes from the `CARTO_API_KEY` environment variable (e.g., set in `.Renviron`).
+
+Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached. Upload `Exercise_04.RData` to the course data pages (`https://justenvirons.org/pedagogy/GEO330/Exercise_04/data/Exercise_04.RData`) after each run.
+
+# Settings
+```{r}
+#| label: settings
+
+data_dir <- "exercises/Exercise_04/data"
+
+# datasets and functions loaded by Exercise_04.qmd
+exercise_file <- file.path(data_dir, "Exercise_04.RData")
+
+# health atlas geographies (TopoJSON)
+url_community_areas <- "https://metopio.blob.core.windows.net/lalage/atlas/3/shapes/communityareas.topo.json"
+url_places_scc <- "https://metopio.blob.core.windows.net/lalage/atlas/6/shapes/SCC-place.topo.json"
+
+# suburban Cook County municipalities smaller than this (square miles) are left out
+min_place_sqmi <- 4
+
+# health atlas indicator data by survey period and topic key: suburban Cook County
+# municipalities ("place" layer) and Chicago community areas ("neighborhood" layer)
+atlas_urls <- c(
+  scc = "https://cookcountyhealthatlas.org/api/v1/data/?format=json&layer=place&period=%s&population=&topic=%s",
+  chicago = "https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&period=%s&population=&topic=%s")
+
+# health survey indicators: column name, display name, and suburban Cook County
+# (CCHS) and Chicago (HCS) topic keys and survey periods
+health_indicators <- tribble(
+  ~column,      ~name,                                  ~scc_key,  ~scc_period, ~chicago_key, ~chicago_period,
+  "obesity",    "Adult obesity rate",                   "JG8YZKL", "2026",      "HCSOBP",     "2023-2024",
+  "safety",     "Neighborhood safety rate",             "JG8SRFE", "2026",      "HCSNSP",     "2023-2024",
+  "sidewalk",   "Neighborhood sidewalk quality rate",   "JG8IQGF", "2026",      "HCSNSQP",    "2023-2024",
+  "ambulatory", "Ambulatory difficulty rate",           "AMBDHSR", "2026",      "HCSIDQZ",    "2022-2024",
+  "transit",    "Ease of walking to transit stop rate", "JG8OWII", "2026",      "HCSWTSP",    "2023-2024",
+  "health",     "Overall health status rate",           "JG8OLNB", "2026",      "HCSOHSP",    "2023-2024",
+  "inactivity", "Physical inactivity rate",             "JG8MIQE", "2026",      "HCSPAP",     "2023-2024")
+```
+
+# Functions for data development
+```{r}
+#| label: data development functions
+
+# download a file to its cache path; if the download fails, the existing cache
+# file (from an earlier run) is used instead. The download goes to a temporary
+# file first so a failed download does not overwrite the cache.
+download_cached <- function(url, cache) {
+  tmp <- tempfile(fileext = paste0(".", tools::file_ext(cache)))
+  ok <- tryCatch({
+    download.file(url, tmp, mode = "wb", quiet = TRUE)
+    file.copy(tmp, cache, overwrite = TRUE)
+  }, error = function(e) FALSE, warning = function(w) FALSE)
+  if (!ok) {
+    if (!file.exists(cache)) stop("Download failed and no cache file found: ", cache)
+    message("Download failed; using cache file ", cache)
+  }
+  cache
+}
+
+# health atlas TopoJSON geographies (no CRS stored), in Illinois State Plane East
+# (epsg:3435) for spatial analysis
+read_atlas_topojson <- function(url, cache) {
+  st_read(download_cached(url, cache), quiet = TRUE) %>%
+    st_as_sf() %>%
+    st_set_crs(4326) %>%
+    st_transform(3435)
+}
+
+# reader passed to fx_download_indicators() below that caches each indicator
+# download as health_atlas_<atlas>_<topic key>_cache.json
+read_atlas_cached <- function(url) {
+  atlas <- if (str_detect(url, "cookcounty")) "scc" else "chicago"
+  key <- str_extract(url, "(?<=topic=)[A-Za-z0-9]+")
+  fromJSON(download_cached(url, file.path(data_dir, paste0("health_atlas_", atlas, "_", key, "_cache.json"))))
+}
+```
+
+# Functions for Exercise #4
+The functions below are shown, in the same order, in `Exercise_04.qmd`.
+
+```{r}
+#| label: step 2 county-wide geography functions
+
+# function for combining Chicago community areas and suburban Cook County
+# municipalities of at least min_sqmi square miles into a single county-wide
+# ("novel") geography; community area geoids drop the Chicago place prefix
+# ("1714000-") so they match the indicator data
+fx_create_novel_geo <- function(community_areas, places_cook_county, min_sqmi = 4) {
+  community_areas <- community_areas %>%
+    transmute(geoid = str_replace(id, "^1714000-", ""),
+              name,
+              location = "Chicago, IL",
+              type = "community area")
+
+  places_cook_county <- places_cook_county %>%
+    mutate(sqmi = as.numeric(st_area(geometry)) * 0.0000003861) %>%
+    filter(sqmi >= min_sqmi) %>%
+    transmute(geoid = id,
+              name,
+              location = "suburban Cook County",
+              type = "municipality")
+
+  bind_rows(places_cook_county, community_areas) %>%
+    st_make_valid()
+}
+
+# function for summarizing the county-wide geography by type: number of areas
+# and total, smallest and largest areas (square miles)
+fx_table_novel_geo <- function(novel_geo_cook) {
+  novel_geo_cook %>%
+    mutate(sqmi = as.numeric(st_area(st_transform(geometry, 3435))) * 0.0000003861) %>%
+    st_drop_geometry() %>%
+    group_by(location, type) %>%
+    summarise(areas = n(),
+              sqmi_total = sum(sqmi),
+              sqmi_min = min(sqmi),
+              sqmi_max = max(sqmi),
+              .groups = "drop") %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              colnames = c("Location", "Type", "Areas", "Total Square Miles",
+                           "Smallest (Square Miles)", "Largest (Square Miles)"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
+    formatRound(c("sqmi_total", "sqmi_min", "sqmi_max"), digits = 1)
+}
+```
+
+```{r}
+#| label: step 2 indicator download functions
+
+# function for downloading one health survey indicator from one atlas ("scc" for
+# suburban Cook County municipalities or "chicago" for Chicago community areas);
+# key is the atlas topic key, period the survey period and column the indicator's
+# (one word) column name. Chicago results also include other cities, so only
+# community areas are kept, and their geoids drop the Chicago place prefix.
+fx_read_atlas_indicator <- function(atlas, key, period, column, read = jsonlite::fromJSON) {
+  results <- read(sprintf(atlas_urls[[atlas]], period, key))$results %>%
+    as.data.frame()
+  if (atlas == "chicago") results <- filter(results, str_starts(g, "1714000-"))
+
+  results %>%
+    transmute(geoid = str_replace(g, "^1714000-", ""),
+              atlas = !!atlas,
+              topic = !!column,
+              estimate = as.numeric(v),
+              se = if ("se" %in% names(results)) as.numeric(se) else NA_real_)
+}
+
+# function for downloading every indicator in the indicators table (columns
+# column, scc_key, scc_period, chicago_key and chicago_period) from both atlases
+# and combining them into one long table (one row per area and indicator)
+fx_download_indicators <- function(indicators, read = jsonlite::fromJSON) {
+  bind_rows(
+    pmap(list(indicators$scc_key, indicators$scc_period, indicators$column),
+         function(key, period, column) fx_read_atlas_indicator("scc", key, period, column, read)),
+    pmap(list(indicators$chicago_key, indicators$chicago_period, indicators$column),
+         function(key, period, column) fx_read_atlas_indicator("chicago", key, period, column, read)))
+}
+
+# function for formatting the indicators table, with links to each indicator's
+# page on the two atlases
+fx_table_health_indicators <- function(indicators) {
+  indicators %>%
+    mutate(scc_key = sprintf('<a href="https://cookcountyhealthatlas.org/indicators/%s" target="_blank">%s</a>', scc_key, scc_key),
+           chicago_key = sprintf('<a href="https://chicagohealthatlas.org/indicators/%s" target="_blank">%s</a>', chicago_key, chicago_key)) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              escape = FALSE,
+              colnames = c("Column", "Indicator", "SCC Key", "SCC Period", "Chicago Key", "Chicago Period"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE))
+}
+```
+
+```{r}
+#| label: step 3 indicator join and table functions
+
+# function for joining the downloaded indicators (one column per indicator, plus
+# its standard error, se_<column>) to the county-wide geography; areas without
+# indicator data are left out
+fx_join_indicators <- function(indicators_all, novel_geo_cook) {
+  indicators_wide <- indicators_all %>%
+    pivot_wider(id_cols = c(geoid, atlas),
+                names_from = topic,
+                values_from = c(estimate, se)) %>%
+    rename_with(~ str_remove(.x, "^estimate_"))
+
+  novel_geo_cook %>%
+    inner_join(indicators_wide, by = "geoid") %>%
+    st_as_sf()
+}
+
+# function for formatting the joined indicators as an interactive table that can
+# be sorted (click a column name) and filtered (boxes under the column names)
+fx_table_indicators <- function(indicators_geo, indicators = health_indicators) {
+  indicators <- filter(indicators, column %in% names(indicators_geo))
+  indicators_geo %>%
+    st_drop_geometry() %>%
+    select(name, type, all_of(indicators$column)) %>%
+    arrange(type, name) %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              filter = "top",
+              colnames = c("Name", "Type", indicators$name),
+              options = list(pageLength = 10, scrollX = TRUE)) %>%
+    formatRound(indicators$column, digits = 1)
+}
+```
+
+```{r}
+#| label: step 3 indicator mapping functions
+
+# function for creating the base map shared by the exercise's interactive maps:
+# CARTO basemap and reset and full screen buttons
+fx_basemap <- function(map_data, carto_api_key = CARTO_API_KEY) {
+  leaflet(data = st_transform(map_data, crs = 4326)) %>%
+    addTiles(urlTemplate = paste0(
+      "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+      carto_api_key
+    )) %>%
+    addResetMapButton() %>%
+    addFullscreenControl()
+}
+
+# function for creating a quintile color palette; when repeated values make some
+# quintile breaks identical, the remaining distinct breaks are used instead.
+# Areas without data are shown in light grey.
+fx_quintile_pal <- function(values, palette = "YlGnBu") {
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) < 2) breaks <- c(breaks, breaks + 1)
+  colorBin(palette = palette, domain = values, bins = breaks, na.color = "#e0e0e0")
+}
+
+# function for formatting legend values (quintile ranges) to one decimal place
+fx_legend_format <- function(type, cuts, p) {
+  values <- formatC(cuts, format = "f", digits = 1, big.mark = ",")
+  paste0(values[-length(values)], " &ndash; ", values[-1])
+}
+
+# function for creating hover (and click) labels with each area's name, geoid,
+# type and location, and its value for every indicator ("no data" when missing)
+fx_indicator_labels <- function(map_data, indicators = health_indicators) {
+  values <- sapply(seq_len(nrow(indicators)), function(i) {
+    x <- map_data[[indicators$column[i]]]
+    sprintf("<i>%s:</i> %s<br/>",
+            indicators$name[i],
+            ifelse(is.na(x), "no data", formatC(x, format = "f", digits = 1)))
+  })
+  values <- matrix(values, nrow = nrow(map_data))
+  paste0("<strong>", map_data$name, "</strong><br/>",
+         "<i>geoid:</i> ", map_data$geoid, "<br/>",
+         "<i>type:</i> ", map_data$type, "<br/>",
+         "<i>location:</i> ", map_data$location, "<hr style='margin: 3px 0;'/>",
+         apply(values, 1, paste, collapse = ""))
+}
+
+# function for adding the city of Chicago (dashed black line) and Cook County
+# (dark red line) boundaries; they are drawn above the other layers in their own
+# pane and do not respond to the mouse, so the hover labels beneath them work
+fx_add_boundaries <- function(map, chicago_boundary, cook_county_boundary) {
+  map %>%
+    addMapPane("boundaries", zIndex = 450) %>%
+    addPolygons(
+      data = st_transform(cook_county_boundary, crs = 4326),
+      fill = FALSE,
+      color = "#7a0019",
+      weight = 3,
+      opacity = 0.9,
+      options = pathOptions(pane = "boundaries", interactive = FALSE)) %>%
+    addPolygons(
+      data = st_transform(chicago_boundary, crs = 4326),
+      fill = FALSE,
+      color = "#000000",
+      weight = 2.5,
+      opacity = 0.9,
+      dashArray = "6 4",
+      options = pathOptions(pane = "boundaries", interactive = FALSE))
+}
+
+# function for adding a dropdown list (top right) that shows one map layer (and
+# its legend) at a time; groups are the layers' group names, in dropdown order,
+# and each layer's legend carries the class "indicator-legend-<position in
+# groups, from 0>". The layer at position selected (from 0) is shown first.
+fx_add_layer_dropdown <- function(map, groups, selected = 0) {
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        // show the selected layer and legend and hide the others
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) { if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); } }
+          });
+          el.querySelectorAll('.indicator-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('indicator-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Indicator</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.value = data.selected;
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(data.selected);
+      }", data = list(groups = groups, selected = selected))
+}
+
+# function for mapping the county-wide geography with a dropdown list of the
+# indicators in indicators_geo, each grouped into quintiles (the first indicator
+# is shown when the map opens; "None" shows only the geography). Community areas
+# have light grey borders and municipalities dark grey borders, and the city of
+# Chicago and Cook County boundaries are drawn on top. palette is any
+# RColorBrewer palette name (e.g., "YlGnBu", "Purples", "Greys")
+fx_map_indicators <- function(novel_geo_cook, indicators_geo, chicago_boundary, cook_county_boundary,
+                              indicators = health_indicators, palette = "YlGnBu") {
+  indicators <- filter(indicators, column %in% names(indicators_geo))
+
+  # all county-wide areas, with indicator values attached
+  map_data <- novel_geo_cook %>%
+    left_join(indicators_geo %>%
+                st_drop_geometry() %>%
+                select(geoid, all_of(indicators$column)),
+              by = "geoid") %>%
+    st_transform(crs = 4326)
+
+  labels <- fx_indicator_labels(map_data, indicators)
+  border_pal <- colorFactor(palette = c("lightgrey", "darkgrey"),
+                            levels = c("community area", "municipality"))
+  groups <- c("None (geography only)", indicators$name)
+
+  # geography only
+  map <- fx_basemap(map_data) %>%
+    addPolygons(
+      data = map_data,
+      label = lapply(labels, htmltools::HTML),
+      popup = labels,
+      weight = 1,
+      opacity = 1,
+      color = border_pal(map_data$type),
+      fillColor = "white",
+      fillOpacity = 0.2,
+      group = groups[1]) %>%
+    addLegend("bottomright",
+              colors = c("lightgrey", "darkgrey", "#000000", "#7a0019"),
+              labels = c("Community area (Chicago)", "Municipality (suburban Cook County)",
+                         "City of Chicago boundary", "Cook County boundary"),
+              title = "Boundaries",
+              opacity = 1)
+
+  # one layer (and legend) per indicator, grouped into quintiles
+  for (i in seq_len(nrow(indicators))) {
+    values <- map_data[[indicators$column[i]]]
+    if (all(is.na(values))) next # skip indicators without any data
+    pal <- fx_quintile_pal(values, palette = palette)
+    map <- map %>%
+      addPolygons(
+        data = map_data,
+        label = lapply(labels, htmltools::HTML),
+        popup = labels,
+        weight = 1,
+        opacity = 1,
+        color = border_pal(map_data$type),
+        fillColor = pal(values),
+        fillOpacity = 0.7,
+        group = groups[i + 1]) %>%
+      addLegend("bottomleft",
+                pal = pal,
+                values = values,
+                title = paste0(indicators$name[i], "<br/>(quintiles)"),
+                labFormat = fx_legend_format,
+                opacity = 0.7,
+                className = paste0("info legend indicator-legend indicator-legend-", i))
+  }
+
+  map %>%
+    fx_add_boundaries(chicago_boundary, cook_county_boundary) %>%
+    fx_add_layer_dropdown(groups, selected = if (length(groups) > 1) 1 else 0)
+}
+```
+
+```{r}
+#| label: step 4 correlation functions
+
+# function for calculating Pearson's bivariate correlations between every pair of
+# indicators; areas missing any indicator are left out
+fx_correlations <- function(indicators_geo, indicators = health_indicators) {
+  indicators_geo %>%
+    st_drop_geometry() %>%
+    select(any_of(indicators$column)) %>%
+    drop_na() %>%
+    cor(method = "pearson")
+}
+
+# function for plotting a correlation matrix, with indicators ordered so that
+# closely related indicators are next to each other; method is "number"
+# (correlation coefficients) or "circle" (graduated circles)
+fx_plot_correlations <- function(indicator_correlations, method = "number") {
+  corrplot(indicator_correlations,
+           method = method,
+           col = c("black", "white"),
+           order = "hclust",
+           bg = "lightgrey",
+           tl.col = "grey")
+}
+
+# function for formatting a correlation matrix as an interactive table
+fx_table_correlations <- function(indicator_correlations) {
+  indicator_correlations %>%
+    as.data.frame() %>%
+    rownames_to_column("indicator") %>%
+    datatable(class = 'cell-border stripe',
+              selection = "none",
+              rownames = FALSE,
+              colnames = c("Indicator" = "indicator"),
+              options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
+    formatRound(rownames(indicator_correlations), digits = 2)
+}
+```
+
+```{r}
+#| label: step 5 bivariate mapping function
+
+# function for mapping two indicators together (bivariate map) in three
+# categories (terciles) each, with a legend; x and y are indicator columns and
+# xlab and ylab label the legend. Areas without data are shown in light grey.
+# palette is a biscale palette: "Bluegill", "BlueGold", "BlueOr", "BlueYl",
+# "Brown"/"Brown2", "DkBlue"/"DkBlue2", "DkCyan"/"DkCyan2",
+# "DkViolet"/"DkViolet2", "GrPink"/"GrPink2", "PinkGrn", "PurpleGrn" or "PurpleOr"
+fx_map_bivariate <- function(indicators_geo, x, y, xlab = x, ylab = y, palette = "BlueGold",
+                             chicago_boundary = NULL) {
+  map_data <- indicators_geo %>%
+    drop_na(all_of(c(x, y))) %>%
+    bi_class(x = !!sym(x), y = !!sym(y), style = "quantile", dim = 3)
+
+  map <- ggplot() +
+    geom_sf(data = indicators_geo, fill = "grey90", color = "white", linewidth = 0.1) +
+    geom_sf(data = map_data,
+            mapping = aes(fill = bi_class),
+            color = "white",
+            linewidth = 0.1,
+            show.legend = FALSE) +
+    bi_scale_fill(pal = palette, dim = 3) +
+    bi_theme()
+
+  # optional city of Chicago boundary (dashed black line)
+  if (!is.null(chicago_boundary)) {
+    map <- map + geom_sf(data = chicago_boundary, fill = NA, color = "black",
+                         linewidth = 0.5, linetype = "dashed")
+  }
+
+  legend <- bi_legend(pal = palette,
+                      dim = 3,
+                      xlab = paste("Higher", xlab),
+                      ylab = paste("Higher", ylab),
+                      size = 8)
+
+  ggdraw() +
+    draw_plot(map, 0, 0, 1, 1) +
+    draw_plot(legend, 0.05, 0.05, 0.3, 0.3)
+}
+```
+
+# Geographic data
+## Novel county-wide geography
+Chicago community areas (N=77) and suburban Cook County municipalities of at least `min_place_sqmi` square miles (N=125) are combined into a single county-wide geography (N=202).
+
+```{r}
+#| label: novel county-wide geography
+
+community_areas <- read_atlas_topojson(url_community_areas,
+                                       file.path(data_dir, "community_areas_cache.topo.json"))
+places_cook_county <- read_atlas_topojson(url_places_scc,
+                                          file.path(data_dir, "places_scc_cache.topo.json"))
+
+novel_geo_cook <- fx_create_novel_geo(community_areas, places_cook_county, min_sqmi = min_place_sqmi)
+
+# check: number of areas by type (expect 77 community areas and 125 municipalities)
+count(st_drop_geometry(novel_geo_cook), type)
+
+rm(community_areas, places_cook_county)
+```
+
+## City of Chicago and Cook County boundaries
+The city of Chicago boundary merges all community areas. The Cook County boundary comes from the US Census Bureau's cartographic boundary file (via tigris), which is cached by tigris.
+
+```{r}
+#| label: city and county boundaries
+
+options(tigris_use_cache = TRUE)
+
+chicago_boundary <- novel_geo_cook %>%
+  filter(type == "community area") %>%
+  st_union() %>%
+  st_sf(name = "City of Chicago", geometry = .) %>%
+  st_transform(crs = 4326)
+
+cook_county_boundary <- counties(state = "IL", cb = TRUE, progress_bar = FALSE) %>%
+  filter(NAME == "Cook") %>%
+  select(name = NAME) %>%
+  st_transform(crs = 4326)
+```
+
+# Health survey indicators
+The indicators are downloaded with the same function students can use (`fx_download_indicators()`), except that each download is also cached in the data directory.
+
+```{r}
+#| label: health survey indicators
+
+indicators_all <- fx_download_indicators(health_indicators, read = read_atlas_cached)
+
+indicators_geo <- fx_join_indicators(indicators_all, novel_geo_cook)
+
+# check: areas with indicator data by type, and missing values by indicator
+count(st_drop_geometry(indicators_geo), type)
+colSums(is.na(st_drop_geometry(indicators_geo)[health_indicators$column]))
+```
+
+# Create Exercise_04.RData file
+
+```{r}
+#| label: save exercise elements to RData file
+
+# set CARTO_API_KEY in .Renviron; it is not stored in this script
+CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
+if (CARTO_API_KEY == "") warning("CARTO_API_KEY is empty; basemaps in Exercise_04.qmd need it")
+
+save(novel_geo_cook, chicago_boundary, cook_county_boundary,
+     health_indicators, atlas_urls, indicators_all, indicators_geo, CARTO_API_KEY,
+     # functions for Exercise #4
+     fx_create_novel_geo, fx_table_novel_geo,
+     fx_read_atlas_indicator, fx_download_indicators, fx_table_health_indicators,
+     fx_join_indicators, fx_table_indicators,
+     fx_basemap, fx_quintile_pal, fx_legend_format, fx_indicator_labels,
+     fx_add_boundaries, fx_add_layer_dropdown, fx_map_indicators,
+     fx_correlations, fx_plot_correlations, fx_table_correlations,
+     fx_map_bivariate,
+     file = exercise_file)
+```
