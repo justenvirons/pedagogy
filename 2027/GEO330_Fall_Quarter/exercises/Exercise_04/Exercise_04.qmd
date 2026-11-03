@@ -248,7 +248,7 @@ indicators_all_long_geo <- novel_geo_cook %>%
 
 Before measuring how indicators relate to one another, look at each indicator on its own. A univariate map shows one variable at a time and answers a simple question: *where* are rates high or low? It's easier to read correlations and bivariate maps once you know how each variable is distributed across the county.
 
-@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the dropdown list to display it as a thematic map. Hover over or click individual places to see their values.
+@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the "Indicator" dropdown list in the upper right of the map to display it as a thematic map, grouped into quintiles (each about 20 percent of places); places without data for the selected indicator are shown in light gray. Hover over or click individual places to see their values for every indicator.
 
 Explore **at least two** of the indicators you discussed on slide 1. For each one, consider:
 
@@ -270,26 +270,59 @@ Then compare your two maps. Do high (or low) values of the two indicators seem t
 #| echo: false
 #| eval: true
 #| label: fig-communityarea_sccplaces
-#| fig-cap: Novel Cook County Geography
+#| fig-cap: Health Survey Indicators by Novel Cook County Geography (Quintiles)
 #| warning: false
 
-map_pal <- 
+# display names for the indicators in the spatially enabled dataset (columns
+# named in a_topic_list); indicators without a name here use their column name
+indicator_names <- c(obesity = "Adult obesity rate",
+                     safety = "Neighborhood safety rate",
+                     sidewalk = "Neighborhood sidewalk quality rate",
+                     ambulatory = "Ambulatory difficulty rate",
+                     transit = "Ease of walking to transit stop rate",
+                     health = "Overall health status rate",
+                     inactivity = "Physical inactivity rate")
+map_indicators <- intersect(a_topic_list, names(indicators_all_long_geo))
+map_indicator_names <- ifelse(map_indicators %in% names(indicator_names),
+                              indicator_names[map_indicators],
+                              map_indicators)
+
+# all county-wide geographies, with indicator values attached (places without
+# data for an indicator are shown in grey)
+map_data <- novel_geo_cook %>% 
+  left_join(indicators_all_long_geo %>% 
+              st_drop_geometry() %>% 
+              select(geoid, all_of(map_indicators)),
+            by = "geoid") %>% 
+  st_transform(crs = 4326)
+
+# borders: light grey for community areas and dark grey for municipalities
+border_pal <- 
    colorFactor(palette = c("lightgrey", "darkgrey"), 
                levels = c("community area", "municipality"))
 
-# hover labels
-novel_geography_labels <- sprintf(
-  "<strong>%s</strong><br/>
-  <i>geoid: %s</i><br/>
-  type: %s<br/>
-  location: %s",
-  novel_geo_cook$name,
-  novel_geo_cook$geoid,
-  novel_geo_cook$type,
-  novel_geo_cook$location) %>%
-lapply(htmltools::HTML)
+# hover (and click) labels with every indicator value
+indicator_values <- sapply(seq_along(map_indicators), function(i) {
+  x <- map_data[[map_indicators[i]]]
+  sprintf("<i>%s:</i> %s<br/>", map_indicator_names[i],
+          ifelse(is.na(x), "no data", formatC(x, format = "f", digits = 1)))
+})
+indicator_values <- matrix(indicator_values, nrow = nrow(map_data))
+novel_geography_labels <- paste0(
+  "<strong>", map_data$name, "</strong><br/>",
+  "<i>geoid:</i> ", map_data$geoid, "<br/>",
+  "<i>type:</i> ", map_data$type, "<br/>",
+  "<i>location:</i> ", map_data$location, "<hr style='margin: 3px 0;'/>",
+  apply(indicator_values, 1, paste, collapse = ""))
+
+# legend values (quintile ranges) to one decimal place
+legend_format <- function(type, cuts, p) {
+  values <- formatC(cuts, format = "f", digits = 1)
+  paste0(values[-length(values)], " &ndash; ", values[-1])
+}
 
 # interactive map
+indicator_map <-
 leaflet() %>% 
   addTiles(urlTemplate = paste0(
       "https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
@@ -300,14 +333,86 @@ leaflet() %>%
   #   "CartoDB.Positron",
   #   group = "CartoDB.Positron") %>% 
   addPolygons(
-    data = novel_geo_cook %>% st_transform(crs=4326),
-    label = novel_geography_labels,
+    data = map_data,
+    label = lapply(novel_geography_labels, htmltools::HTML),
+    popup = novel_geography_labels,
     weight = 1,
-    opacity = 0.5,
-    fillColor = ~map_pal(novel_geo_cook$type),
-    color = "white",
-    fillOpacity = 0.7
-    )
+    opacity = 1,
+    fillColor = "white",
+    color = border_pal(map_data$type),
+    fillOpacity = 0.2,
+    group = "None (geography only)"
+    ) %>% 
+  addLegend("bottomright",
+            colors = c("lightgrey", "darkgrey"),
+            labels = c("Community area (Chicago)", "Municipality (suburban Cook County)"),
+            title = "Border",
+            opacity = 1)
+
+# one layer (and legend) per indicator, grouped into quintiles
+for (i in seq_along(map_indicators)) {
+  values <- map_data[[map_indicators[i]]]
+  if (all(is.na(values))) next # skip indicators without any data
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  indicator_pal <- colorBin(palette = "YlGnBu", domain = values, bins = breaks, na.color = "#e0e0e0")
+  indicator_map <- indicator_map %>% 
+    addPolygons(
+      data = map_data,
+      label = lapply(novel_geography_labels, htmltools::HTML),
+      popup = novel_geography_labels,
+      weight = 1,
+      opacity = 1,
+      fillColor = indicator_pal(values),
+      color = border_pal(map_data$type),
+      fillOpacity = 0.7,
+      group = map_indicator_names[i]) %>% 
+    addLegend("bottomleft",
+              pal = indicator_pal,
+              values = values,
+              title = paste0(map_indicator_names[i], "<br/>(quintiles)"),
+              labFormat = legend_format,
+              opacity = 0.7,
+              className = paste0("info legend indicator-legend indicator-legend-", i))
+}
+
+# dropdown list (top right) that shows one indicator layer and legend at a time;
+# the first indicator is shown when the map opens (choose "None" to show
+# only the geography)
+indicator_map %>% 
+  htmlwidgets::onRender("
+    function(el, x, data) {
+      var map = this;
+      var groups = [].concat(data.groups);
+      function show(i) {
+        groups.forEach(function(g, j) {
+          var layer = map.layerManager.getLayerGroup(g, false);
+          if (layer) { if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); } }
+        });
+        el.querySelectorAll('.indicator-legend').forEach(function(d) {
+          d.style.display = d.classList.contains('indicator-legend-' + i) ? '' : 'none';
+        });
+      }
+      var control = L.control({position: 'topright'});
+      control.onAdd = function() {
+        var div = L.DomUtil.create('div', 'leaflet-bar');
+        div.style.background = 'white';
+        div.style.padding = '4px 6px';
+        div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">Indicator</label>';
+        var select = L.DomUtil.create('select', '', div);
+        groups.forEach(function(g, j) {
+          var option = L.DomUtil.create('option', '', select);
+          option.value = j;
+          option.text = g;
+        });
+        select.value = groups.length > 1 ? 1 : 0;
+        select.onchange = function() { show(parseInt(select.value)); };
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        return div;
+      };
+      control.addTo(map);
+      show(groups.length > 1 ? 1 : 0);
+    }", data = list(groups = c("None (geography only)", map_indicator_names)))
 
 ```
 
