@@ -497,7 +497,10 @@ fx_map_bivariate <- function(indicators_geo, x, y, xlab = x, ylab = y, palette =
                              chicago_boundary = NULL) {
   map_data <- indicators_geo %>%
     drop_na(all_of(c(x, y))) %>%
-    bi_class(x = x, y = y, style = "quantile", dim = 3) # x and y are column names (strings)
+    # copy the two indicators to fixed column names, since bi_class() reads its
+    # x and y arguments as written rather than as variables
+    mutate(bi_x = .data[[x]], bi_y = .data[[y]]) %>%
+    bi_class(x = bi_x, y = bi_y, style = "quantile", dim = 3)
 
   map <- ggplot() +
     geom_sf(data = indicators_geo, fill = "grey90", color = "white", linewidth = 0.1) +
