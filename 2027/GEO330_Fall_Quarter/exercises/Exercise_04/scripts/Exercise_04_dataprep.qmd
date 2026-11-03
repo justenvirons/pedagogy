@@ -38,6 +38,9 @@ Each download is also saved as a cache file in the data directory, which is read
 
 data_dir <- "exercises/Exercise_04/data"
 
+# create the data directory if needed (git does not track empty directories)
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+
 # datasets and functions loaded by Exercise_04.qmd
 exercise_file <- file.path(data_dir, "Exercise_04.RData")
 
@@ -75,11 +78,15 @@ health_indicators <- tribble(
 # file (from an earlier run) is used instead. The download goes to a temporary
 # file first so a failed download does not overwrite the cache.
 download_cached <- function(url, cache) {
+  dir.create(dirname(cache), recursive = TRUE, showWarnings = FALSE)
   tmp <- tempfile(fileext = paste0(".", tools::file_ext(cache)))
   ok <- tryCatch({
     download.file(url, tmp, mode = "wb", quiet = TRUE)
-    file.copy(tmp, cache, overwrite = TRUE)
-  }, error = function(e) FALSE, warning = function(w) FALSE)
+    file.exists(tmp) && file.size(tmp) > 0 && file.copy(tmp, cache, overwrite = TRUE)
+  }, error = function(e) {
+    message("Download failed: ", conditionMessage(e))
+    FALSE
+  })
   if (!ok) {
     if (!file.exists(cache)) stop("Download failed and no cache file found: ", cache)
     message("Download failed; using cache file ", cache)
@@ -87,10 +94,23 @@ download_cached <- function(url, cache) {
   cache
 }
 
-# health atlas TopoJSON geographies (no CRS stored), in Illinois State Plane East
-# (epsg:3435) for spatial analysis
+# health atlas TopoJSON geographies, read directly from the atlas (no CRS stored),
+# in Illinois State Plane East (epsg:3435) for spatial analysis. Each successful
+# read is also saved as a GeoJSON cache file, which is read instead when the atlas
+# cannot be reached.
 read_atlas_topojson <- function(url, cache) {
-  st_read(download_cached(url, cache), quiet = TRUE) %>%
+  geo <- tryCatch(st_read(url, quiet = TRUE), error = function(e) {
+    message("Could not read ", url, ": ", conditionMessage(e))
+    NULL
+  })
+  if (is.null(geo)) {
+    if (!file.exists(cache)) stop("Could not read the atlas geography and no cache file found: ", cache)
+    message("Using cache file ", cache)
+    geo <- st_read(cache, quiet = TRUE)
+  } else {
+    st_write(st_set_crs(geo, 4326), cache, delete_dsn = TRUE, quiet = TRUE)
+  }
+  geo %>%
     st_as_sf() %>%
     st_set_crs(4326) %>%
     st_transform(3435)
@@ -515,9 +535,9 @@ Chicago community areas (N=77) and suburban Cook County municipalities of at lea
 #| label: novel county-wide geography
 
 community_areas <- read_atlas_topojson(url_community_areas,
-                                       file.path(data_dir, "community_areas_cache.topo.json"))
+                                       file.path(data_dir, "community_areas_cache.geojson"))
 places_cook_county <- read_atlas_topojson(url_places_scc,
-                                          file.path(data_dir, "places_scc_cache.topo.json"))
+                                          file.path(data_dir, "places_scc_cache.geojson"))
 
 novel_geo_cook <- fx_create_novel_geo(community_areas, places_cook_county, min_sqmi = min_place_sqmi)
 
