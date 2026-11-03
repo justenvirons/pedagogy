@@ -1,0 +1,22 @@
+/*-- scss:defaults --*/
+
+/*-- scss:rules --*/
+
+// Map legends: Leaflet legends are placed inside Quarto's centered figure
+// container and inherit text-align: center, so left-justify them explicitly.
+// The legend element itself carries the classes "info legend leaflet-control".
+.leaflet .info.legend {
+  text-align: left;
+}
+
+.leaflet .info.legend i {
+  float: left;
+  margin-right: 6px;
+}
+
+// Legends for station circles (e.g., change in boardings) show circles rather
+// than squares
+.leaflet .info.legend.circle-legend i {
+  border-radius: 50%;
+  border: 1px solid #fff;
+}

@@ -11,7 +11,7 @@ format:
     code-fold: false
     eval: false
     echo: true
-    theme: flatly
+    theme: [flatly, styles.scss]
     toc: true
     toc-depth: 3
     toc-location: left
@@ -248,7 +248,7 @@ indicators_all_long_geo <- novel_geo_cook %>%
 
 Before measuring how indicators relate to one another, look at each indicator on its own. A univariate map shows one variable at a time and answers a simple question: *where* are rates high or low? It's easier to read correlations and bivariate maps once you know how each variable is distributed across the county.
 
-@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the "Indicator" dropdown list in the upper right of the map to display it as a thematic map, grouped into quintiles (each about 20 percent of places); places without data for the selected indicator are shown in light gray. Hover over or click individual places to see their values for every indicator.
+@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the "Indicator" dropdown list in the upper right of the map to display it as a thematic map, grouped into quintiles (each about 20 percent of places); places without data for the selected indicator are shown in light gray. The city of Chicago boundary (dashed black line) and Cook County boundary (dark red line) make it easier to see where Chicago ends and suburban Cook County begins. Hover over or click individual places to see their values for every indicator.
 
 Explore **at least two** of the indicators you discussed on slide 1. For each one, consider:
 
@@ -321,6 +321,18 @@ legend_format <- function(type, cuts, p) {
   paste0(values[-length(values)], " &ndash; ", values[-1])
 }
 
+# city of Chicago boundary (all community areas merged) and Cook County boundary
+# (US Census Bureau cartographic boundary file, via tigris)
+options(tigris_use_cache = TRUE)
+chicago_boundary <- novel_geo_cook %>% 
+  filter(type == "community area") %>% 
+  st_union() %>% 
+  st_sf(name = "City of Chicago", geometry = .) %>% 
+  st_transform(crs = 4326)
+cook_county_boundary <- counties(state = "IL", cb = TRUE, progress_bar = FALSE) %>% 
+  filter(NAME == "Cook") %>% 
+  st_transform(crs = 4326)
+
 # interactive map
 indicator_map <-
 leaflet() %>% 
@@ -344,9 +356,10 @@ leaflet() %>%
     group = "None (geography only)"
     ) %>% 
   addLegend("bottomright",
-            colors = c("lightgrey", "darkgrey"),
-            labels = c("Community area (Chicago)", "Municipality (suburban Cook County)"),
-            title = "Border",
+            colors = c("lightgrey", "darkgrey", "#000000", "#7a0019"),
+            labels = c("Community area (Chicago)", "Municipality (suburban Cook County)",
+                       "City of Chicago boundary", "Cook County boundary"),
+            title = "Boundaries",
             opacity = 1)
 
 # one layer (and legend) per indicator, grouped into quintiles
@@ -374,6 +387,27 @@ for (i in seq_along(map_indicators)) {
               opacity = 0.7,
               className = paste0("info legend indicator-legend indicator-legend-", i))
 }
+
+# city of Chicago and Cook County boundaries, drawn above the indicator layers
+# in their own pane; they do not respond to the mouse, so the hover labels of
+# the places beneath them still work
+indicator_map <- indicator_map %>% 
+  addMapPane("boundaries", zIndex = 450) %>% 
+  addPolygons(
+    data = cook_county_boundary,
+    fill = FALSE,
+    color = "#7a0019",
+    weight = 3,
+    opacity = 0.9,
+    options = pathOptions(pane = "boundaries", interactive = FALSE)) %>% 
+  addPolygons(
+    data = chicago_boundary,
+    fill = FALSE,
+    color = "#000000",
+    weight = 2.5,
+    opacity = 0.9,
+    dashArray = "6 4",
+    options = pathOptions(pane = "boundaries", interactive = FALSE))
 
 # dropdown list (top right) that shows one indicator layer and legend at a time;
 # the first indicator is shown when the map opens (choose "None" to show
