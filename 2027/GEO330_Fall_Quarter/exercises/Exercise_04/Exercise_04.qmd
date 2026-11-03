@@ -497,6 +497,14 @@ corrplot_2
 Bivariate Correlation Plots (Pearson)
 :::
 
+On **slide 4** of your presentation, copy and paste your bivariate correlation plot (either the correlation coefficients or the graduated circles version, or both). Below the plot, write a short paragraph (4–6 sentences) explaining the results:
+
+1.  **Strongest relationships.** Identify the two or three strongest positive and negative correlations. Report each coefficient (r) and describe its direction in plain language (e.g., "places with higher physical inactivity rates tend to report poorer overall health").
+2.  **Weak or absent relationships.** Point out at least one pair of indicators with a weak relationship (r close to 0). Is that surprising?
+3.  **Active transportation.** Focus on the transportation-related indicators (sidewalk quality, neighborhood safety, ease of walking to a transit stop). Which health outcomes are most closely related to them, and what might that mean for walking, bicycling, and transit use?
+4.  **Revisit your predictions.** Compare the results with the hypotheses on slide 1 and the patterns in your univariate maps (slides 2 and 3). Which predictions were supported, which were not, and what might explain the differences?
+5.  **Limits of correlation.** Remember that correlation does not imply causation. Name at least one other factor (e.g., income, age, car ownership, land use) that could explain a relationship you observed.
+
 ::: {.callout-tip collapse="true"}
 ## VIDEO Step #4
 {{< video videos/Exercise_04_04.mp4 >}}
