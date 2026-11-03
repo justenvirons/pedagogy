@@ -1,5 +1,5 @@
 ---
-title: "GEO 3/430 Exercise #4"
+title: "Sustainable Urban Transportation: Exercise #4"
 subtitle: "Examining Relationships Between Transportation and Health Outcomes Across Public Health Jurisdictions"
 author: C. Scott Smith, PhD AICP (Instructor)
 email: c.scott.smith@depaul.edu
@@ -19,8 +19,8 @@ format:
     fontsize: 0.9em
     interlinespace: -0.75em
     embed-resources: false
-date: 2026-02-26
-bibliography: ../references.bib
+date: 2026-11-3
+bibliography: references.bib
 editor_options: 
   chunk_output_type: console
 ---
@@ -72,81 +72,11 @@ options(scipen=999, digits = 2) # format output for data tables
 
 ```
 
-# Step 2. Review public health indicators on atlases
+# Step 2. Create health and transportation indicator dataset
 
-The [suburban Cook County](https://cookcountyhealthatlas.org) and [city of Chicago](https://chicagohealthatlas.org) health atlases are published on similar online platforms. Both atlases provide a wide array of public health indicators on a range of topics. Comprehensive data dictionaries for each of the atlases can be downloaded via the following links ([SCC atlas indicator data dictionary](https://cookcountyhealthatlas.org/api/action/download/data-dictionary/); [Chicago atlas indicator data dictionary](https://chicagohealthatlas.org/api/action/download/data-dictionary/)). For this exercise, we will be using indicators derived from each jurisdictions' health survey. @fig-survey_indicators lists survey indicators for each of the jurisdictions along with their unique identifier keys. *Note that the following code was used to create the interactive table. It is for reference only and does not need to be copied into your custom R script.*
+## Combine countywide geographies
 
-```{r}
-#| code-fold: true
-#| eval: true
-#| echo: true
-
-# reference API url
-topic_list_scc_url <- "https://cookcountyhealthatlas.org/api/v1/topics/?format=json&limit=400"
-
-# download data in JSON format
-topic_list_scc_json <- fromJSON(topic_list_scc_url)
-
-# convert to dataframe
-survey_topic_list_scc <- topic_list_scc_json$results %>% 
-  as.data.frame() %>% 
-  filter(str_detect(name,"CCHS") &
-           !str_detect(name, "diabetes") &
-           is_count==FALSE) %>%
-  select(name,
-         key,
-         description) %>% 
-  mutate(location = "SCC")
-
-# reference API url
-topic_list_chicago_url <- "https://chicagohealthatlas.org/api/v1/topics/?format=json&limit=400"
-
-# download data in JSON format
-topic_list_chicago_json <- fromJSON(topic_list_chicago_url)
-
-# convert to dataframe
-survey_topic_list_chicago <- topic_list_chicago_json$results %>% 
-  as.data.frame() %>% 
-  filter(str_detect(key,"HCS") &
-           !str_detect(name, "diabetes") &
-           is_count==FALSE) %>%
-  select(name,
-         key,
-         description) %>% 
-  mutate(location = "Chicago")
-
-# bind SCC and Chicago indicator lists
-survey_topic_list <- survey_topic_list_scc %>% 
-  bind_rows(survey_topic_list_chicago) %>% 
-  relocate(location, .before = name)
-
-```
-
-```{r}
-#| label: fig-survey_indicators
-#| eval: true
-#| echo: false
-#| fig-cap: Health Survey Indicators
-
-# create searchable indicator table
-survey_topic_list %>% 
-    datatable(class = 'cell-border stripe',
-            rownames = FALSE,
-            options = list(pageLength = 10),
-            filter = "top") %>%
-  formatStyle(columns = c(1:4),
-              fontSize = '75%')
-
-```
-
-::: {.callout-tip collapse="true"}
-## VIDEO Step #2
-{{< video videos/Exercise_04_03.mp4 >}}
-:::
-
-# Step 3. Create novel county-wide geographic layer for mapping
-
-Use the following code to create a novel geography (N=202) that combines city of Chicago community areas (N=77) and suburban Cook County municipalities (N=125 using 4 square mile threshold area) using GEOJSON data imported from the two health atlases. @fig-communityarea_sccplaces displays an interactive map of the new geography (i.e., "novel_geo_cook"), which includes both suburban Cook County municipalities (dark gray) and community areas (light gray).
+Use the following code to create a novel geography (N=202) that combines city of Chicago community areas (N=77) and suburban Cook County municipalities (N=125 using 4 square mile threshold area) using GEOJSON data imported from the two health atlases.
 
 ```{r}
 #| eval: true
@@ -185,6 +115,156 @@ novel_geo_cook <- places_cook_county %>%
   st_make_valid()
 
 ```
+
+## Merge select suburban Cook County and city of Chicago indicators
+
+The next step is to download and merge similar indicator data from the two atlases for statistical analysis and mapping. Both suburban Cook County and the city of Chicago regularly survey their residents about health. Indicators derived from these surveys are shared on the atlases. Many indicators on the two atlases are aligned so that they can be compared across jurisdictions, including those below.
+
+The following code downloads and combines a selection of health survey indicators that are comparable across both atlases. Below are links to each jurisdiction's charts and thematic maps for the selected indicators. Before running any statistics, review the indicators and form your own hypotheses about how they relate to one another and to active transportation: walking, bicycling, and public transit use.
+
+-   Adult obesity rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8YZKL) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSOBP))
+-   Neighborhood safety rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8SRFE) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNSP))
+-   Neighborhood sidewalk quality rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8IQGF) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNSQP))
+-   Neighborhood ambulatory difficulty rate ([SCC](https://cookcountyhealthatlas.org/indicators/AMBDHSR) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSIDQZ))
+-   Ease of walking to transit stop rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8OWII) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSWTSP))
+-   Overall health status ([SCC](https://cookcountyhealthatlas.org/indicators/JG8OLNB) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSOHSP))
+-   Physical inactivity rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8MIQE) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSPAP))
+
+On **slide 1** of your presentation, speculate about the relationships between **two or more** of these indicators and how they may encourage or discourage active transportation. For each relationship you propose:
+
+1.  **State the relationship and its expected direction.** For example, communities with higher physical inactivity rates may also report poorer overall health status, or places with better sidewalk quality may report easier walking access to transit stops.
+2.  **Explain the mechanism.** Why might these indicators move together? Consider the built environment (sidewalks, transit access), perceptions (neighborhood safety), and individual capacity (ambulatory difficulty, obesity, overall health).
+3.  **Connect it to walking, bicycling, and/or transit use.** For example, does feeling unsafe in a neighborhood discourage walking to a bus stop at night? Can poor sidewalks turn a short walk to transit into a barrier for someone with ambulatory difficulty?
+4.  **Consider the direction of causality.** Does poor health lead to less walking and cycling, or does an environment that discourages active travel lead to poorer health? Could both be true, or could a third factor (e.g., income, car ownership, land use) explain both?
+5.  **Anticipate geographic differences.** Would you expect these relationships to look the same in Chicago and suburban Cook County? Why or why not?
+
+You will test these hypotheses with the merged data in the steps that follow, so treat this slide as a set of predictions that you will revisit.
+
+```{r}
+#| eval: true
+#| echo: true
+
+a_topic_list <- c("obesity", "safety", "sidewalk", "ambulatory", "transit", "health", "inactivity") # edit here
+a_scc_topic_keys <- c("JG8YZKL","JG8SRFE","JG8IQGF","AMBDHSR","JG8OWII","JG8OLNB","JG8MIQE") # edit here
+a_scc_topic_period <- c("2026","2026","2026","2026","2026","2026","2026") # edit here
+a_chicago_topic_keys <- c("HCSOBP", "HCSNSP","HCSNSQP","HCSIDQZ","HCSWTSP","HCSOHSP","HCSPAP") # edit here
+a_chicago_topic_period <- c("2023-2024","2023-2024","2023-2024","2022-2024","2023-2024","2023-2024","2023-2024") # edit here
+
+# download SCC health survey indicators
+for (i in 1:length(a_scc_topic_keys)){
+
+  atopic_key <- a_scc_topic_keys[i]
+  atopic_name <- a_topic_list[i]
+  atopic_period <- a_scc_topic_period[i]
+  
+  #print(atopic_name)
+  
+  a_table_name <- paste0("scc_indicator_",atopic_name)
+
+  a_topic_url <- paste0("https://cookcountyhealthatlas.org/api/v1/data/?format=json&layer=place&period=",atopic_period,"&population=&topic=",atopic_key)
+  
+  a_topic_json <- fromJSON(a_topic_url)
+
+  a_topic_df <- a_topic_json$results %>% 
+    as.data.frame() %>% 
+   select(estimate = v,
+          se = se,
+          geoid = g,
+          layer = l) %>%
+    mutate(topic = atopic_name)
+
+  assign(a_table_name, a_topic_df)
+  
+}
+
+# download Chicago health survey indicators
+for (i in 1:length(a_chicago_topic_keys)){
+
+  atopic_key <- a_chicago_topic_keys[i]
+  atopic_name <- a_topic_list[i]
+  atopic_period <- a_chicago_topic_period[i]
+  
+  #print(atopic_name)
+  
+  a_table_name <- paste0("chicago_indicator_",atopic_name)
+
+  a_topic_url <- paste0("https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&period=",atopic_period,"&population=&topic=",atopic_key)
+  
+  a_topic_json <- fromJSON(a_topic_url)
+
+  a_topic_df <- a_topic_json$results %>% 
+    as.data.frame() %>% 
+  select(estimate = v,
+         se = se,
+         geoid = g,
+         layer = l) %>%
+    mutate(topic = atopic_name,
+           geoid= str_replace(geoid,"1714000-",""))
+
+  assign(a_table_name, a_topic_df)
+  
+}
+
+# bind SCC and Chicago indicators together
+apattern <- "_indicator_"
+alist_indicators <- mget(ls(pattern=apattern))
+indicators_all <- rbindlist(alist_indicators)
+
+# remove unneeded tables
+rm(list=ls(pattern=apattern))
+
+```
+
+::: {.callout-tip collapse="true"}
+## VIDEO Step #2
+{{< video videos/Exercise_04_02.mp4 >}}
+:::
+
+# Step #3 Map and explore indicators
+
+## Join indicator attributes with county-wide geographies
+
+Next, use the code below to join the indicator attributes to the county-wide geography layer. The result is a spatially enabled table that you will use to make custom maps in the steps that follow.
+
+```{r}
+#| warning: false
+#| eval: true
+#| output: true
+
+# reformat indicators in wide format
+indicators_all_long <- indicators_all %>% 
+  pivot_wider(names_from = "topic", values_from = c("estimate","se")) %>% 
+  rename_with(~str_remove(., 'estimate_'))
+
+# join indicator data with county-wide "novel" geography layer
+indicators_all_long_geo <- novel_geo_cook %>% 
+  left_join(indicators_all_long, by="geoid") %>% 
+  st_as_sf() %>% 
+  drop_na(layer)
+
+```
+
+## Create univariate maps of select indicators
+
+Before measuring how indicators relate to one another, look at each indicator on its own. A univariate map shows one variable at a time and answers a simple question: *where* are rates high or low? It's easier to read correlations and bivariate maps once you know how each variable is distributed across the county.
+
+@fig-communityarea_sccplaces is an interactive map of the new geography ("novel_geo_cook"). It combines suburban Cook County municipalities (dark gray border) and Chicago community areas (light gray border), with the merged indicators attached. Choose an indicator from the dropdown list to display it as a thematic map. Hover over or click individual places to see their values.
+
+Explore **at least two** of the indicators you discussed on slide 1. For each one, consider:
+
+1.  **Overall pattern.** Are high and low rates clustered in certain parts of the county (e.g., the North Shore, the south suburbs, Chicago's South and West Sides, the downtown core)? Or are they scattered?
+2.  **Extremes and outliers.** Which places have the highest and lowest rates? Do any places stand out sharply from their neighbors?
+3.  **City–suburb boundary.** Do rates change abruptly at the Chicago city limits? If they do, think about whether that reflects real differences between places or differences in how the two jurisdictions run their surveys, word their questions, or estimate rates for small areas.
+4.  **Missing or unreliable data.** Are any places blank or flagged? How might gaps affect what you conclude?
+5.  **Comparison with your predictions.** Does the pattern match what you expected on slide 1? What surprised you, and what might explain it?
+
+On **slides 2 and 3** of your presentation, paste one univariate map per slide, each showing a different indicator. Under each map, write 2–3 sentences that:
+
+-   describe where rates are higher and lower,
+-   point out at least one specific place or cluster that stands out, and
+-   note whether the pattern supports, contradicts, or complicates the relationship you proposed on slide 1.
+
+Then compare your two maps. Do high (or low) values of the two indicators seem to show up in the same places? Note your impressions. You'll test them formally with correlations and bivariate maps in the next step.
 
 ```{r}
 #| echo: false
@@ -231,129 +311,13 @@ leaflet() %>%
 
 ```
 
+
 ::: {.callout-tip collapse="true"}
 ## VIDEO Step #3
-{{< video videos/Exercise_04_04.mp4 >}}
+{{< video videos/Exercise_04_03.mp4 >}}
 :::
 
-# Step 4. Merge suburban Cook County and city of Chicago health indicators
-
-The next step is to download and merge similar health indicator data from the two atlases for statistical analysis and mapping. Both suburban Cook County and the city of Chicago engage in regular health surveys of their resident populations. Indicators derived from these surveys are shared on the atlas. Many of the indicators on the two atlases are aligned in such a way that allows for comparisons across jurisdictions.
-
-The following code downloads and combines information for a selection of health survey indicators that are comparable across both atlases. Links to jurisdiction-specific thematic maps for the selected indicators are provided below. *Using the survey indicators table @fig-survey_indicators above, add two additional health indicators to the lists below. That is, add a one-word indicator name to the "a_topic_list", and the associated indicator keys to the SCC and Chicago lists in the appropriate format.*
-
--   Adult obesity rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8YZKL) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSOBP))
--   Neighborhood safety rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8SRFE) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNSP))
--   Neighborhood sidewalk quality rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8IQGF) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNSQP))
--   Neighborhood violence rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8QFWF) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSNVP))
--   Ease of walking to transit stop rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8OWII) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSWTSP))
--   Overall health status ([SCC](https://cookcountyhealthatlas.org/indicators/JG8OLNB) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSOHSP))
--   Physical inactivity rate ([SCC](https://cookcountyhealthatlas.org/indicators/JG8MIQE) \| [Chicago](https://chicagohealthatlas.org/indicators/HCSPAP))
-
-```{r}
-#| eval: true
-#| echo: true
-
-a_topic_list <- c("obesity","safety", "sidewalk", "violence", "transit", "health", "inactivity") # edit here
-a_scc_topic_keys <- c("JG8YZKL","JG8SRFE","JG8IQGF","JG8QFWF","JG8OWII","JG8OLNB","JG8MIQE") # edit here
-a_chicago_topic_keys <- c("HCSOBP", "HCSNSP","HCSNSQP","HCSNVP","HCSWTSP","HCSOHSP","HCSPAP") # edit here
-
-# download SCC health survey indicators
-for (i in 1:length(a_scc_topic_keys)){
-
-  atopic_key <- a_scc_topic_keys[i]
-  atopic_name <- a_topic_list[i]
-  
-  #print(atopic_name)
-  
-  a_table_name <- paste0("scc_indicator_",atopic_name)
-
-  a_topic_url <- paste0("https://cookcountyhealthatlas.org/api/v1/data/?format=json&layer=place&period=2022&population=&topic=",atopic_key)
-  
-  a_topic_json <- fromJSON(a_topic_url)
-
-  a_topic_df <- a_topic_json$results %>% 
-    as.data.frame() %>% 
-   # select(estimate = v,
-   #        se = se,
-   #        geoid = g,
-   #        layer = l) %>%
-    mutate(topic = atopic_name)
-
-  assign(a_table_name, a_topic_df)
-  
-}
-
-# download Chicago health survey indicators
-for (i in 1:length(a_chicago_topic_keys)){
-
-  atopic_key <- a_chicago_topic_keys[i]
-  atopic_name <- a_topic_list[i]
-  
-  #print(atopic_name)
-  
-  a_table_name <- paste0("chicago_indicator_",atopic_name)
-
-  a_topic_url <- paste0("https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&period=2021-2022&population=&topic=",atopic_key)
-  
-  a_topic_json <- fromJSON(a_topic_url)
-
-  a_topic_df <- a_topic_json$results %>% 
-    as.data.frame() %>% 
-  select(estimate = v,
-         se = se,
-         geoid = g,
-         layer = l) %>%
-    mutate(topic = atopic_name,
-           geoid= str_replace(geoid,"1714000-",""))
-
-  assign(a_table_name, a_topic_df)
-  
-}
-
-# bind SCC and Chicago indicators together
-apattern <- "_indicator_"
-alist_indicators <- mget(ls(pattern=apattern))
-indicators_all <- rbindlist(alist_indicators)
-
-# remove unneeded tables
-rm(list=ls(pattern=apattern))
-
-```
-
-::: {.callout-tip collapse="true"}
-## VIDEO Step #4
-{{< video videos/Exercise_04_05.mp4 >}}
-:::
-
-# Step 5. Join indicator attributes with county-wide geographies
-
-Now join indicator attributes to the county-wide geography layer using the code below. This spatially-enabled table will be used in Step 8 to create custom univariate and bivariate maps.
-
-```{r}
-#| warning: false
-#| eval: true
-#| output: true
-
-# reformat indicators in wide format
-indicators_all_long <- indicators_all %>% 
-  pivot_wider(names_from = "topic", values_from = c("estimate","se")) %>% 
-  rename_with(~str_remove(., 'estimate_'))
-
-# join indicator data with county-wide "novel" geography layer
-indicators_all_long_geo <- novel_geo_cook %>% 
-  left_join(indicators_all_long, by="geoid") %>% 
-  st_as_sf() %>% 
-  drop_na(layer)
-
-```
-
-::: {.callout-tip collapse="true"}
-## VIDEO Step #5
-{{< video videos/Exercise_04_06.mp4 >}}
-:::
-
-# Step 6. Examine statistical relationships between selected variables
+# Step 4. Examine statistical relationships between selected variables
 
 Use the code below to create a bivariate correlation plot to explore the statistical relationships between the seven downloaded indicator variables. Pearson's bivariate correlation (or Pearson's r) quantifies the strength and direction of the linear relationship between each pair of variables. The coefficients ranges from -1 to +1 with values greater than 0 indicating positive linear relationships (i.e., as one variable increases, the other variable also increases) and values less than 0 indicating a negative linear relationship (i.e., as one variable decreases, the other variable also decreases). @fig-correlation_plots shows two plots based on the same correlation matrix: Plot 1 shows explicit correlation statistics and plot 2 shows graduated circles.
 
@@ -395,11 +359,11 @@ Bivariate Correlation Plots (Pearson)
 :::
 
 ::: {.callout-tip collapse="true"}
-## VIDEO Step #6
-{{< video videos/Exercise_04_07.mp4 >}}
+## VIDEO Step #4
+{{< video videos/Exercise_04_04.mp4 >}}
 :::
 
-# Step 7. Create custom maps
+# Step 5. Create two custom bivariate maps
 
 Adapt the code below (i.e.., look for the "edit here" comments) to create two custom single variable (univariate) and bivariate thematic / choropleth maps similar to those displayed in @fig-univariate_maps and @fig-bivariate_map. The univariate maps are categorized into quintiles from quintile 1 (representing the lowest performing areas) to quintile 5 (the highest performing areas). Each quintile represents about 20 percent of the geographies mapped (i.e., about 40). *Add your custom maps to slides 2-4 of your presentation and describe the spatial patterns you see in each map.*
 
@@ -408,71 +372,38 @@ Adapt the code below (i.e.., look for the "edit here" comments) to create two cu
 #| echo: true
 #| output: true
 
-# Create two custom, single variable (univariate) maps and one bivariate thematic/choropleth map # modify variable(s) to be mapped and legend names/titles for all maps
-
-# map.HEALTH
-map.Health <- ggplot() + geom_sf(data=indicators_all_long_geo,
-                                  mapping = aes(fill = ntile(health, 5)), # edit here
-                               size = 0.1) + 
-  scale_fill_distiller(name="Health", # edit here
-                       palette = "Greys", 
-                       breaks = pretty_breaks(),
-                       direction = 1) + 
-  theme_minimal()
-
-# map.Transit
-map.Transit <- ggplot() + geom_sf(data=indicators_all_long_geo,
-                   mapping = aes(fill = ntile(transit, 5)), # edit here
-                   size = 0.1) + 
-  scale_fill_distiller(name="Transit", # edit here
-                       palette = "Greys", 
-                       breaks = pretty_breaks(n=4),
-                       direction = 1) + 
-  theme_minimal()
-  
-# create custom bivariate map based on two component variables
-# bivariate map data
-map.bivariate.data <- bi_class(indicators_all_long_geo, 
-                 x = health, # edit here
-                 y = transit, # edit here
-                 style = "quantile", dim = 3)
-
-# bivariate map 1 plot
-# Available palettes: "Bluegill", "BlueGold", "BlueOr", "BlueYl",
-# "Brown"/"Brown2", "DkBlue"/"DkBlue2", "DkCyan"/"DkCyan2",
-# "DkViolet"/"DkViolet2", "GrPink"/"GrPink2", "PinkGrn", "PurpleGrn", or
-# "PurpleOr"
-
-map <- ggplot() +
-  geom_sf(data = map.bivariate.data, 
-          mapping = aes(fill = bi_class), 
-          color = "grey", 
-          size = 0.01, 
-          show.legend = FALSE) +
-  bi_scale_fill(pal = "BlueGold", dim = 3) + 
-  bi_theme()
+# Create two bivariate thematic/choropleth maps 
+# modify variable(s) to be mapped and legend names/titles for all maps
 
 # bivariate map 1 legend
-map.legend <- bi_legend(pal = "BlueGold",
+map1.legend <- bi_legend(pal = "BlueGold",
                     dim = 3,
                     xlab = "Health", # edit here
                     ylab = "Access", # edit here
                     size = 8,
                     pad_width = 1)
 
-map.bivariate <- ggdraw() +
-  draw_plot(map, 0, 0, 1, 1) +
-  draw_plot(map.legend, 0.2, 0.45, 0.35, 0.2)
-
-
-# display health map
-map.Health
-
-# display transit access map
-map.Transit
+map1.bivariate <- ggdraw() +
+  draw_plot(map1, 0, 0, 1, 1) +
+  draw_plot(map1.legend, 0.2, 0.45, 0.35, 0.2)
 
 # display bivariate map
-map.bivariate
+map1.bivariate
+
+# bivariate map 2 legend
+map2.legend <- bi_legend(pal = "BlueGold",
+                    dim = 3,
+                    xlab = "Health", # edit here
+                    ylab = "Access", # edit here
+                    size = 8,
+                    pad_width = 1)
+
+map2.bivariate <- ggdraw() +
+  draw_plot(map1, 0, 0, 1, 1) +
+  draw_plot(map1.legend, 0.2, 0.45, 0.35, 0.2)
+
+# display bivariate map 2
+map2.bivariate
 ```
 
 ::: {#fig-univariate_maps layout-ncol=2}
@@ -492,6 +423,6 @@ Bivariate Map
 :::
 
 ::: {.callout-tip collapse="true"}
-## VIDEO Step #7
+## VIDEO Step #5
 {{< video videos/Exercise_04_08.mp4 >}}
 :::
