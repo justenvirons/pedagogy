@@ -60,10 +60,22 @@ fx_links <- function(files) {
              collapse = "\n"), "\n")
 }
 
+# simplified polygons for display: each map layer embeds its own copy of the
+# boundaries in the HTML, so vertices closer than tol_ft (feet) are removed. The
+# downloadable datasets keep the full boundaries.
+fx_simplify <- function(data, tol_ft = 50) {
+  data %>%
+    st_transform(3435) %>%
+    st_simplify(preserveTopology = TRUE, dTolerance = tol_ft) %>%
+    st_transform(4326)
+}
+
 # base map: CARTO light basemap, reset and full screen buttons; canvas rendering
-# keeps maps with many points responsive
+# keeps maps with many points responsive. Coordinates are written to the HTML with
+# 5 decimal places (about 1 meter), which keeps the file small.
 fx_basemap <- function(map_data) {
   map <- leaflet(data = st_transform(map_data, 4326), options = leafletOptions(preferCanvas = TRUE))
+  attr(map$x, "TOJSON_ARGS") <- list(digits = 5)
   map <- if (nzchar(CARTO_API_KEY)) {
     addTiles(map,
              urlTemplate = paste0("https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
@@ -98,7 +110,7 @@ fx_legend_format <- function(digits = 1) {
   }
 }
 
-# hover (and click) labels: the value of title_col in bold, then each field in
+# hover labels (and, for polygons, click popups): the value of title_col in bold, then each field in
 # fields (a named vector of column names; names are the labels shown)
 fx_labels <- function(data, title_col, fields, digits = 1) {
   data <- st_drop_geometry(data)
@@ -119,7 +131,7 @@ fx_labels <- function(data, title_col, fields, digits = 1) {
 # chosen from the dropdown list (index is the layer's position in the list, from 0)
 fx_add_choropleth <- function(map, data, column, group, index, labels, palette = "YlOrRd",
                               type = "quintile", digits = 1, title = group) {
-  data <- st_transform(data, 4326)
+  data <- fx_simplify(data)
   values <- data[[column]]
   pal <- fx_pal(values, palette, type)
   map %>%
@@ -157,7 +169,6 @@ fx_add_point_layer <- function(map, data, column, group, index, labels, palette 
                      color = "#444444",
                      weight = 0.5,
                      label = lapply(labels, HTML),
-                     popup = labels,
                      group = group) %>%
     addLegend("bottomleft",
               pal = pal,
@@ -251,7 +262,6 @@ fx_add_crash_points <- function(map, crashes, injury_col, group, labels, title =
                      color = "#444444",
                      weight = 0.3,
                      label = lapply(labels, HTML),
-                     popup = labels,
                      group = group) %>%
     addLegend("bottomright",
               colors = c("#67000d", "#d7301f", "#fc8d59", "#fdcc8a", "#bdbdbd"),
@@ -300,7 +310,7 @@ Each group's datasets are available in three formats:
 - **CSV (`.csv`)**: tables without geometry for Excel, Google Sheets or Tableau. Point tables include latitude and longitude, and community area tables include `comarea_id` and `comarea_name`, which can be joined to community area boundaries.
 - **R data (`.RData`)**: all of a group's datasets (and the community area boundaries) for R or Posit Cloud, e.g., `load(url("https://justenvirons.org/pedagogy/GEO330/projects/data/group01_bike_crashes.RData"))`.
 
-Spatial data are in WGS84 longitude and latitude (EPSG:4326); transform them to Illinois State Plane East (EPSG:3435, feet) to measure distances and areas. Hover over (or click) map features to see their values, use the dropdown lists to change what the maps show, and use the tables' search boxes and column filters to find records.
+Spatial data are in WGS84 longitude and latitude (EPSG:4326); transform them to Illinois State Plane East (EPSG:3435, feet) to measure distances and areas. Hover over map features (or click areas) to see their values, use the dropdown lists to change what the maps show, and use the tables' search boxes and column filters to find records.
 
 # Group 1: E-bike safety and legislation in the city of Chicago
 
@@ -737,7 +747,6 @@ fx_basemap(motorcycle_fatalities_ca) %>%
                    color = "#222222",
                    weight = 1,
                    label = lapply(g4_point_labels, HTML),
-                   popup = g4_point_labels,
                    group = "Fatal crashes (points)") %>%
   addLegend("bottomright",
             pal = g4_year_pal,
@@ -937,7 +946,7 @@ g6_map <- fx_basemap(ohare_travel_ca) %>%
 if (nrow(g6_route_ca) > 0) {
   g6_map <- g6_map %>%
     addMapPane("route", zIndex = 450) %>%
-    addPolygons(data = g6_route_ca,
+    addPolygons(data = fx_simplify(g6_route_ca),
                 fill = FALSE,
                 color = "#000000",
                 weight = 2.5,
