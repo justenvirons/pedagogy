@@ -1,0 +1,472 @@
+---
+title: "Final group projects data prep"
+output: html_document
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#| label: activate packages and set working directory
+
+library(tidyverse)
+library(lubridate)
+library(jsonlite) # Chicago Health Atlas API
+library(sf)
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
+```
+
+# Purpose
+This document stores the code used to create datasets for the GEO 330 final group projects, along with descriptions of each dataset and suggestions for how it may inform a group's analyses. Datasets are added iteratively, one group at a time:
+
+| Group | Topic | Datasets |
+|-------|-------|----------|
+| 1 | E-bike safety and legislation in the city of Chicago | Bicycle crashes (points); bicycle crashes by community area and year (polygons) |
+
+Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
+
+# Settings
+```{r}
+#| label: settings
+
+data_dir <- "projects/data"
+
+# create the data directory if needed (git does not track empty directories)
+dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Chicago Data Portal (Socrata) datasets
+portal_resource <- "https://data.cityofchicago.org/resource/%s.csv"
+id_crashes <- "85ca-t3if" # Traffic Crashes - Crashes
+id_people <- "u6pd-qa9d"  # Traffic Crashes - People
+url_community_areas <- "https://data.cityofchicago.org/resource/igwz-8jzy.geojson"
+
+# Chicago Health Atlas community area population (same as Exercise #3)
+url_health_atlas <- "https://chicagohealthatlas.org/api/v1/data/?format=json&layer=neighborhood&population=&period=%s&topic=%s"
+population_period <- "2020-2024"
+
+# maximum number of rows returned by a single portal request
+soql_limit <- 1000000
+```
+
+# Functions for data development
+```{r}
+#| label: data development functions
+
+# download a file to its cache path; if the download fails, the existing cache
+# file (from an earlier run) is used instead. The download goes to a temporary
+# file first so a failed download does not overwrite the cache.
+download_cached <- function(url, cache) {
+  dir.create(dirname(cache), recursive = TRUE, showWarnings = FALSE)
+  tmp <- tempfile(fileext = paste0(".", tools::file_ext(cache)))
+  ok <- tryCatch({
+    download.file(url, tmp, mode = "wb", quiet = TRUE)
+    file.exists(tmp) && file.size(tmp) > 0 && file.copy(tmp, cache, overwrite = TRUE)
+  }, error = function(e) {
+    message("Download failed: ", conditionMessage(e))
+    FALSE
+  })
+  if (!ok) {
+    if (!file.exists(cache)) stop("Download failed and no cache file found: ", cache)
+    message("Download failed; using cache file ", cache)
+  }
+  cache
+}
+
+# Chicago Data Portal request (SoQL) URL for a dataset id, e.g.
+# soql_url(id_crashes, `$where` = "first_crash_type = 'PEDALCYCLIST'")
+soql_url <- function(id, ...) {
+  params <- list(...)
+  values <- map_chr(params, ~ URLencode(format(.x, scientific = FALSE, trim = TRUE), reserved = TRUE))
+  paste0(sprintf(portal_resource, id), "?", paste0(names(params), "=", values, collapse = "&"))
+}
+
+# portal CSV read as text; columns are converted where they are used
+read_portal_csv <- function(url, cache) {
+  read_csv(download_cached(url, cache), col_types = cols(.default = col_character()))
+}
+
+read_portal_geojson <- function(url, cache) {
+  st_read(download_cached(url, cache), quiet = TRUE)
+}
+
+# portal records for a long list of ids, requested in batches (to keep URLs short)
+# and combined into a single cache file
+read_portal_ids <- function(id, field, ids, cache, batch_size = 40) {
+  if (length(ids) == 0) return(tibble())
+  batches <- split(ids, ceiling(seq_along(ids) / batch_size))
+  result <- tryCatch({
+    map(batches, function(batch) {
+      where <- sprintf("%s in (%s)", field, paste0("'", batch, "'", collapse = ","))
+      read_csv(soql_url(id, `$where` = where, `$limit` = soql_limit),
+               col_types = cols(.default = col_character()))
+    }) %>%
+      bind_rows()
+  }, error = function(e) {
+    message("Download failed: ", conditionMessage(e))
+    NULL
+  })
+  if (is.null(result)) {
+    if (!file.exists(cache)) stop("Download failed and no cache file found: ", cache)
+    message("Download failed; using cache file ", cache)
+    return(read_csv(cache, col_types = cols(.default = col_character())))
+  }
+  write_csv(result, cache)
+  result
+}
+```
+
+# Shared geographic data
+## Community areas
+Community area boundaries (N=77) are downloaded from the [Chicago Data Portal](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data) and projected to Illinois State Plane East (epsg:3435, US feet) for spatial analysis. Population (2020-2024 American Community Survey estimates) comes from the [Chicago Health Atlas](https://chicagohealthatlas.org) and is used to calculate rates.
+
+```{r}
+#| label: community areas
+
+community_areas <- read_portal_geojson(url_community_areas,
+                                       file.path(data_dir, "community_areas_cache.geojson")) %>%
+  st_transform(3435) %>%
+  mutate(comarea_id = as.numeric(area_numbe),
+         comarea_name = str_to_title(community),
+         area_sqmi = as.numeric(st_area(geometry)) / 27878400) %>% # square feet to square miles
+  select(comarea_id, comarea_name, area_sqmi) %>%
+  arrange(comarea_id)
+
+community_areas_population <- fromJSON(download_cached(
+  sprintf(url_health_atlas, population_period, "POP"),
+  file.path(data_dir, "health_atlas_population_cache.json")))$results %>%
+  as.data.frame() %>%
+  filter(str_starts(g, "1714000-")) %>% # Chicago community areas (results include other cities)
+  transmute(comarea_id = as.numeric(str_replace(g, "1714000-", "")),
+            population = as.numeric(v)) %>%
+  drop_na(comarea_id)
+
+community_areas <- community_areas %>%
+  left_join(community_areas_population, by = "comarea_id")
+```
+
+# Group 1: E-bike safety and legislation in the city of Chicago
+## Project overview
+Group 1 is examining how e-bike legislation relates to bicyclist injuries, and which other factors (e.g., bike infrastructure and street connectivity) might influence those outcomes. The datasets below describe where, when and under what conditions bicycle crashes occurred in Chicago over the past five full calendar years, and how crash counts, severe injuries and rates differ among community areas and change over time.
+
+## Settings
+```{r}
+#| label: group 1 settings
+
+# five full calendar years of crashes (update each year)
+g1_years <- 2021:2025
+
+# crash dates are local (Chicago) time
+g1_where_dates <- sprintf("crash_date >= '%d-01-01T00:00:00' AND crash_date < '%d-01-01T00:00:00'",
+                          min(g1_years), max(g1_years) + 1)
+
+# crashes farther than this distance (feet) from a community area are left unassigned
+g1_snap_ft <- 500
+
+# bicyclist injury classifications, least to most severe
+injury_levels <- c("NO INDICATION OF INJURY", "REPORTED, NOT EVIDENT",
+                   "NONINCAPACITATING INJURY", "INCAPACITATING INJURY", "FATAL")
+
+# output files
+g1_gpkg <- file.path(data_dir, "group01_bike_crashes.gpkg")
+g1_rdata <- file.path(data_dir, "group01_bike_crashes.RData")
+```
+
+## Data sources
+Crash records come from two related Chicago Data Portal datasets, joined by `crash_record_id`:
+
+- [Traffic Crashes - Crashes](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data): one record per crash on city streets within the city of Chicago, reported by the Chicago Police Department (CPD), with the crash's location, conditions, contributing causes and crash-level injury totals.
+- [Traffic Crashes - People](https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data): one record per person involved in a crash (drivers, passengers, pedestrians and bicyclists), with each person's injury classification, age and sex.
+
+A crash is identified as a **bicycle crash** when its first crash type is `PEDALCYCLIST` (Crashes dataset) *or* at least one person involved was a bicyclist (`person_type = 'BICYCLE'`, People dataset). Using both captures crashes in which a bicyclist was involved but the first harmful event was something else (e.g., a vehicle that struck a parked car and then a bicyclist).
+
+## Download bicycle crash records
+```{r}
+#| label: group 1 download crash records
+
+# bicyclists involved in crashes
+g1_people <- read_portal_csv(
+  soql_url(id_people,
+           `$where` = paste(g1_where_dates, "AND person_type = 'BICYCLE'"),
+           `$limit` = soql_limit),
+  file.path(data_dir, "group01_people_bicycle_cache.csv"))
+
+# crashes with a first crash type of PEDALCYCLIST
+g1_crashes_pedalcyclist <- read_portal_csv(
+  soql_url(id_crashes,
+           `$where` = paste(g1_where_dates, "AND first_crash_type = 'PEDALCYCLIST'"),
+           `$limit` = soql_limit),
+  file.path(data_dir, "group01_crashes_pedalcyclist_cache.csv"))
+
+# other crashes involving a bicyclist
+g1_crashes_other <- read_portal_ids(
+  id_crashes, "crash_record_id",
+  setdiff(unique(g1_people$crash_record_id), g1_crashes_pedalcyclist$crash_record_id),
+  file.path(data_dir, "group01_crashes_other_cache.csv"))
+
+g1_crashes_raw <- bind_rows(g1_crashes_pedalcyclist, g1_crashes_other) %>%
+  distinct(crash_record_id, .keep_all = TRUE)
+```
+
+## Bicyclists by crash
+Bicyclist records are summarized by crash: the number of bicyclists involved, the number killed and seriously (incapacitating) injured, and the injury classification, age, sex, action, visibility and location of the most severely injured bicyclist. Bicyclist injuries are more useful than the crash-level injury columns for a bicycle safety analysis, because the crash-level columns also count injuries to drivers and passengers.
+
+```{r}
+#| label: group 1 bicyclists by crash
+
+g1_cyclists <- g1_people %>%
+  mutate(injury = factor(injury_classification, levels = injury_levels, ordered = TRUE),
+         age = as.numeric(age),
+         age = if_else(age <= 0 | age > 110, NA_real_, age)) %>% # implausible ages
+  arrange(crash_record_id, desc(injury)) %>%
+  group_by(crash_record_id) %>%
+  summarise(n_cyclists = n(),
+            n_cyclists_killed = sum(injury == "FATAL", na.rm = TRUE),
+            n_cyclists_seriously_injured = sum(injury == "INCAPACITATING INJURY", na.rm = TRUE),
+            n_cyclists_injured = sum(injury >= "NONINCAPACITATING INJURY", na.rm = TRUE),
+            cyclist_injury = as.character(first(injury)),
+            cyclist_age = first(age),
+            cyclist_sex = first(sex),
+            cyclist_action = first(pedpedal_action),
+            cyclist_visibility = first(pedpedal_visibility),
+            cyclist_location = first(pedpedal_location),
+            .groups = "drop")
+```
+
+## Bicycle crash points
+Crashes are located with their latitude and longitude, and attributed with the community area they fall within. Crashes with missing coordinates are dropped, and crashes just outside a community area boundary (e.g., on a bridge or along the lakefront) are assigned to the nearest community area within `g1_snap_ft` feet.
+
+```{r}
+#| label: group 1 bicycle crash points
+
+g1_crashes <- g1_crashes_raw %>%
+  mutate(bike_source = case_when(
+    first_crash_type == "PEDALCYCLIST" & crash_record_id %in% g1_people$crash_record_id ~ "both",
+    first_crash_type == "PEDALCYCLIST" ~ "first crash type",
+    TRUE ~ "bicyclist record")) %>%
+  select(crash_record_id, crash_date, posted_speed_limit, traffic_control_device,
+         weather_condition, lighting_condition, first_crash_type, trafficway_type,
+         roadway_surface_cond, crash_type, intersection_related_i, hit_and_run_i,
+         dooring_i, prim_contributory_cause, sec_contributory_cause, street_no,
+         street_direction, street_name, num_units, damage, most_severe_injury,
+         injuries_total, injuries_fatal, injuries_incapacitating, latitude, longitude,
+         bike_source) %>%
+  mutate(crash_date = ymd_hms(crash_date, tz = "America/Chicago", truncated = 3),
+         crash_year = year(crash_date),
+         crash_month = month(crash_date),
+         crash_hour = hour(crash_date),
+         crash_day_of_week = wday(crash_date, label = TRUE, abbr = TRUE),
+         across(c(posted_speed_limit, num_units, injuries_total, injuries_fatal,
+                  injuries_incapacitating, latitude, longitude), as.numeric),
+         across(c(intersection_related_i, hit_and_run_i, dooring_i), ~ replace_na(.x, "N")),
+         ksi_crash = injuries_fatal + injuries_incapacitating > 0) %>%
+  left_join(g1_cyclists, by = "crash_record_id") %>%
+  mutate(n_cyclists = replace_na(n_cyclists, 0),
+         across(c(n_cyclists_killed, n_cyclists_seriously_injured, n_cyclists_injured),
+                ~ replace_na(.x, 0))) %>%
+  filter(crash_year %in% g1_years) %>%
+  arrange(crash_date)
+
+# crashes without usable coordinates (reported in the checks below)
+g1_crashes_unlocated <- g1_crashes %>%
+  filter(is.na(latitude) | is.na(longitude) | latitude == 0 | longitude == 0)
+
+bike_crashes <- g1_crashes %>%
+  anti_join(g1_crashes_unlocated, by = "crash_record_id") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435)
+
+# nearest community area and distance (0 for crashes within a community area)
+nearest_ca <- st_nearest_feature(bike_crashes, community_areas)
+nearest_ft <- as.numeric(st_distance(bike_crashes, community_areas[nearest_ca, ], by_element = TRUE))
+
+bike_crashes <- bike_crashes %>%
+  mutate(comarea_id = if_else(nearest_ft <= g1_snap_ft,
+                              community_areas$comarea_id[nearest_ca], NA_real_)) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name),
+            by = "comarea_id") %>%
+  relocate(comarea_id, comarea_name, .before = bike_source)
+
+rm(nearest_ca, nearest_ft)
+```
+
+## Bicycle crashes by community area and year
+Crashes are counted by community area and year. Every community area appears in every year (N = 77 x 5 = 385 rows), with zeros where no crashes occurred. Rates use the community area's 2020-2024 population and land area, so changes between years reflect changes in crashes, not population.
+
+```{r}
+#| label: group 1 crashes by community area and year
+
+g1_count_cols <- c("crashes", "crashes_injury", "crashes_ksi", "crashes_dooring",
+                   "crashes_hit_and_run", "cyclists_injured", "cyclists_seriously_injured",
+                   "cyclists_killed")
+
+bike_crashes_ca_year_table <- bike_crashes %>%
+  st_drop_geometry() %>%
+  filter(!is.na(comarea_id)) %>%
+  group_by(comarea_id, crash_year) %>%
+  summarise(crashes = n(),
+            crashes_injury = sum(injuries_total > 0, na.rm = TRUE),
+            crashes_ksi = sum(ksi_crash, na.rm = TRUE),
+            crashes_dooring = sum(dooring_i == "Y"),
+            crashes_hit_and_run = sum(hit_and_run_i == "Y"),
+            cyclists_injured = sum(n_cyclists_injured),
+            cyclists_seriously_injured = sum(n_cyclists_seriously_injured),
+            cyclists_killed = sum(n_cyclists_killed),
+            .groups = "drop") %>%
+  complete(comarea_id = community_areas$comarea_id, crash_year = g1_years) %>%
+  mutate(across(all_of(g1_count_cols), ~ replace_na(.x, 0L))) %>%
+  left_join(st_drop_geometry(community_areas), by = "comarea_id") %>%
+  mutate(crashes_per_10k = round(crashes / population * 10000, 2),
+         crashes_per_sqmi = round(crashes / area_sqmi, 2),
+         area_sqmi = round(area_sqmi, 2)) %>%
+  select(comarea_id, comarea_name, crash_year, all_of(g1_count_cols),
+         crashes_per_10k, crashes_per_sqmi, population, area_sqmi) %>%
+  arrange(comarea_id, crash_year)
+
+# long format (one row per community area and year) with community area boundaries
+bike_crashes_ca_year <- community_areas %>%
+  select(comarea_id) %>%
+  right_join(bike_crashes_ca_year_table, by = "comarea_id") %>%
+  arrange(comarea_id, crash_year)
+
+# wide format (one row per community area) for mapping: crashes by year, total
+# crashes, and change between the first and last year
+bike_crashes_ca_wide <- community_areas %>%
+  select(comarea_id, comarea_name, population, area_sqmi) %>%
+  left_join(bike_crashes_ca_year_table %>%
+              select(comarea_id, crash_year, crashes) %>%
+              pivot_wider(names_from = crash_year, values_from = crashes,
+                          names_prefix = "crashes_"),
+            by = "comarea_id") %>%
+  left_join(bike_crashes_ca_year_table %>%
+              group_by(comarea_id) %>%
+              summarise(crashes_total = sum(crashes),
+                        crashes_ksi_total = sum(crashes_ksi),
+                        cyclists_killed_total = sum(cyclists_killed)),
+            by = "comarea_id") %>%
+  mutate(crashes_change = .data[[paste0("crashes_", max(g1_years))]] -
+           .data[[paste0("crashes_", min(g1_years))]],
+         crashes_total_per_10k = round(crashes_total / population * 10000, 2),
+         area_sqmi = round(area_sqmi, 2)) %>%
+  arrange(comarea_id)
+
+# city-wide totals by year (includes crashes not assigned to a community area)
+bike_crashes_city_year <- bike_crashes %>%
+  st_drop_geometry() %>%
+  bind_rows(g1_crashes_unlocated) %>%
+  group_by(crash_year) %>%
+  summarise(crashes = n(),
+            crashes_injury = sum(injuries_total > 0, na.rm = TRUE),
+            crashes_ksi = sum(ksi_crash, na.rm = TRUE),
+            crashes_dooring = sum(dooring_i == "Y"),
+            crashes_hit_and_run = sum(hit_and_run_i == "Y"),
+            cyclists_injured = sum(n_cyclists_injured),
+            cyclists_seriously_injured = sum(n_cyclists_seriously_injured),
+            cyclists_killed = sum(n_cyclists_killed),
+            .groups = "drop")
+```
+
+## Checks
+```{r}
+#| label: group 1 checks
+
+# crashes by identification source (first crash type, bicyclist record or both)
+count(g1_crashes, bike_source)
+
+# crashes without coordinates and crashes not assigned to a community area
+nrow(g1_crashes_unlocated)
+sum(is.na(bike_crashes$comarea_id))
+
+# city-wide totals by year
+bike_crashes_city_year
+
+# community area totals should equal assigned crashes
+sum(bike_crashes_ca_year$crashes) == sum(!is.na(bike_crashes$comarea_id))
+
+# total crashes by community area
+ggplot(bike_crashes_ca_wide) +
+  geom_sf(aes(fill = crashes_total), color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(name = "Crashes", direction = -1) +
+  labs(title = sprintf("Bicycle crashes by community area, %d-%d", min(g1_years), max(g1_years))) +
+  theme_void()
+```
+
+## Save datasets
+Spatial layers are transformed to and saved in WGS84 (epsg:4326) so they can be used directly in web maps, Tableau and ArcGIS Online; transform them to Illinois State Plane East (epsg:3435) for distance and area calculations. The `.RData` file also includes the community area boundaries.
+
+```{r}
+#| label: group 1 save datasets
+
+bike_crashes <- st_transform(bike_crashes, 4326)
+bike_crashes_ca_year <- st_transform(bike_crashes_ca_year, 4326)
+bike_crashes_ca_wide <- st_transform(bike_crashes_ca_wide, 4326)
+community_areas <- st_transform(community_areas, 4326)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g1_gpkg)) file.remove(g1_gpkg)
+st_write(bike_crashes, g1_gpkg, layer = "bike_crashes", quiet = TRUE)
+st_write(bike_crashes_ca_year, g1_gpkg, layer = "bike_crashes_ca_year", quiet = TRUE)
+st_write(bike_crashes_ca_wide, g1_gpkg, layer = "bike_crashes_ca_wide", quiet = TRUE)
+
+# CSV tables (points include latitude and longitude)
+write_csv(st_drop_geometry(bike_crashes), file.path(data_dir, "group01_bike_crashes.csv"))
+write_csv(bike_crashes_ca_year_table, file.path(data_dir, "group01_bike_crashes_ca_year.csv"))
+write_csv(st_drop_geometry(bike_crashes_ca_wide), file.path(data_dir, "group01_bike_crashes_ca_wide.csv"))
+write_csv(bike_crashes_city_year, file.path(data_dir, "group01_bike_crashes_city_year.csv"))
+
+# R datasets
+save(bike_crashes, bike_crashes_ca_year, bike_crashes_ca_wide, bike_crashes_ca_year_table,
+     bike_crashes_city_year, community_areas, g1_years,
+     file = g1_rdata)
+```
+
+## Dataset descriptions
+### `bike_crashes` (points, one row per crash)
+Bicycle crashes reported by CPD on city streets, `r min(g1_years)`-`r max(g1_years)`.
+
+| Column | Description |
+|--------|-------------|
+| `crash_record_id` | Unique crash id; links to the portal's Crashes, People and Vehicles datasets |
+| `crash_date`, `crash_year`, `crash_month`, `crash_hour`, `crash_day_of_week` | Date and time of the crash (Chicago local time) |
+| `posted_speed_limit` | Posted speed limit (mph) where the crash occurred |
+| `traffic_control_device`, `trafficway_type`, `intersection_related_i` | Street design and control: signal or stop sign, street type (e.g., divided, one-way), and whether the crash was intersection related (Y/N) |
+| `weather_condition`, `lighting_condition`, `roadway_surface_cond` | Conditions at the time of the crash |
+| `first_crash_type` | First harmful event (e.g., `PEDALCYCLIST`, `TURNING`, `ANGLE`) |
+| `crash_type` | Whether anyone was injured and/or a vehicle was towed |
+| `dooring_i`, `hit_and_run_i` | Bicyclist struck by an opening vehicle door; driver left the scene (Y/N) |
+| `prim_contributory_cause`, `sec_contributory_cause` | Primary and secondary causes, as judged by the responding officer |
+| `street_no`, `street_direction`, `street_name` | Approximate street address |
+| `num_units`, `damage` | Number of units (vehicles, bicycles) involved; estimated property damage |
+| `most_severe_injury`, `injuries_total`, `injuries_fatal`, `injuries_incapacitating` | Crash-level injuries (all people involved, including drivers and passengers) |
+| `ksi_crash` | Crash in which someone was killed or seriously (incapacitating) injured (TRUE/FALSE) |
+| `n_cyclists`, `n_cyclists_injured`, `n_cyclists_seriously_injured`, `n_cyclists_killed` | Bicyclists involved, and bicyclists injured (non-incapacitating or worse), seriously injured and killed |
+| `cyclist_injury`, `cyclist_age`, `cyclist_sex` | Injury classification, age and sex of the most severely injured bicyclist |
+| `cyclist_action`, `cyclist_visibility`, `cyclist_location` | What the bicyclist was doing (e.g., riding with or against traffic), whether they had lights or reflective gear, and where they were (e.g., bike lane, crosswalk) |
+| `latitude`, `longitude` | Crash location (WGS84) |
+| `comarea_id`, `comarea_name` | Community area number and name |
+| `bike_source` | How the crash was identified as a bicycle crash: `first crash type`, `bicyclist record` or `both` |
+
+### `bike_crashes_ca_year` (polygons, one row per community area and year)
+| Column | Description |
+|--------|-------------|
+| `comarea_id`, `comarea_name`, `crash_year` | Community area and year |
+| `crashes` | Bicycle crashes |
+| `crashes_injury`, `crashes_ksi` | Crashes with any injury; crashes with someone killed or seriously injured |
+| `crashes_dooring`, `crashes_hit_and_run` | Dooring and hit-and-run crashes |
+| `cyclists_injured`, `cyclists_seriously_injured`, `cyclists_killed` | Bicyclists injured, seriously injured and killed |
+| `crashes_per_10k`, `crashes_per_sqmi` | Crashes per 10,000 residents and per square mile |
+| `population`, `area_sqmi` | Population (2020-2024) and land area (square miles) |
+
+`bike_crashes_ca_year_table` is the same table without boundaries (also saved as `group01_bike_crashes_ca_year.csv`). `bike_crashes_ca_wide` has one row per community area, with crashes by year in separate columns (`crashes_2021`, ..., `crashes_2025`), five-year totals, and the change in crashes between the first and last year. `bike_crashes_city_year` has city-wide totals by year.
+
+## How these datasets may inform the project
+- **Trends over time.** Plot `bike_crashes_city_year` to see whether bicycle crashes, serious injuries and deaths increased or decreased over the five years, and compare those trends with the timing of state and city e-bike legislation and policies the group identifies (e.g., Illinois' three-class e-bike law, Public Act 101-0444, effective January 1, 2020; Divvy's e-bike fleet expansion; city ordinances or enforcement changes). Monthly counts (`crash_month`) show seasonality, which matters when comparing periods before and after a policy change.
+- **Where crashes occur.** Map `bike_crashes` (points or a heat map) and `bike_crashes_ca_wide` (choropleth of totals, rates or change) to identify hot spots and community areas where crashes are rising or falling. Compare counts with rates: community areas with many crashes (e.g., downtown and the North Side) also have the most bicycling, so rates per resident or square mile tell a different story than counts.
+- **Severity and conditions.** Use `cyclist_injury`, `ksi_crash`, `posted_speed_limit`, `lighting_condition`, `crash_hour`, `first_crash_type`, `dooring_i` and `prim_contributory_cause` to ask which conditions are associated with more severe outcomes for bicyclists (e.g., higher speed limits, darkness, turning vehicles). Since faster e-bikes and higher-speed streets are central to e-bike regulation debates, the relationship between posted speed limit and injury severity is especially relevant.
+- **Confounding factors.** The community area tables can be joined (by `comarea_id`) with other community-level data, such as bike lane miles from the portal's bike routes dataset, Divvy trips (Exercise #2; Divvy trip data distinguish `electric_bike` from `classic_bike` trips, which can serve as a rough measure of e-bike exposure), or Health Atlas indicators (Exercises #3 and #4), to account for differences in bicycling activity, infrastructure and demographics.
+- **Comparisons with other cities.** These datasets cover Chicago only. They can be compared with similar open crash data from the other cities in the group's proposal (e.g., New York City's Motor Vehicle Collisions dataset, which codes e-bikes and e-scooters as vehicle types), using rates rather than counts.
+
+## Limitations
+- **E-bikes are not identified.** Chicago crash reports do not distinguish e-bikes from conventional bicycles, so these datasets describe all bicycle crashes. They provide context for e-bike safety (overall trends, where and under what conditions bicyclists are hurt), but cannot measure e-bike crashes directly.
+- **Underreporting.** Only crashes reported to CPD are included. Crashes involving only bicyclists (e.g., falls, crashes between two bicyclists or with pedestrians), minor crashes and crashes reported later at police stations are underrepresented, and about half of all crash reports (mostly minor crashes) are self-reported by those involved at a police district rather than recorded at the scene by an officer.
+- **Coverage.** Crashes on interstate highways and other roads patrolled by the Illinois State Police are not included. Crash records can be added or updated months after a crash, so counts for the most recent year may increase slightly when the data are recreated.
+- **Counts are not exposure.** More crashes may simply reflect more bicycling. Rates per resident or square mile are a partial adjustment; bicycling activity (e.g., Divvy trips or bike counts) is a better denominator where available.
