@@ -393,19 +393,6 @@ fx_table(bike_crashes_city_year, paging = FALSE)
 fx_table(bike_crashes_ca_year_table)
 ```
 
-```{r}
-#| label: tbl-group1-points
-#| tbl-cap: Bicycle Crashes (Selected Columns)
-
-bike_crashes %>%
-  st_drop_geometry() %>%
-  transmute(crash_record_id, crash_date, address = fx_address(bike_crashes), comarea_name,
-            cyclist_injury, n_cyclists, first_crash_type, prim_contributory_cause,
-            posted_speed_limit, lighting_condition, dooring_i, hit_and_run_i,
-            cyclist_age, cyclist_sex, cyclist_location) %>%
-  fx_table()
-```
-
 ## How these datasets may inform the project
 
 - **Trends:** compare yearly totals, serious injuries and deaths with the timing of state and city e-bike legislation and policy (e.g., Illinois' three-class e-bike law, effective January 1, 2020, and Divvy's e-bike expansion).
@@ -544,26 +531,6 @@ fx_table(ashland_bus_stops, digits = 5)
 fx_table(ashland_community_areas, digits = 1)
 ```
 
-```{r}
-#| label: tbl-group2-bus-monthly
-#| tbl-cap: Monthly Average Weekday Rides, Ashland and Connecting Bus Routes (all day types are in the CSV file)
-
-ashland_bus_ridership %>%
-  filter(str_starts(day_type, "W")) %>%
-  select(-month, -year_month) %>%
-  fx_table()
-```
-
-```{r}
-#| label: tbl-group2-rail-monthly
-#| tbl-cap: Monthly Weekday Ridership, Rail Stations near Ashland (all day types are in the CSV file)
-
-ashland_rail_ridership %>%
-  filter(str_starts(day_type, "W")) %>%
-  select(-month, -year_month) %>%
-  fx_table()
-```
-
 ## How these datasets may inform the project
 
 - **Demand for BRT:** compare the Ashland routes' weekday ridership and rank with other CTA bus routes, and their recovery since 2019; compare the X9 express with the route 9 local.
@@ -692,19 +659,6 @@ station_ped_crashes %>%
 fx_table(station_ped_crashes_year)
 ```
 
-```{r}
-#| label: tbl-group3-points
-#| tbl-cap: Pedestrian Crashes within the Largest Distance of a Station (all citywide crashes are in the CSV file)
-
-g3_near %>%
-  st_drop_geometry() %>%
-  transmute(crash_record_id, crash_date, address = fx_address(g3_near), station_name, station_dist_ft,
-            pedestrian_injury, n_pedestrians, pedestrian_action, pedestrian_location,
-            first_crash_type, prim_contributory_cause, traffic_control_device, lighting_condition,
-            posted_speed_limit) %>%
-  fx_table(digits = 1)
-```
-
 ## How these datasets may inform the project
 
 - **Where:** identify the stations with the most pedestrian crashes nearby and compare lines and parts of the city.
@@ -816,19 +770,6 @@ fx_table(motorcycle_fatalities_ca)
 #| tbl-cap: Motorcycle Fatalities by Community Area and Year
 
 fx_table(motorcycle_fatalities_ca_year_table)
-```
-
-```{r}
-#| label: tbl-group4-points
-#| tbl-cap: Fatal Motorcycle Crashes (Selected Columns)
-
-motorcycle_fatal_crashes %>%
-  st_drop_geometry() %>%
-  transmute(crash_record_id, crash_date, address = fx_address(motorcycle_fatal_crashes), comarea_name,
-            motorcyclists_killed, others_killed, motorcycle_type, vehicle_class,
-            motorcyclist_killed_age, motorcyclist_killed_sex, motorcyclist_killed_safety,
-            first_crash_type, prim_contributory_cause, posted_speed_limit, lighting_condition) %>%
-  fx_table()
 ```
 
 ## How these datasets may inform the project
@@ -1042,17 +983,10 @@ ohare_travel_ca %>%
 fx_table(ohare_travel_points, digits = 4)
 ```
 
-```{r}
-#| label: tbl-group6-periods
-#| tbl-cap: Transit Travel Time to O'Hare by Origin Point and Time of Day (Minutes)
-
-fx_table(ohare_travel_times_period, digits = 1)
-```
-
 ## How these datasets may inform the project
 
 - **Who benefits:** map minutes saved to show which parts of the city would reach O'Hare faster with the Flyer; places near the downtown station benefit most, while places near the Blue Line may not benefit at all.
 - **Along the route:** compare community areas along the route with the rest of the city; a train that passes through neighborhoods without stopping brings their residents no time savings.
-- **Compared with today's options:** compare the Flyer with the Blue Line and Metra, including the time of day (the periods table).
+- **Compared with today's options:** compare the Flyer with the Blue Line and Metra, including the time of day (`group06_ohare_travel_times_period.csv`).
 - **Equity:** join the community area table with Group 5's transit access and vulnerability measures to ask who gains from the project.
 - **Limitations:** the Flyer's route, stations and schedule are proposals; times are scheduled (not actual) weekday times and exclude fares; Metra's O'Hare service is limited; and points are evenly spaced rather than weighted by population.
