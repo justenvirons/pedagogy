@@ -89,25 +89,60 @@ fx_basemap <- function(map_data) {
     addFullscreenControl()
 }
 
-# color palette: quintiles of numeric values, or categories (factor). palette is an
-# RColorBrewer or viridis palette name, or a vector of colors. Missing values are
-# light grey.
-fx_pal <- function(values, palette = "YlOrRd", type = "quintile") {
+# color palette: graduated classes of numeric values, or categories (factor). palette
+# is an RColorBrewer or viridis palette name, or a vector of colors. Missing values
+# are light grey. Numeric values are classed by
+#   - quintiles, when the five classes are distinct;
+#   - one class per value, when there are five or fewer distinct values (e.g.,
+#     counts of 0, 1 or 2 deaths in a year, or percentages of 0 or 100);
+#   - otherwise (many tied values, e.g., mostly zeros, so that quintiles collapse
+#     into one or two classes), five classes with equal numbers of distinct values.
+# The palette carries its legend colors, labels and classification method (see
+# fx_add_legend).
+fx_pal <- function(values, palette = "YlOrRd", type = "quintile", digits = 1) {
   if (type == "factor") {
     levels <- if (is.factor(values)) levels(values) else sort(unique(na.omit(values)))
     return(colorFactor(palette, levels = levels, na.color = "#e0e0e0"))
   }
-  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
-  if (length(breaks) < 2) breaks <- c(breaks, breaks + 1)
-  colorBin(palette, domain = values, bins = breaks, na.color = "#e0e0e0")
+  v <- sort(values[!is.na(values)])
+  u <- unique(v)
+  if (length(u) == 0) u <- 0
+  fmt <- function(x) formatC(x, format = "f", big.mark = ",",
+                             digits = if (all(x == round(x))) 0 else digits)
+  if (length(u) <= 5) {
+    # one class per value: breaks halfway between values
+    bins <- if (length(u) == 1) c(u, u + 1) else c(u[1], (head(u, -1) + u[-1]) / 2, u[length(u)])
+    lower <- u
+    labels <- fmt(u)
+    method <- ""
+  } else {
+    bins <- unique(quantile(v, probs = seq(0, 1, 0.2), names = FALSE))
+    method <- "quintiles"
+    if (length(bins) < 6) {
+      bins <- unique(quantile(u, probs = seq(0, 1, 0.2), type = 1, names = FALSE))
+      method <- "classes"
+    }
+    lower <- head(bins, -1)
+    labels <- paste0(fmt(lower), " &ndash; ", fmt(bins[-1]))
+  }
+  pal <- colorBin(palette, domain = values, bins = bins, na.color = "#e0e0e0")
+  structure(pal, legend_colors = pal(lower), legend_labels = labels, method = method)
 }
 
-# legend labels for quintile ranges, rounded to digits
-fx_legend_format <- function(digits = 1) {
-  function(type, cuts, p) {
-    values <- formatC(cuts, format = "f", digits = digits, big.mark = ",")
-    paste0(values[-length(values)], " &ndash; ", values[-1])
+# add the legend for a palette from fx_pal; the classification method (e.g.,
+# quintiles) is added to the title. ... are passed to addLegend (e.g., className,
+# group)
+fx_add_legend <- function(map, pal, values, title, opacity = 0.7, position = "bottomleft", ...) {
+  if (is.null(attr(pal, "legend_colors"))) { # categories (factor)
+    return(addLegend(map, position, pal = pal, values = values, title = title,
+                     opacity = opacity, ...))
   }
+  method <- attr(pal, "method")
+  addLegend(map, position,
+            colors = attr(pal, "legend_colors"),
+            labels = attr(pal, "legend_labels"),
+            title = if (method == "") title else paste0(title, "<br/>(", method, ")"),
+            opacity = opacity, ...)
 }
 
 # hover labels (and, for polygons, click popups): the value of title_col in bold, then each field in
@@ -133,7 +168,7 @@ fx_add_choropleth <- function(map, data, column, group, index, labels, palette =
                               type = "quintile", digits = 1, title = group) {
   data <- fx_simplify(data)
   values <- data[[column]]
-  pal <- fx_pal(values, palette, type)
+  pal <- fx_pal(values, palette, type, digits)
   map %>%
     addPolygons(data = data,
                 fillColor = pal(values),
@@ -145,13 +180,8 @@ fx_add_choropleth <- function(map, data, column, group, index, labels, palette =
                 popup = labels,
                 highlightOptions = highlightOptions(weight = 3, color = "#333333", bringToFront = FALSE),
                 group = group) %>%
-    addLegend("bottomleft",
-              pal = pal,
-              values = values,
-              title = if (type == "factor") title else paste0(title, "<br/>(quintiles)"),
-              labFormat = if (type == "factor") labelFormat() else fx_legend_format(digits),
-              opacity = 0.7,
-              className = paste0("info legend indicator-legend indicator-legend-", index))
+    fx_add_legend(pal, values, title, opacity = 0.7,
+                  className = paste0("info legend indicator-legend indicator-legend-", index))
 }
 
 # add a point layer colored by column, and its legend, as one of the layers chosen
@@ -160,7 +190,7 @@ fx_add_point_layer <- function(map, data, column, group, index, labels, palette 
                                type = "quintile", digits = 1, title = group, radius = 4) {
   data <- st_transform(data, 4326)
   values <- data[[column]]
-  pal <- fx_pal(values, palette, type)
+  pal <- fx_pal(values, palette, type, digits)
   map %>%
     addCircleMarkers(data = data,
                      radius = radius,
@@ -170,13 +200,8 @@ fx_add_point_layer <- function(map, data, column, group, index, labels, palette 
                      weight = 0.5,
                      label = lapply(labels, HTML),
                      group = group) %>%
-    addLegend("bottomleft",
-              pal = pal,
-              values = values,
-              title = if (type == "factor") title else paste0(title, "<br/>(quintiles)"),
-              labFormat = if (type == "factor") labelFormat() else fx_legend_format(digits),
-              opacity = 0.85,
-              className = paste0("info legend indicator-legend indicator-legend-", index))
+    fx_add_legend(pal, values, title, opacity = 0.85,
+                  className = paste0("info legend indicator-legend indicator-legend-", index))
 }
 
 # add the choropleth layers listed in layers (a table of column, name, palette,
@@ -459,7 +484,7 @@ g2_station_labels <- fx_labels(ashland_rail_stations, "station_name",
 g2_stop_labels <- fx_labels(ashland_bus_stops, "stop_name",
                             c("Stop id" = "stop_id", "Routes" = "routes", "Community area" = "comarea_name"))
 
-g2_connect_pal <- fx_pal(g2_routes_connecting$avg_weekday_current, "YlOrRd")
+g2_connect_pal <- fx_pal(g2_routes_connecting$avg_weekday_current, "YlOrRd", digits = 0)
 g2_station_size <- scales::rescale(sqrt(replace_na(ashland_rail_stations$avg_weekday_current, 0)),
                                    to = c(5, 16))
 
@@ -472,12 +497,9 @@ fx_basemap(ashland_bus_routes) %>%
                label = lapply(g2_route_label(g2_routes_connecting), HTML),
                popup = g2_route_label(g2_routes_connecting),
                group = "Connecting bus routes") %>%
-  addLegend("bottomleft",
-            pal = g2_connect_pal,
-            values = g2_routes_connecting$avg_weekday_current,
-            title = "Connecting routes:<br/>avg. weekday rides<br/>(quintiles)",
-            labFormat = fx_legend_format(0),
-            group = "Connecting bus routes") %>%
+  fx_add_legend(g2_connect_pal, g2_routes_connecting$avg_weekday_current,
+                "Connecting routes:<br/>avg. weekday rides", opacity = 0.5,
+                group = "Connecting bus routes") %>%
   addPolylines(data = g2_routes_ashland,
                color = "#08306b",
                weight = 6,
@@ -612,7 +634,7 @@ g3_map <- fx_basemap(station_ped_crashes) %>%
 for (i in seq_along(g3_radii_ft)) {
   r <- g3_radii_ft[i]
   values <- station_ped_crashes[[paste0("crashes_", r, "ft")]]
-  pal <- fx_pal(values, "YlOrRd")
+  pal <- fx_pal(values, "YlOrRd", digits = 0)
   g3_map <- g3_map %>%
     addPolygons(data = filter(station_buffers, radius_ft == r),
                 fillColor = "#fdae6b",
@@ -630,13 +652,10 @@ for (i in seq_along(g3_radii_ft)) {
                      label = lapply(g3_station_labels, HTML),
                      popup = g3_station_labels,
                      group = g3_groups[i]) %>%
-    addLegend("bottomleft",
-              pal = pal,
-              values = values,
-              title = paste0("Pedestrian crashes<br/>within ", r, " ft, ", g3_period, "<br/>(quintiles)"),
-              labFormat = fx_legend_format(0),
-              opacity = 0.85,
-              className = paste0("info legend indicator-legend indicator-legend-", i - 1))
+    fx_add_legend(pal, values,
+                  paste0("Pedestrian crashes<br/>within ", r, " ft, ", g3_period),
+                  opacity = 0.85,
+                  className = paste0("info legend indicator-legend indicator-legend-", i - 1))
 }
 
 g3_map %>%
@@ -708,7 +727,7 @@ Key columns: motorcyclists killed (riding a motorcycle, as driver or passenger),
 
 ```{r}
 #| label: fig-group4-map
-#| fig-cap: Motorcycle Fatalities by Community Area (Quintiles) and Fatal Crash Locations
+#| fig-cap: Motorcycle Fatalities by Community Area and Fatal Crash Locations
 
 g4_layers <- tibble(
   column = c("motorcyclists_killed_total", "motorcyclists_killed_total_per_100k", "fatal_crashes_total",
