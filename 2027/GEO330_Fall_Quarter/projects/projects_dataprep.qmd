@@ -26,6 +26,7 @@ This document stores the code used to create datasets for the GEO 330 final grou
 | 2 | Bus rapid transit (BRT) along Ashland Avenue | Ashland and connecting bus routes (lines) and nearby rail stations (points) with current and pre-pandemic ridership; Ashland bus stops (points); CTA rail lines; monthly bus and rail ridership |
 | 3 | Pedestrian safety near CTA rail stations | Pedestrian crashes (points); CTA rail stations with pedestrian crash counts within 25, 50 and 100 feet (points and buffers) |
 | 4 | Motorcycle fatalities in the city of Chicago | Fatal motorcycle crashes (points); motorcycle fatalities citywide and by community area and year |
+| 5 | Transit access by community area | CTA rail stations, bus stops, rail line and bus route miles, and CMAP Transit Availability Index by community area (polygons); Transit Availability Index grid for Chicago |
 
 Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 
@@ -1476,3 +1477,244 @@ Motorcyclists killed by year (`motorcyclists_killed_2021`, ..., `motorcyclists_k
 - **Fatality reporting.** Fatalities are as recorded in the crash data; deaths that occur days after a crash may be added late, and counts may differ from other official sources (e.g., Illinois Department of Transportation or city Vision Zero reports).
 - **Coverage.** Only crashes reported to CPD on city streets are included; crashes on interstate highways (e.g., the Kennedy and Dan Ryan expressways) are not.
 - **Vehicle types.** Motorcycle crashes are identified from the vehicle types recorded by the reporting officer; check `motorcycle_type` and `vehicle_class` and adjust `g4_vehicle_patterns` if needed.
+
+# Group 5: Transit access by community area
+## Project overview
+Group 5 is comparing transit access among Chicago's community areas. The dataset below summarizes, for each community area, the CTA transit supply within it (rail stations, bus stops, and miles of rail lines and bus routes) and CMAP's Transit Availability Index, an index of transit service frequency, connectivity, proximity and sidewalk availability, averaged from CMAP's grid of subzones to community areas. It uses the CTA files saved for Group 2 (run the Group 2 settings first).
+
+## Settings
+```{r}
+#| label: group 5 settings
+
+# CMAP Transit Availability Index, 2019 (subzone grid), downloaded from
+# https://datahub.cmap.illinois.gov/datasets/CMAPGIS::transit-availability-index-2019/about
+# and saved in the data directory
+g5_file_tai <- file.path(data_dir, "Transit_Availability_Index_2019.shp")
+
+# bus routes are counted in a community area if at least this length (miles) is inside it
+g5_min_route_mi <- 0.1
+
+# output files
+g5_gpkg <- file.path(data_dir, "group05_transit_access.gpkg")
+g5_rdata <- file.path(data_dir, "group05_transit_access.RData")
+```
+
+## Data sources
+- CTA rail stations, rail lines and bus routes (NITA; see Group 2), and [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal; cached for Group 2).
+- [CMAP Transit Availability Index, 2019](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::transit-availability-index-2019/about): an index for each CMAP subzone (about ½ mile by ½ mile, ¼ mile by ¼ mile downtown) in the seven-county region, based on 2019 service. Each subzone has four sub-indices, scored from 1 (lowest) to 5 (highest), or 0 where there is no service or no sidewalks: transit service frequency (`freq_ind`), transit connectivity (`conn_ind`), network proximity to transit stops (`prox_ind`) and sidewalk density (`walk_ind`). The overall index (`ta_ind`, 1 to 5) is their average. The raw values behind each sub-index are also included (`freq`, `conn_act`, `prox`, `sdwlkidx`). CMAP advises against comparing this index with earlier versions, which used different subzones and measures.
+
+## Functions
+```{r}
+#| label: group 5 functions
+
+# community area of each point: the area it falls within, or the nearest area within
+# g1_snap_ft (as for Group 1); points farther from the city (e.g., suburban CTA
+# stations and stops) are dropped
+fx_points_by_ca <- function(points) {
+  nearest <- st_nearest_feature(points, community_areas)
+  dist_ft <- as.numeric(st_distance(points, community_areas[nearest, ], by_element = TRUE))
+  points %>%
+    mutate(comarea_id = if_else(dist_ft <= g1_snap_ft, community_areas$comarea_id[nearest], NA_real_)) %>%
+    filter(!is.na(comarea_id))
+}
+
+# length (miles) of lines within each community area, by any grouping columns
+fx_miles_by_ca <- function(lines, ...) {
+  suppressWarnings(st_intersection(lines, select(community_areas, comarea_id))) %>%
+    mutate(mi = as.numeric(st_length(geometry)) / 5280) %>%
+    st_drop_geometry() %>%
+    group_by(comarea_id, ...) %>%
+    summarise(mi = sum(mi), .groups = "drop")
+}
+```
+
+## Rail stations and lines
+Rail line miles are summed by line, so track shared by several lines (e.g., the Loop) is counted once for each line (`rail_line_mi`); `rail_track_mi` counts shared track once.
+
+```{r}
+#| label: group 5 rail
+
+g5_rail_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  transmute(station_id = as.character(as.numeric(STATION_ID))) %>%
+  fx_points_by_ca()
+
+g5_rail_lines <- st_read(g2_file_rail_lines, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  transmute(rail_line = str_to_lower(COLOR))
+
+g5_rail_ca <- fx_miles_by_ca(g5_rail_lines, rail_line) %>%
+  group_by(comarea_id) %>%
+  summarise(rail_line_mi = sum(mi),
+            n_rail_lines = n_distinct(rail_line),
+            .groups = "drop") %>%
+  full_join(fx_miles_by_ca(st_sf(geometry = st_union(g5_rail_lines))) %>%
+              rename(rail_track_mi = mi),
+            by = "comarea_id") %>%
+  full_join(count(st_drop_geometry(g5_rail_stations), comarea_id, name = "rail_stations"),
+            by = "comarea_id")
+```
+
+## Bus stops and routes
+`bus_route_mi` sums the length of each route in the community area (a street served by three routes counts three times); `bus_street_mi` counts streets with bus service once. `n_bus_routes` counts routes with at least `g5_min_route_mi` inside the community area.
+
+```{r}
+#| label: group 5 bus
+
+g5_bus_stops <- read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson")) %>%
+  st_transform(3435) %>%
+  select(geometry) %>%
+  fx_points_by_ca()
+
+g5_bus_routes <- st_read(g2_file_bus_routes, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  transmute(route_id = str_trim(ROUTE))
+
+g5_bus_ca <- fx_miles_by_ca(g5_bus_routes, route_id) %>%
+  group_by(comarea_id) %>%
+  summarise(bus_route_mi = sum(mi),
+            n_bus_routes = sum(mi >= g5_min_route_mi),
+            .groups = "drop") %>%
+  full_join(fx_miles_by_ca(st_sf(geometry = st_union(g5_bus_routes))) %>%
+              rename(bus_street_mi = mi),
+            by = "comarea_id") %>%
+  full_join(count(st_drop_geometry(g5_bus_stops), comarea_id, name = "bus_stops"),
+            by = "comarea_id")
+```
+
+## Transit Availability Index
+Subzones are intersected with community areas, and each index is averaged across the pieces of subzones within each community area, weighted by area (area-weighted means). The percent of each community area's area in each overall index class (`pct_area_ta_1`, ..., `pct_area_ta_5`) is also calculated.
+
+```{r}
+#| label: group 5 transit availability index
+
+g5_tai_cols <- c("ta_ind", "freq_ind", "conn_ind", "prox_ind", "walk_ind",
+                 "freq", "conn_act", "prox", "sdwlkidx")
+
+# subzones overlapping the city of Chicago
+tai_grid_chicago <- st_read(g5_file_tai, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  select(subzone17, all_of(g5_tai_cols)) %>%
+  st_filter(st_union(community_areas))
+
+# subzone pieces within each community area, with their areas
+g5_tai_pieces <- suppressWarnings(st_intersection(tai_grid_chicago, select(community_areas, comarea_id))) %>%
+  mutate(area = as.numeric(st_area(geometry))) %>%
+  st_drop_geometry()
+
+g5_tai_ca <- g5_tai_pieces %>%
+  group_by(comarea_id) %>%
+  summarise(across(all_of(g5_tai_cols), ~ round(weighted.mean(.x, area, na.rm = TRUE), 2)),
+            .groups = "drop") %>%
+  left_join(g5_tai_pieces %>%
+              group_by(comarea_id, ta_ind) %>%
+              summarise(area = sum(area), .groups = "drop") %>%
+              complete(comarea_id, ta_ind = 1:5, fill = list(area = 0)) %>%
+              group_by(comarea_id) %>%
+              mutate(pct = round(100 * area / sum(area), 1)) %>%
+              ungroup() %>%
+              select(comarea_id, ta_ind, pct) %>%
+              pivot_wider(names_from = ta_ind, values_from = pct, names_prefix = "pct_area_ta_"),
+            by = "comarea_id")
+```
+
+## Transit access by community area
+```{r}
+#| label: group 5 transit access by community area
+
+g5_count_cols <- c("rail_stations", "n_rail_lines", "bus_stops", "n_bus_routes")
+g5_mile_cols <- c("rail_line_mi", "rail_track_mi", "bus_route_mi", "bus_street_mi")
+
+transit_access_ca <- community_areas %>%
+  left_join(g5_rail_ca, by = "comarea_id") %>%
+  left_join(g5_bus_ca, by = "comarea_id") %>%
+  mutate(across(all_of(g5_count_cols), ~ as.integer(replace_na(.x, 0))),
+         across(all_of(g5_mile_cols), ~ round(replace_na(.x, 0), 2)),
+         rail_stations_per_sqmi = round(rail_stations / area_sqmi, 2),
+         bus_stops_per_sqmi = round(bus_stops / area_sqmi, 2),
+         bus_stops_per_10k = round(bus_stops / population * 10000, 2),
+         bus_street_mi_per_sqmi = round(bus_street_mi / area_sqmi, 2),
+         area_sqmi = round(area_sqmi, 2)) %>%
+  left_join(g5_tai_ca, by = "comarea_id") %>%
+  select(comarea_id, comarea_name, population, area_sqmi,
+         rail_stations, n_rail_lines, rail_line_mi, rail_track_mi,
+         bus_stops, n_bus_routes, bus_route_mi, bus_street_mi,
+         rail_stations_per_sqmi, bus_stops_per_sqmi, bus_stops_per_10k, bus_street_mi_per_sqmi,
+         all_of(g5_tai_cols), starts_with("pct_area_ta_")) %>%
+  arrange(comarea_id)
+
+rm(g5_rail_stations, g5_bus_stops, g5_tai_pieces)
+```
+
+## Checks
+```{r}
+#| label: group 5 checks
+
+# citywide totals (stations, stops and miles within the city)
+transit_access_ca %>%
+  st_drop_geometry() %>%
+  summarise(across(c(rail_stations, bus_stops, rail_track_mi, bus_street_mi), sum))
+
+# community areas with no rail station, and with the lowest and highest index
+filter(transit_access_ca, rail_stations == 0)$comarea_name
+transit_access_ca %>% st_drop_geometry() %>% arrange(ta_ind) %>% select(comarea_name, ta_ind) %>% head(5)
+transit_access_ca %>% st_drop_geometry() %>% arrange(desc(ta_ind)) %>% select(comarea_name, ta_ind) %>% head(5)
+
+# percent of area by index class should total 100
+summary(rowSums(st_drop_geometry(select(transit_access_ca, starts_with("pct_area_ta_")))))
+
+# area-weighted Transit Availability Index by community area
+ggplot(transit_access_ca) +
+  geom_sf(aes(fill = ta_ind), color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(name = "Transit\nAvailability\nIndex", limits = c(1, 5)) +
+  labs(title = "Transit Availability Index (2019) by community area") +
+  theme_void()
+```
+
+## Save datasets
+```{r}
+#| label: group 5 save datasets
+
+transit_access_ca <- st_transform(transit_access_ca, 4326)
+tai_grid_chicago <- st_transform(tai_grid_chicago, 4326)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g5_gpkg)) file.remove(g5_gpkg)
+st_write(transit_access_ca, g5_gpkg, layer = "transit_access_ca", quiet = TRUE)
+st_write(tai_grid_chicago, g5_gpkg, layer = "tai_grid_chicago", quiet = TRUE)
+
+# CSV table
+write_csv(st_drop_geometry(transit_access_ca), file.path(data_dir, "group05_transit_access_ca.csv"))
+
+# R datasets
+save_with_community_areas(c("transit_access_ca", "tai_grid_chicago"), g5_rdata)
+```
+
+## Dataset descriptions
+### `transit_access_ca` (polygons, one row per community area)
+| Column | Description |
+|--------|-------------|
+| `comarea_id`, `comarea_name`, `population`, `area_sqmi` | Community area, population (2020-2024) and land area (square miles) |
+| `rail_stations` | CTA rail stations |
+| `n_rail_lines`, `rail_line_mi`, `rail_track_mi` | Rail lines running through the community area, miles of rail line (each line counted separately) and miles of track (shared track counted once) |
+| `bus_stops` | CTA bus stops |
+| `n_bus_routes`, `bus_route_mi`, `bus_street_mi` | Bus routes with at least 0.1 mile in the community area, route miles (each route counted separately) and miles of street with bus service |
+| `rail_stations_per_sqmi`, `bus_stops_per_sqmi`, `bus_stops_per_10k`, `bus_street_mi_per_sqmi` | Densities per square mile and per 10,000 residents |
+| `ta_ind` | Transit Availability Index (1 = lowest, 5 = highest), area-weighted mean |
+| `freq_ind`, `conn_ind`, `prox_ind`, `walk_ind` | Sub-indices for service frequency, connectivity, proximity and sidewalk density, area-weighted means (0 = no service or sidewalks) |
+| `freq`, `conn_act`, `prox`, `sdwlkidx` | Raw sub-index values, area-weighted means (see CMAP's documentation) |
+| `pct_area_ta_1`, ..., `pct_area_ta_5` | Percent of the community area's area in each Transit Availability Index class |
+
+### `tai_grid_chicago` (polygons, one row per CMAP subzone)
+The Transit Availability Index subzones overlapping the city of Chicago, with the index, sub-indices and raw values above, for mapping access at a finer scale than community areas.
+
+## How these datasets may inform the project
+- **Supply vs. availability.** Compare counts and densities of stations, stops and route miles (what is *there*) with the Transit Availability Index (how *useful* it is, considering frequency and connections) to find community areas where plentiful stops do not translate into frequent, well-connected service.
+- **Rail vs. bus.** Many community areas, especially on the Far South and Southwest Sides, have no rail station; compare their bus supply and index values with areas served by rail.
+- **Who is served.** Join `transit_access_ca` (by `comarea_id`) with Health Atlas indicators (e.g., poverty, ease of walking to transit; Exercises #3 and #4), census data on car ownership and commuting, or Group 2's ridership, and map or correlate them to examine whether transit access is distributed equitably.
+- **Within community areas.** Map `tai_grid_chicago` to show variation within community areas that community area averages hide (`pct_area_ta_*` summarizes this variation).
+
+## Limitations
+- **Area weighting.** Index averages are weighted by area, not population, so parks, industrial areas and rail yards count as much as residential blocks; population-weighted averages (e.g., using census block population) would better reflect residents' access.
+- **Different years.** The Transit Availability Index reflects 2019 service, before the pandemic and later service changes; stations and lines (2020), bus routes and bus stops (current) are from different years.
+- **Lines vs. service.** Route and line miles describe where transit runs, not how often; frequency is captured only by the index (`freq_ind`).

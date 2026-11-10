@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><MD_Metadata xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:xalan="http://xml.apache.org/xalan" xmlns:srv="http://www.isotc211.org/2005/srv" xmlns:gmx="http://www.isotc211.org/2005/gmx" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.isotc211.org/2005/gmd">
+    <fileIdentifier>
+        <gco:CharacterString>2f455b11ce5b43129d4cea5aa54dbac0</gco:CharacterString>
+    </fileIdentifier>
+    <language>
+        <LanguageCode codeList="http://www.loc.gov/standards/iso639-2/php/code_list.php" codeListValue="eng" codeSpace="ISO639-2">eng</LanguageCode>
+    </language>
+    <characterSet>
+        <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+    </characterSet>
+    <hierarchyLevel>
+        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset" codeSpace="ISOTC211/19115">dataset</MD_ScopeCode>
+    </hierarchyLevel>
+    <hierarchyLevelName>
+        <gco:CharacterString>dataset</gco:CharacterString>
+    </hierarchyLevelName>
+    <contact>
+        <CI_ResponsibleParty>
+            <individualName>
+                <gco:CharacterString>Mitch Hirst</gco:CharacterString>
+            </individualName>
+            <organisationName>
+                <gco:CharacterString>CMAP</gco:CharacterString>
+            </organisationName>
+            <role>
+                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+            </role>
+        </CI_ResponsibleParty>
+    </contact>
+    <dateStamp gco:nilReason="missing"/>
+    <metadataStandardName>
+        <gco:CharacterString>ISO 19139 Geographic Information - Metadata - Implementation Specification</gco:CharacterString>
+    </metadataStandardName>
+    <metadataStandardVersion>
+        <gco:CharacterString>2007</gco:CharacterString>
+    </metadataStandardVersion>
+    <identificationInfo>
+        <MD_DataIdentification>
+            <citation>
+                <CI_Citation>
+                    <title>
+                        <gco:CharacterString>Transit Availability Index, 2019</gco:CharacterString>
+                    </title>
+                    <date>
+                        <CI_Date>
+                            <date>
+                                <gco:Date>2023-05-19</gco:Date>
+                            </date>
+                            <dateType>
+                                <CI_DateTypeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode" codeListValue="creation" codeSpace="ISOTC211/19115">creation</CI_DateTypeCode>
+                            </dateType>
+                        </CI_Date>
+                    </date>
+                </CI_Citation>
+            </citation>
+            <abstract>
+                <gco:CharacterString>The Transit Availability Index (formerly known as the Transit Accessibility Index) is an index measuring access to transit. The index is made up of 4 sub-indices: transit frequency, transit connectivity, sidewalk density, and transit proximity. The focus of the index is on examining how well the transit system as a whole serves the region. The index is not intended to reflect the actual transit service conditions one may encounter on a specific transit trip. It is also not intended as a means to evaluate the performance of the various transit operators nor is it a suitable tool for such an evaluation. For this analysis, transit service attributes are summed at the subzone-level geography for the seven-county region. Subzones are quarter-section sized geographies that CMAP uses for household and employment forecasting; generally they are ½ mile by ½ mile square throughout the region. Subzones in the Chicago Central Business District (CBD) are generally ¼ mile by ¼ mile square due to the densities of activities and the street network in that area.The original index was created in 2010 for the GO TO 2040 plan update. "In anticipation of the GO TO 2040 plan update, CMAP staff developed a new method of measuring access to transit as a means of determining the percentage of regional population and jobs with access to transit, one of the plan’s indicators for measuring the progress of plan implementation. This new method, the Transit Accessibility Index, severed as a uniform measure of transit level of service available during an average week. It permits us to track changes in transit level of service over time and present the results in an intuitive fashion. It also offers a universal comparison of the different service levels offered across the region. The inherent loss of some of the nuances in localized service is balanced against the ability of the index to provide a relatively simple way to compare transit service over a large area over time. This index also adheres to a number of tenets CMAP staff used in developing a revised set of performance measures for the GO TO 2040 plan update: principally that the indicator use actual observed data rather than modeled values, that it is widely comprehensible and that the data are updated with sufficient frequency for the index to serve as a reasonable access to transit index benchmark for measuring progress.”The 2023 update of transit availability is a continuation of these efforts using 2019 data. One notable change is that the Pedestrian Environment Factor is no longer used as a measurement of transit availability. Rather, we have replaced this sub-index with sidewalk density. Another notable change is that the 2017 subzones were used for this analysis, whereas previous iterations used the 2009 subzones. As such, it is not suggested to directly compare the new transit availability index with previous versions of transit availability/accessibility.Transit Availability Index, Indicator Methodology Excerpt</gco:CharacterString>
+            </abstract>
+            <purpose>
+                <gco:CharacterString>The Transit Availability Index (formerly the Transit Accessibility Index) is a metric that takes into account transit service frequency, the surrounding sidewalk inventory, network distance to transit stops, and number of subzone connections. Each factor is measured individually at the subzone level and an index value is assigned to each subzone. The Transit Accessibility Index is then the average of these four factor indices that have been assigned to each subzone.</gco:CharacterString>
+            </purpose>
+            <credit>
+                <gco:CharacterString>CMAP</gco:CharacterString>
+            </credit>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>Transit Availability Index</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Service Frequency</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Transit Connectivity</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Proximity</gco:CharacterString>
+                    </keyword>
+                    <keyword>
+                        <gco:CharacterString>Sidewalk Inventory</gco:CharacterString>
+                    </keyword>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <resourceConstraints>
+                <MD_Constraints>
+                    <useLimitation>
+                        <gco:CharacterString>Please note that past versions of this analysis used the 2009 CMAP subzones. The 2019 analysis uses the updated 2017 CMAP subzones. As such, the two analysis should not be directly compared.</gco:CharacterString>
+                    </useLimitation>
+                </MD_Constraints>
+            </resourceConstraints>
+            <language>
+                <LanguageCode codeList="http://www.loc.gov/standards/iso639-2/php/code_list.php" codeListValue="eng" codeSpace="ISO639-2">eng</LanguageCode>
+            </language>
+            <characterSet>
+                <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+            </characterSet>
+            <topicCategory>
+                <MD_TopicCategoryCode>transportation</MD_TopicCategoryCode>
+            </topicCategory>
+        </MD_DataIdentification>
+    </identificationInfo>
+</MD_Metadata>
