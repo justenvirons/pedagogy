@@ -118,3 +118,8 @@
   text-indent: -2em;
   margin-bottom: 0.3em;
 }
+
+/* Keep images in their original proportions when a width or height is set */
+.reveal img {
+  object-fit: contain;
+}
