@@ -27,6 +27,7 @@ This document stores the code used to create datasets for the GEO 330 final grou
 | 3 | Pedestrian safety near CTA rail stations | Pedestrian crashes (points); CTA rail stations with pedestrian crash counts within 25, 50 and 100 feet (points and buffers) |
 | 4 | Motorcycle fatalities in the city of Chicago | Fatal motorcycle crashes (points); motorcycle fatalities citywide and by community area and year |
 | 5 | Public transportation access in underserved Chicago neighborhoods | CTA rail stations, bus stops, rail line and bus route miles, CMAP Transit Availability Index and COVID-19 Community Vulnerability Index by community area (polygons); summary by vulnerability category; Transit Availability Index grid for Chicago |
+| 6 | The proposed O'Hare Flyer rail connection | Average transit travel times to O'Hare, current and with the O'Hare Flyer, from points within each community area (points) and by community area (polygons) |
 
 Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 
@@ -1800,3 +1801,309 @@ The Transit Availability Index subzones overlapping the city of Chicago, with th
 - **Different years.** The Transit Availability Index reflects 2019 service, before the pandemic and later service changes; stations and lines (2020), bus routes and bus stops (current) are from different years.
 - **Lines vs. service.** Route and line miles describe where transit runs, not how often; frequency is captured only by the index (`freq_ind`).
 - **Defining "underserved".** The CCVI was designed to identify communities disproportionately affected by COVID-19, using data from 2020-2021; it is a reasonable proxy for social vulnerability, but other measures (e.g., the CDC Social Vulnerability Index or Health Atlas hardship and poverty indicators) may identify somewhat different neighborhoods. The "low access" threshold (the median) is also a choice; consider alternatives such as the lowest quartile.
+
+# Group 6: The proposed O'Hare Flyer rail connection
+## Project overview
+Group 6 is examining the proposed O'Hare Flyer, a privately funded express rail link between the West Loop and O'Hare International Airport. As proposed in 2026, trains would run on existing freight railroad right-of-way (Canadian National, CSX and Union Pacific) between a downtown station near Canal Street and Van Buren Street (near Union Station and the Old Post Office) and O'Hare Terminal 2, taking about 15 minutes and running every 15 minutes from 4 a.m. to 10 p.m. An intermediate stop in Forest Park, near the CTA Blue Line terminal, has also been discussed. The route, stations and schedule are proposals and may change, so they are settings below.
+
+The datasets below estimate how long it takes to reach O'Hare by public transit from points throughout each community area, using CTA timetables (GTFS) and a transit trip planner ([r5r](https://ipeagit.github.io/r5r/), which routes trips on the street network and transit schedules, like Google Maps or the CTA trip planner). Travel times are calculated for today's transit network and for a network with the O'Hare Flyer, so that time savings can be compared among community areas, especially those along the proposed route.
+
+## Settings
+```{r}
+#| label: group 6 settings
+
+# r5r routes trips with Java (version 21); allocate memory before r5r (rJava) loads
+options(java.parameters = "-Xmx6G")
+library(r5r)
+
+# r5r network folder: an OpenStreetMap street network (.pbf) and transit
+# schedules (GTFS .zip files), downloaded below and cached
+g6_r5r_dir <- file.path(data_dir, "r5r")
+url_osm_pbf <- "https://download.bbbike.org/osm/bbbike/Chicago/Chicago.osm.pbf"
+url_gtfs <- c(cta = "https://www.transitchicago.com/downloads/sch_data/google_transit.zip")
+# add Metra (which serves O'Hare Transfer station) or Pace, e.g.:
+# url_gtfs["metra"] <- "https://schedules.metrarail.com/gtfs/schedule.zip"
+
+# destination (O'Hare, at the CTA Blue Line O'Hare station beneath Terminal 2's
+# parking garage) and proposed O'Hare Flyer stations (approximate locations)
+g6_places <- tribble(
+  ~id,              ~name,                                        ~lat,     ~lon,
+  "ohare",          "O'Hare International Airport (Blue Line)",  41.97766, -87.90422,
+  "flyer_downtown", "O'Hare Flyer downtown station (Canal & Van Buren)", 41.87664, -87.63943,
+  "flyer_forest_park", "O'Hare Flyer Forest Park stop (Blue Line terminal)", 41.87404, -87.81727)
+
+# O'Hare Flyer service (proposed): minutes from each station to O'Hare and minutes
+# between trains (riders wait half the headway, on average). The Forest Park stop's
+# ride time has not been announced; set it (e.g., 10) to include the stop, or NA
+g6_flyer_ride_min <- c(flyer_downtown = 15, flyer_forest_park = NA)
+g6_flyer_headway_min <- 15
+
+# origins: a grid of points spaced this far apart (feet) within each community area
+g6_spacing_ft <- 2640 # half a mile
+
+# weekday departure times; travel times are averaged over each time window
+# (minutes after the departure time) and over the periods
+g6_periods <- c(am_peak = "07:30", midday = "12:00", pm_peak = "16:30")
+g6_time_window <- 60
+
+# trip limits (minutes)
+g6_max_walk_min <- 20
+g6_max_trip_min <- 180
+
+# community areas along the proposed route; update when the alignment is final
+# (e.g., the Loop, Near West Side and O'Hare), or leave empty
+g6_route_comareas <- c()
+
+# output files
+g6_gpkg <- file.path(data_dir, "group06_ohare_flyer.gpkg")
+g6_rdata <- file.path(data_dir, "group06_ohare_flyer.RData")
+```
+
+## Data sources
+- [CTA GTFS](https://www.transitchicago.com/developers/gtfs/) (CTA bus and rail timetables) and, optionally, Metra and Pace GTFS.
+- OpenStreetMap streets and paths for the Chicago area ([BBBike extract](https://download.bbbike.org/osm/bbbike/Chicago/)), used to route walking to, from and between transit stops. If the extract cannot be downloaded, save any OpenStreetMap `.pbf` file covering the city and O'Hare (e.g., a Geofabrik Illinois extract) in `projects/data/r5r/`.
+- Community areas (shared section above).
+- O'Hare Flyer proposal: route, stations and service as reported in August 2026 (e.g., [Chicago Sun-Times](https://chicago.suntimes.com/transportation/2026/08/25/ohare-flyer-train-high-speed-rail-old-post-office), [Axios Chicago](https://www.axios.com/local/chicago/2026/08/25/inside-the-usd2-25b-plan-for-a-15-minute-o-hare-to-downtown-train), [Capitol News Illinois](https://capitolnewsillinois.com/news/ohare-flyer-would-whisk-travelers-between-airport-chicago-loop-in-15-minutes/), [Wikipedia](https://en.wikipedia.org/wiki/O'Hare_Flyer)).
+
+## Build the transit network
+The street network and timetables are downloaded (or read from the cache) and built into an r5r network. Travel times are calculated for a Tuesday within the timetables' service dates.
+
+```{r}
+#| label: group 6 network
+
+dir.create(g6_r5r_dir, recursive = TRUE, showWarnings = FALSE)
+download_cached(url_osm_pbf, file.path(g6_r5r_dir, basename(url_osm_pbf)))
+g6_gtfs_files <- imap_chr(url_gtfs, ~ download_cached(.x, file.path(g6_r5r_dir, paste0(.y, "_gtfs.zip"))))
+
+# first Tuesday on or after today (or the CTA timetables' start date) and before their end date
+g6_calendar <- read_csv(unz(g6_gtfs_files[["cta"]], "calendar.txt"), col_types = cols(.default = "c"))
+g6_service_start <- max(Sys.Date(), min(ymd(g6_calendar$start_date)))
+g6_service_end <- max(ymd(g6_calendar$end_date))
+g6_date <- g6_service_start + (2 - wday(g6_service_start, week_start = 1)) %% 7
+if (g6_date > g6_service_end) stop("No Tuesday within the CTA timetables' service dates; download newer GTFS files")
+
+# build (or load) the r5r network (r5r 2.0 renamed setup_r5() to build_network())
+g6_r5r <- if (exists("build_network", envir = asNamespace("r5r"))) {
+  r5r::build_network(g6_r5r_dir, verbose = FALSE)
+} else {
+  r5r::setup_r5(g6_r5r_dir, verbose = FALSE)
+}
+```
+
+## Origins
+```{r}
+#| label: group 6 origins
+
+# grid points within each community area, plus a point within any community area
+# too small to contain a grid point
+g6_grid <- st_make_grid(community_areas, cellsize = g6_spacing_ft, what = "centers") %>%
+  st_sf(geometry = .) %>%
+  st_join(select(community_areas, comarea_id), left = FALSE)
+
+g6_origins <- community_areas %>%
+  filter(!comarea_id %in% g6_grid$comarea_id) %>%
+  select(comarea_id) %>%
+  st_point_on_surface() %>%
+  bind_rows(g6_grid) %>%
+  arrange(comarea_id) %>%
+  mutate(id = sprintf("%02d_%04d", comarea_id, row_number())) %>%
+  st_transform(4326)
+
+g6_origins <- g6_origins %>%
+  mutate(lon = st_coordinates(g6_origins)[, "X"],
+         lat = st_coordinates(g6_origins)[, "Y"])
+
+rm(g6_grid)
+```
+
+## Travel times
+For each origin and period, r5r finds the fastest walk and transit trips to O'Hare and to each O'Hare Flyer station, for departures every minute over the time window, and reports the median travel time (minutes). Travel times with the O'Hare Flyer are the time to reach a Flyer station, plus the average wait (half the headway) and the ride to O'Hare; the *with Flyer* time for each origin is the faster of that time and the current trip. Results are saved to a cache file, since routing takes several minutes.
+
+```{r}
+#| label: group 6 travel times
+
+g6_cache <- file.path(data_dir, "group06_travel_times_cache.csv")
+
+fx_travel_times <- function(origins, destinations, departure) {
+  ttm <- travel_time_matrix(g6_r5r,
+                            origins = origins,
+                            destinations = destinations,
+                            mode = c("WALK", "TRANSIT"),
+                            departure_datetime = departure,
+                            time_window = g6_time_window,
+                            percentiles = 50,
+                            max_walk_time = g6_max_walk_min,
+                            max_trip_duration = g6_max_trip_min,
+                            verbose = FALSE,
+                            progress = FALSE)
+  names(ttm)[str_starts(names(ttm), "travel_time")][1] <- "minutes"
+  as_tibble(ttm) %>% select(from_id, to_id, minutes)
+}
+
+g6_destinations <- g6_places %>%
+  filter(id == "ohare" | id %in% names(g6_flyer_ride_min)[!is.na(g6_flyer_ride_min)])
+
+g6_times <- imap(g6_periods, function(time, period) {
+  fx_travel_times(st_drop_geometry(select(g6_origins, id, lat, lon)),
+                  g6_destinations,
+                  as.POSIXct(paste(g6_date, time), tz = "America/Chicago")) %>%
+    mutate(period = period)
+}) %>%
+  bind_rows()
+write_csv(g6_times, g6_cache)
+# to skip routing on later runs, read the cache instead:
+# g6_times <- read_csv(g6_cache, show_col_types = FALSE)
+
+# travel times by origin and period: current (walk and transit to O'Hare) and via the
+# O'Hare Flyer (to a Flyer station, then wait and ride)
+g6_times_period <- g6_times %>%
+  mutate(minutes = if_else(to_id == "ohare", minutes,
+                           minutes + g6_flyer_headway_min / 2 + g6_flyer_ride_min[to_id])) %>%
+  mutate(trip = if_else(to_id == "ohare", "current", "flyer")) %>%
+  group_by(from_id, period, trip) %>%
+  summarise(minutes = min(minutes, na.rm = TRUE), .groups = "drop") %>%
+  mutate(minutes = if_else(is.infinite(minutes), NA_real_, minutes)) %>%
+  pivot_wider(names_from = trip, values_from = minutes) %>%
+  mutate(with_flyer = pmin(current, flyer, na.rm = TRUE))
+
+# average over periods for each origin
+ohare_travel_points <- g6_origins %>%
+  select(id, comarea_id, lat, lon) %>%
+  left_join(g6_times_period %>%
+              group_by(from_id) %>%
+              summarise(minutes_current = mean(current, na.rm = TRUE),
+                        minutes_flyer = mean(flyer, na.rm = TRUE),
+                        minutes_with_flyer = mean(with_flyer, na.rm = TRUE),
+                        .groups = "drop"),
+            by = c("id" = "from_id")) %>%
+  mutate(across(starts_with("minutes_"), ~ round(if_else(is.nan(.x), NA_real_, .x), 1)),
+         minutes_saved = minutes_current - minutes_with_flyer,
+         flyer_faster = minutes_with_flyer < minutes_current) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name), by = "comarea_id") %>%
+  relocate(comarea_name, .after = comarea_id)
+
+# travel times by period (one row per origin and period), for comparing times of day
+ohare_travel_times_period <- g6_times_period %>%
+  rename(id = from_id, minutes_current = current, minutes_flyer = flyer,
+         minutes_with_flyer = with_flyer) %>%
+  left_join(st_drop_geometry(select(ohare_travel_points, id, comarea_id, comarea_name)), by = "id") %>%
+  select(id, comarea_id, comarea_name, period, starts_with("minutes_")) %>%
+  arrange(id, period)
+```
+
+## Travel times by community area
+```{r}
+#| label: group 6 travel times by community area
+
+ohare_travel_ca <- community_areas %>%
+  select(comarea_id, comarea_name, population) %>%
+  left_join(ohare_travel_points %>%
+              st_drop_geometry() %>%
+              group_by(comarea_id) %>%
+              summarise(n_points = n(),
+                        minutes_current_min = min(minutes_current, na.rm = TRUE),
+                        minutes_current_max = max(minutes_current, na.rm = TRUE),
+                        minutes_current = mean(minutes_current, na.rm = TRUE),
+                        minutes_with_flyer = mean(minutes_with_flyer, na.rm = TRUE),
+                        minutes_saved = mean(minutes_saved, na.rm = TRUE),
+                        pct_points_flyer_faster = 100 * mean(flyer_faster, na.rm = TRUE),
+                        .groups = "drop"),
+            by = "comarea_id") %>%
+  mutate(across(c(starts_with("minutes_"), pct_points_flyer_faster),
+                ~ round(if_else(is.nan(.x) | is.infinite(.x), NA_real_, .x), 1)),
+         along_route = if (length(g6_route_comareas) > 0) comarea_id %in% g6_route_comareas else NA) %>%
+  arrange(comarea_id)
+```
+
+## Checks
+```{r}
+#| label: group 6 checks
+
+# timetable date and number of origins
+g6_date
+nrow(g6_origins)
+
+# origins without a transit trip to O'Hare within the trip limits
+sum(is.na(ohare_travel_points$minutes_current))
+
+# community areas with the longest and shortest current trips, and the largest savings
+ohare_travel_ca %>% st_drop_geometry() %>% arrange(desc(minutes_current)) %>% head(10)
+ohare_travel_ca %>% st_drop_geometry() %>% arrange(minutes_current) %>% head(10)
+ohare_travel_ca %>% st_drop_geometry() %>% arrange(desc(minutes_saved)) %>% head(10)
+
+# current travel time and time saved with the O'Hare Flyer
+ggplot(ohare_travel_ca) +
+  geom_sf(aes(fill = minutes_current), color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(name = "Minutes", direction = -1) +
+  labs(title = "Average transit travel time to O'Hare (current)") +
+  theme_void()
+
+ggplot(ohare_travel_ca) +
+  geom_sf(aes(fill = minutes_saved), color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(name = "Minutes") +
+  labs(title = "Average minutes saved with the O'Hare Flyer") +
+  theme_void()
+```
+
+## Save datasets
+```{r}
+#| label: group 6 save datasets
+
+ohare_travel_points <- st_transform(ohare_travel_points, 4326)
+ohare_travel_ca <- st_transform(ohare_travel_ca, 4326)
+ohare_flyer_places <- st_as_sf(g6_places, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g6_gpkg)) file.remove(g6_gpkg)
+st_write(ohare_travel_points, g6_gpkg, layer = "ohare_travel_points", quiet = TRUE)
+st_write(ohare_travel_ca, g6_gpkg, layer = "ohare_travel_ca", quiet = TRUE)
+st_write(ohare_flyer_places, g6_gpkg, layer = "ohare_flyer_places", quiet = TRUE)
+
+# CSV tables
+write_csv(st_drop_geometry(ohare_travel_points), file.path(data_dir, "group06_ohare_travel_points.csv"))
+write_csv(st_drop_geometry(ohare_travel_ca), file.path(data_dir, "group06_ohare_travel_ca.csv"))
+write_csv(ohare_travel_times_period, file.path(data_dir, "group06_ohare_travel_times_period.csv"))
+
+# R datasets
+save_with_community_areas(c("ohare_travel_points", "ohare_travel_ca", "ohare_travel_times_period",
+                            "ohare_flyer_places", "g6_date", "g6_periods", "g6_flyer_ride_min",
+                            "g6_flyer_headway_min"),
+                          g6_rdata)
+
+# stop the r5r Java process
+r5r::stop_r5(g6_r5r)
+rJava::.jgc(R.gc = TRUE)
+```
+
+## Dataset descriptions
+All travel times are in minutes, by walking and public transit, the median over departures every minute during each one-hour period (7:30, 12:00 and 16:30 on a weekday), averaged over the three periods.
+
+### `ohare_travel_points` (points, one row per origin)
+| Column | Description |
+|--------|-------------|
+| `id`, `comarea_id`, `comarea_name`, `lat`, `lon` | Origin (grid point about every half mile) and its community area |
+| `minutes_current` | Travel time to O'Hare with today's transit network |
+| `minutes_flyer` | Travel time using the O'Hare Flyer: transit to a Flyer station, average wait (half the headway) and the ride to O'Hare |
+| `minutes_with_flyer` | Faster of the current and Flyer trips |
+| `minutes_saved`, `flyer_faster` | Minutes saved with the Flyer, and whether the Flyer trip is faster (TRUE/FALSE) |
+
+### `ohare_travel_ca` (polygons, one row per community area)
+Number of origins (`n_points`); average, fastest and slowest current travel times among the community area's origins (`minutes_current`, `minutes_current_min`, `minutes_current_max`); average travel time with the Flyer and minutes saved; the percent of origins for which the Flyer is faster; population; and `along_route` (community areas listed in `g6_route_comareas`).
+
+### `ohare_travel_times_period` (table, one row per origin and period)
+Current, Flyer and with-Flyer travel times for each period (`am_peak`, `midday`, `pm_peak`), before averaging.
+
+### `ohare_flyer_places` (points)
+O'Hare and the proposed O'Hare Flyer stations used in the calculations.
+
+## How these datasets may inform the project
+- **Who benefits.** Map `minutes_saved` and `pct_points_flyer_faster` to show which parts of the city would reach O'Hare faster with the Flyer. Areas near the downtown station (and the Forest Park stop, if included) benefit most; areas already near the Blue Line, especially on the Northwest Side, may not benefit at all.
+- **Along the route.** Compare community areas along the proposed route (`along_route`) with the rest of the city: a rail line that passes through neighborhoods without stopping there brings their residents no time savings, which raises questions about who the project serves.
+- **Equity.** Join `ohare_travel_ca` (by `comarea_id`) with Group 5's transit access and vulnerability measures, or with Health Atlas or census data, to ask whether the time savings go to neighborhoods that already have good access to the airport, and how people who work at the airport might be affected.
+- **Scenarios.** Change the settings (e.g., a 10-minute headway, a Forest Park stop with a 10-minute ride, or a different downtown station) and recreate the datasets to compare alternatives.
+
+## Limitations
+- **Proposed service.** The O'Hare Flyer's alignment, stations, travel time and frequency are proposals, not final plans; travel times with the Flyer are estimates based on those proposals, and do not include fares (expected to be higher than CTA fares) or transfers within O'Hare (e.g., to Terminal 5).
+- **Scheduled, not actual, times.** Travel times use published timetables, not real-world reliability, delays or crowding, and assume walking at a constant speed.
+- **Weekday periods only.** Travel times are for three weekday periods; airport travel also occurs early in the morning, late at night and on weekends.
+- **Grid origins.** Origins are evenly spaced, not weighted by population, so averages describe places, not residents; parks and industrial areas count as much as residential blocks.
