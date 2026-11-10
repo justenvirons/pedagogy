@@ -162,17 +162,14 @@ fx_table_novel_geo <- function(novel_geo_cook) {
     st_drop_geometry() %>%
     group_by(location, type) %>%
     summarise(areas = n(),
-              sqmi_total = sum(sqmi),
-              sqmi_min = min(sqmi),
               sqmi_max = max(sqmi),
               .groups = "drop") %>%
     datatable(class = 'cell-border stripe',
               selection = "none",
               rownames = FALSE,
-              colnames = c("Location", "Type", "Areas", "Total Square Miles",
-                           "Smallest (Square Miles)", "Largest (Square Miles)"),
+              colnames = c("Location", "Type", "Areas", "Square Miles"),
               options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
-    formatRound(c("sqmi_total", "sqmi_min", "sqmi_max"), digits = 1)
+    formatRound(c("sqmi_max"), digits = 1)
 }
 ```
 

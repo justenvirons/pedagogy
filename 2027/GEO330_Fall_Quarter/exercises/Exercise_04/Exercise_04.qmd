@@ -78,10 +78,15 @@ load(file = url("https://justenvirons.org/pedagogy/GEO330/Exercise_04/data/Exerc
 
 The load command imports the datasets and custom functions (all beginning with "fx_") used to create the exercise's tables, plots and maps. You can view the code for each function by clicking the "Show" links throughout this document.
 
+::: {.callout-tip collapse="true"}
+## VIDEO Step #1
+{{< video videos/Exercise_04_01.mp4 >}}
+:::
+
 # Step 2. Create health and transportation indicator dataset
 
 ## Combine countywide geographies
-Health indicators on the Chicago atlas are reported by community area, whereas those on the suburban Cook County atlas are reported by municipality. To map and compare indicators across the county, the two have been combined into a novel geography (`novel_geo_cook`, N=202) of city of Chicago community areas (N=77) and suburban Cook County municipalities of at least 4 square miles (N=125), using GeoJSON data imported from the two health atlases. The geography was loaded in Step 1; the function used to create it is shown below for reference. @tbl-novel_geo summarizes the areas in the new geography.
+Health indicators on the Chicago atlas are reported by community area, whereas those on the suburban Cook County atlas are reported by municipality. To map and compare indicators across the county, the two have been combined into a novel geography (`novel_geo_cook`, N=202) of city of Chicago community areas (N=77) and suburban Cook County municipalities of at least 4 square miles (N=125), using GeoJSON data imported from the two health atlases. The geography was loaded in Step 1; the function used to create it (fx_create_novel_geo) is available below for reference. @tbl-novel_geo summarizes the areas in the new geography.
 
 ```{r}
 #| label: define county-wide geography functions
@@ -120,23 +125,21 @@ fx_table_novel_geo <- function(novel_geo_cook) {
     st_drop_geometry() %>%
     group_by(location, type) %>%
     summarise(areas = n(),
-              sqmi_total = sum(sqmi),
-              sqmi_min = min(sqmi),
               sqmi_max = max(sqmi),
               .groups = "drop") %>%
     datatable(class = 'cell-border stripe',
               selection = "none",
               rownames = FALSE,
-              colnames = c("Location", "Type", "Areas", "Total Square Miles",
-                           "Smallest (Square Miles)", "Largest (Square Miles)"),
+              colnames = c("Location", "Type", "Areas", "Square Miles"),
               options = list(searching = FALSE, lengthChange = FALSE, paging = FALSE)) %>%
-    formatRound(c("sqmi_total", "sqmi_min", "sqmi_max"), digits = 1)
+    formatRound(c("sqmi_max"), digits = 1)
 }
 ```
 
 ```{r}
 #| label: tbl-novel_geo
 #| tbl-cap: Novel Cook County Geography by Location and Type
+#| echo: false
 
 # summarize the county-wide geography
 fx_table_novel_geo(novel_geo_cook)
@@ -170,6 +173,7 @@ You will test these hypotheses with the merged data in the steps that follow, so
 ```{r}
 #| label: tbl-health_indicators
 #| tbl-cap: Selected Health Survey Indicators, Topic Keys and Survey Periods
+#| echo: false
 
 # show the selected health survey indicators
 fx_table_health_indicators(health_indicators)
@@ -533,7 +537,7 @@ fx_map_indicators(novel_geo_cook,
 
 # Step 4. Examine statistical relationships between selected variables
 
-Use the code below to create a bivariate correlation plot to explore the statistical relationships between the seven downloaded indicator variables (`indicators_geo`). Only areas with data for every indicator are included. Pearson's bivariate correlation (or Pearson's r) quantifies the strength and direction of the linear relationship between each pair of variables. The coefficients range from -1 to +1 with values greater than 0 indicating positive linear relationships (i.e., as one variable increases, the other variable also increases) and values less than 0 indicating a negative linear relationship (i.e., as one variable increases, the other variable decreases). @fig-correlation_plots shows two plots based on the same correlation matrix: Plot 1 shows explicit correlation statistics and plot 2 shows graduated circles (larger circles for stronger relationships; black for negative and white for positive relationships). Indicators are ordered so that closely related indicators are next to each other. @tbl-correlations lists the same coefficients.
+Use the code below to create a bivariate correlation plot to explore the statistical relationships between the seven downloaded indicator variables (`indicators_geo`). Only areas with data for every indicator are included. Pearson's bivariate correlation (or Pearson's r) quantifies the strength and direction of the linear relationship between each pair of variables. The coefficients range from -1 to +1 with values greater than 0 indicating positive linear relationships (i.e., as one variable increases, the other variable also increases) and values less than 0 indicating a negative linear relationship (i.e., as one variable increases, the other variable decreases). @fig-correlation_plots shows two plots based on the same correlation matrix: Plot 1 shows explicit correlation statistics and plot 2 shows graduated circles (larger circles for stronger relationships; black for negative and white for positive relationships). Indicators are ordered so that closely related indicators are next to each other.
 
 ```{r}
 #| label: define correlation functions
@@ -593,15 +597,6 @@ fx_plot_correlations(indicator_correlations, method = "number")
 
 # plot 2: graduated circles
 fx_plot_correlations(indicator_correlations, method = "circle")
-
-```
-
-```{r}
-#| label: tbl-correlations
-#| tbl-cap: Bivariate Correlation Coefficients (Pearson) Between Health Survey Indicators
-
-# show the correlation coefficients
-fx_table_correlations(indicator_correlations)
 
 ```
 
