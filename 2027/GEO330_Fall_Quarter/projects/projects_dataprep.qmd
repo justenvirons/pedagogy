@@ -1839,7 +1839,7 @@ The Transit Availability Index subzones overlapping the city of Chicago, with th
 
 # Group 6: The proposed O'Hare Flyer rail connection
 ## Project overview
-Group 6 is examining the proposed O'Hare Flyer, a privately funded express rail link between the West Loop and O'Hare International Airport. As proposed in 2026, trains would run on existing freight railroad right-of-way between a downtown station on Canal Street just south of Chicago Union Station (near Van Buren Street and the Old Post Office) and an O'Hare Flyer airport station at Terminal 2, taking about 15 minutes and running every 15 minutes from 4 a.m. to 10 p.m. From downtown, the route runs south and then west on Union Pacific (UP) track past UP's Global 1 intermodal yard, west on CSX track south of the Blue Line's Forest Park branch to Forest Park, and north on Canadian National (CN) track through Forest Park and River Forest to O'Hare. No intermediate stations are shown on the published route map, although a Forest Park stop near the Blue Line terminal has been discussed. The route, stations and schedule are proposals and may change, so they are settings below.
+Group 6 is examining the proposed O'Hare Flyer, a privately funded express rail link between the West Loop and O'Hare International Airport. As proposed in 2026, trains would run on existing freight railroad right-of-way between a downtown terminus at the Old Chicago Main Post Office (433 W. Van Buren Street, in the West Loop just south of Chicago Union Station) and an O'Hare Flyer airport station across from Terminal 2, taking about 15 minutes and running every 15 minutes from 4 a.m. to 10 p.m. From downtown, the route runs south and then west on Union Pacific (UP) track past UP's Global 1 intermodal yard, west on CSX track south of the Blue Line's Forest Park branch to Forest Park, and north on Canadian National (CN) track through Forest Park, River Forest (near Forest and Park avenues), Franklin Park and Schiller Park to O'Hare. Near downtown, the alignment is described as running near the St. Charles Air Line and the Clinton/Union Station area. No intermediate stations are shown on the published route map, although a Forest Park stop near the Blue Line terminal has been discussed as a tentative option. The route, stations and schedule are proposals and may change, so they are settings below.
 
 Today, transit riders reach O'Hare on the CTA Blue Line (O'Hare station, beneath the Terminal 2 parking garage), on CTA and Pace buses, or on Metra's North Central Service to O'Hare Transfer station, which connects to the terminals on the airport's Airport Transit System (ATS) people mover.
 
@@ -1878,16 +1878,17 @@ g6_places <- tribble(
   ~id,                 ~name,                                                 ~lat,     ~lon,
   "ohare",             "O'Hare International Airport (CTA Blue Line station)", 41.97766, -87.90422,
   "ohare_transfer",    "Metra O'Hare Transfer station",                       41.99539, -87.88363,
-  "flyer_downtown",    "O'Hare Flyer downtown station (Canal St south of Union Station)", 41.87664, -87.63943,
-  "flyer_forest_park", "O'Hare Flyer Forest Park stop (discussed; Blue Line terminal)",   41.87404, -87.81727)
+  "flyer_downtown",    "O'Hare Flyer downtown terminus (Old Chicago Main Post Office, 433 W. Van Buren St.)", 41.87530, -87.63860,
+  "flyer_forest_park", "O'Hare Flyer Forest Park stop (tentative option; Blue Line terminal)", 41.87404, -87.81727)
 
 # minutes from Metra's O'Hare Transfer station to the terminals on the Airport
 # Transit System (average wait plus ride; an assumption, adjust as needed)
 g6_ats_min <- 10
 
 # O'Hare Flyer service (proposed): minutes from each station to O'Hare and minutes
-# between trains (riders wait half the headway, on average). The Forest Park stop's
-# ride time has not been announced; set it (e.g., 10) to include the stop, or NA
+# between trains (riders wait half the headway, on average). The Forest Park stop is a
+# tentative option and its ride time has not been announced; set it (e.g., 10) to
+# include the stop, or NA
 g6_flyer_ride_min <- c(flyer_downtown = 15, flyer_forest_park = NA)
 g6_flyer_headway_min <- 15
 
