@@ -505,11 +505,10 @@ g2_file_bus_routes <- file.path(data_dir, "CTA_Bus_Routes.shp")
 g2_file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
 g2_file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
 
-# CTA bus stops (Chicago Data Portal); $limit raises the portal's default of 1,000 rows.
-# If a bus stops shapefile has been exported from the portal page (Export > Shapefile)
-# and saved as g2_file_bus_stops, it is used instead of the portal download.
-url_bus_stops <- "https://data.cityofchicago.org/resource/hvnx-qtky.geojson?$limit=50000"
-g2_file_bus_stops <- file.path(data_dir, "CTA_BusStops.shp")
+# CTA GTFS schedule data (bus stops and the routes serving them); also used by
+# Groups 5 and 6. The download is saved as a cache file.
+url_cta_gtfs <- "https://www.transitchicago.com/downloads/sch_data/google_transit.zip"
+g2_file_cta_gtfs <- file.path(data_dir, "cta_gtfs_cache.zip")
 
 # Ashland Avenue bus routes: 9 Ashland and X9 Ashland Express
 g2_routes <- c("9", "X9")
@@ -532,7 +531,7 @@ g2_rdata <- file.path(data_dir, "group02_ashland_brt.RData")
   - `CTA_Average_Rail_Station_Ridership_1999_2026.csv`: total and average daily entries by rail station, month and day type, January 1999 to June 2026.
   - `CTA_Bus_Routes.shp`: current bus route alignments (one line per route), with route number (`ROUTE`), name and type (`KEY` or `SUPPORT` route).
   - `CTA_RAIL_STATIONS.shp` and `CTA_RAIL_LINES.shp`: rail stations and lines. Station ids (`STATION_ID`) match the rail ridership file's `RIDERSHIP_ID`.
-- [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal): bus stop locations and the routes serving each stop. The download is also saved as a cache file. If the portal download does not work, export the dataset as a shapefile from the portal page and save it in `projects/data/` as `CTA_BusStops.shp` (with its other files); it is then used instead.
+- [CTA GTFS](https://www.transitchicago.com/developers/gtfs/) (General Transit Feed Specification) schedule data: bus stop locations (`stops.txt`), and the routes serving each stop, from the stops (`stop_times.txt`) of each bus route's scheduled trips (`trips.txt`, `routes.txt`). The download is also saved as a cache file.
 
 ## Functions
 ```{r}
@@ -664,105 +663,53 @@ ashland_bus_ridership <- g2_bus_all %>%
 ```
 
 ## Bus stops
-Bus stops served by the Ashland routes are selected using the routes listed for each stop in the portal's bus stop data (the column is found by its values, since column names differ between portal exports). If no stops are found that way, stops within 100 feet of the Ashland routes are selected instead.
+CTA bus stops and the routes serving each stop are built from the CTA GTFS schedule data: a stop is served by a route if any of the route's scheduled trips stops there. Bus stops are stops served by bus routes (GTFS `route_type` 3), which excludes rail platforms and stations. The Ashland bus stops are the stops served by route 9 or X9.
 
 ```{r}
 #| label: group 2 bus stops
 
-# CTA bus stops: a saved shapefile, if there is one, or the portal download
-fx_read_bus_stops <- function() {
-  stops <- if (file.exists(g2_file_bus_stops)) {
-    st_read(g2_file_bus_stops, quiet = TRUE)
-  } else {
-    read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson"))
-  }
-  names(stops) <- str_to_lower(names(stops))
-  st_geometry(stops) <- "geometry"
-  # stops without point geometry but with coordinate columns (e.g., point_x and
-  # point_y, or longitude and latitude) are located from those columns
-  if (all(st_is_empty(stops))) {
-    table <- st_drop_geometry(stops)
-    x <- intersect(c("point_x", "longitude", "lon", "x"), names(table))[1]
-    y <- intersect(c("point_y", "latitude", "lat", "y"), names(table))[1]
-    if (is.na(x) || is.na(y)) stop("The bus stop data have no locations; columns: ", paste(names(table), collapse = ", "))
-    table <- mutate(table, across(all_of(c(x, y)), as.numeric)) %>% filter(!is.na(.data[[x]]), !is.na(.data[[y]]))
-    stops <- st_as_sf(table, coords = c(x, y), remove = FALSE,
-                      crs = if (abs(median(table[[x]])) <= 180) 4326 else 3435) # degrees or State Plane feet
-    st_geometry(stops) <- "geometry"
-  }
-  if (is.na(st_crs(stops))) stops <- st_set_crs(stops, 4326)
-  st_transform(stops, 3435)
+# unzip the GTFS tables used here (stop_times.txt is large, so only two of its
+# columns are read)
+g2_gtfs_dir <- file.path(tempdir(), "cta_gtfs")
+unzip(download_cached(url_cta_gtfs, g2_file_cta_gtfs),
+      files = c("routes.txt", "trips.txt", "stops.txt", "stop_times.txt"),
+      exdir = g2_gtfs_dir, overwrite = TRUE)
+
+read_gtfs <- function(file, ...) {
+  read_csv(file.path(g2_gtfs_dir, file), col_types = cols(.default = col_character()), ...)
 }
 
-g2_stops_all <- fx_read_bus_stops()
+# trips on bus routes
+g2_bus_trips <- read_gtfs("routes.txt") %>%
+  filter(route_type == "3") %>%
+  select(route_id) %>%
+  inner_join(read_gtfs("trips.txt", col_select = c(route_id, trip_id)), by = "route_id")
 
-# describe the bus stop data (useful if no Ashland stops are found below)
-fx_describe_stops <- function(stops) {
-  paste0("Bus stops read: ", nrow(stops),
-         "\nGeometry types: ", paste(unique(as.character(st_geometry_type(stops))), collapse = ", "),
-         "\nExtent (WGS84): ", paste(round(st_bbox(st_transform(stops, 4326)), 4), collapse = ", "),
-         "\nColumns: ", paste(names(stops), collapse = ", "))
-}
-message(fx_describe_stops(g2_stops_all))
+# routes serving each stop (e.g., "9,X9,66")
+g2_stop_routes <- read_gtfs("stop_times.txt", col_select = c(trip_id, stop_id)) %>%
+  inner_join(g2_bus_trips, by = "trip_id") %>%
+  distinct(stop_id, route_id) %>%
+  group_by(stop_id) %>%
+  summarise(routes = paste(str_sort(route_id, numeric = TRUE), collapse = ","),
+            n_routes = n(),
+            .groups = "drop")
 
-# split a column of route lists (e.g., "9,X9,66") into route tokens
-fx_route_tokens <- function(x) str_split(str_to_upper(coalesce(as.character(x), "")), "[^A-Z0-9]+")
+# all CTA bus stops (also used by Group 5)
+cta_bus_stops <- read_gtfs("stops.txt") %>%
+  inner_join(g2_stop_routes, by = "stop_id") %>%
+  mutate(across(c(stop_lat, stop_lon), as.numeric)) %>%
+  filter(!is.na(stop_lat), !is.na(stop_lon)) %>%
+  select(stop_id, stop_name, routes, n_routes, stop_lat, stop_lon) %>%
+  st_as_sf(coords = c("stop_lon", "stop_lat"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435)
 
-# column listing the routes serving each stop: among columns named like "route"
-# (or, if none, text columns with comma-separated values), the column whose values
-# contain the most CTA route numbers (column names differ between portal exports)
-g2_route_ids <- str_to_upper(g2_bus_routes_all$route_id)
-g2_stops_table <- st_drop_geometry(g2_stops_all)
-g2_route_candidates <- str_subset(names(g2_stops_table), "rout")
-if (length(g2_route_candidates) == 0) {
-  g2_route_candidates <- names(select(g2_stops_table, where(~ is.character(.x) && any(str_detect(.x, ","), na.rm = TRUE))))
-}
-g2_route_match <- g2_stops_table %>%
-  select(all_of(g2_route_candidates)) %>%
-  map_dbl(~ mean(map_lgl(fx_route_tokens(.x), function(tokens) any(tokens %in% g2_route_ids))))
-g2_routes_col <- if (length(g2_route_match) > 0 && max(g2_route_match) > 0.5) {
-  names(which.max(g2_route_match))
-} else {
-  NA_character_
-}
-message("Routes column: ", g2_routes_col)
-
-ashland_bus_stops <- if (!is.na(g2_routes_col)) {
-  g2_stops_all %>%
-    mutate(routes = str_squish(as.character(.data[[g2_routes_col]]))) %>%
-    filter(map_lgl(fx_route_tokens(routes), ~ any(.x %in% str_to_upper(g2_routes))))
-} else {
-  g2_stops_all[0, ]
-}
-
-# if no stops are found by route, select stops within 100 feet of the Ashland routes
-if (nrow(ashland_bus_stops) == 0) {
-  message("No stops found by route; selecting stops within 100 feet of the Ashland routes")
-  ashland_bus_stops <- g2_stops_all %>%
-    st_filter(g2_ashland_narrow) %>%
-    mutate(routes = if (!is.na(g2_routes_col)) as.character(.data[[g2_routes_col]]) else NA_character_)
-}
-if (nrow(ashland_bus_stops) == 0) {
-  stop("No bus stops found along the Ashland routes; check the bus stop data (",
-       if (file.exists(g2_file_bus_stops)) g2_file_bus_stops else file.path(data_dir, "bus_stops_cache.geojson"),
-       ")\n", fx_describe_stops(g2_stops_all))
-}
-
-# point coordinates (any multipoint stops are reduced to a single point)
-ashland_bus_stops <- suppressWarnings(st_centroid(ashland_bus_stops))
-g2_stop_coords <- st_coordinates(st_transform(ashland_bus_stops, 4326))
-
-ashland_bus_stops <- ashland_bus_stops %>%
-  mutate(stop_lon = g2_stop_coords[, 1],
-         stop_lat = g2_stop_coords[, 2]) %>%
-  select(any_of(c(stop_id = "systemstop", stop_id = "stop_id", stop_name = "public_nam",
-                  stop_name = "stop_name", street = "street", cross_street = "cross_st",
-                  direction = "dir")),
-         routes, stop_lat, stop_lon) %>%
+# bus stops served by the Ashland routes
+ashland_bus_stops <- cta_bus_stops %>%
+  filter(map_lgl(str_split(routes, ","), ~ any(.x %in% g2_routes))) %>%
   st_join(select(community_areas, comarea_id, comarea_name)) %>%
   arrange(desc(stop_lat))
 
-rm(g2_stops_all, g2_stops_table, g2_stop_coords, g2_route_candidates, g2_route_match, g2_route_ids)
+rm(g2_bus_trips, g2_stop_routes)
 ```
 
 ## Rail stations and ridership
@@ -924,7 +871,7 @@ The Ashland routes (9 and X9) and the bus routes that cross or connect with them
 CTA rail stations within a quarter mile of the Ashland routes, with `station_id`, `station_name`, `station_line` (`Multi` for stations served by more than one line), distance from the Ashland routes (`dist_ashland_ft`), community area, and the ridership columns above. Rail ridership counts entries at each station; riders transferring between lines within a station are not counted again.
 
 ### `ashland_bus_stops` (points, one row per stop)
-Bus stops served by the Ashland routes, with the stop id and name, street, cross street, direction, the routes serving the stop (`routes`), latitude and longitude, and community area. Stops have no ridership (see limitations); they can be used to measure stop spacing (a key difference between local bus and BRT service), identify transfer points and summarize the population or destinations near the corridor.
+Bus stops served by the Ashland routes (from the CTA GTFS data), with the stop id (`stop_id`) and name (`stop_name`, e.g., "Ashland & Belmont"), the routes serving the stop (`routes`, e.g., "9,X9,77") and their number (`n_routes`), latitude and longitude, and community area. Each direction of travel has its own stop. Stops have no ridership (see limitations); they can be used to measure stop spacing (a key difference between local bus and BRT service), identify transfer points and summarize the population or destinations near the corridor.
 
 ### `ashland_community_areas` (polygons, one row per community area)
 Community areas with Ashland bus stops, with population, land area, and the number of Ashland bus stops (`n_bus_stops`) and nearby rail stations (`n_rail_stations`).
@@ -1571,7 +1518,7 @@ g5_rdata <- file.path(data_dir, "group05_transit_access.RData")
 ```
 
 ## Data sources
-- CTA rail stations, rail lines and bus routes (NITA; see Group 2), and [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal; cached for Group 2).
+- CTA rail stations, rail lines and bus routes (NITA; see Group 2), and CTA bus stops from the CTA GTFS data (`cta_bus_stops`; see Group 2). Each direction of travel has its own stop, so stops on two-way streets are counted twice.
 - [CMAP Transit Availability Index, 2019](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::transit-availability-index-2019/about): an index for each CMAP subzone (about ½ mile by ½ mile, ¼ mile by ¼ mile downtown) in the seven-county region, based on 2019 service. Each subzone has four sub-indices, scored from 1 (lowest) to 5 (highest), or 0 where there is no service or no sidewalks: transit service frequency (`freq_ind`), transit connectivity (`conn_ind`), network proximity to transit stops (`prox_ind`) and sidewalk density (`walk_ind`). The overall index (`ta_ind`, 1 to 5) is their average. The raw values behind each sub-index are also included (`freq`, `conn_act`, `prox`, `sdwlkidx`). CMAP advises against comparing this index with earlier versions, which used different subzones and measures.
 - [Chicago COVID-19 Community Vulnerability Index (CCVI)](https://data.cityofchicago.org/Health-Human-Services/Chicago-COVID-19-Community-Vulnerability-Index-CCV/xhc6-88s9/about_data) (Chicago Department of Public Health; also used in Exercise #2): a composite score for each community area and ZIP code, adapted from Surgo Ventures' CCVI and the CDC Social Vulnerability Index, combining socioeconomic status, household composition and disability, adults without a primary care provider, mobility, frontline essential workers, age 65+, comorbid conditions and COVID-19 incidence, hospitalization and mortality. Higher scores (and categories of low, medium and high) indicate greater vulnerability. The download is also saved as a cache file.
 
@@ -1633,8 +1580,8 @@ g5_rail_ca <- fx_miles_by_ca(g5_rail_lines, rail_line) %>%
 ```{r}
 #| label: group 5 bus
 
-g5_bus_stops <- fx_read_bus_stops() %>%
-  select(geometry) %>%
+g5_bus_stops <- cta_bus_stops %>%
+  select(stop_id) %>%
   fx_points_by_ca()
 
 g5_bus_routes <- st_read(g2_file_bus_routes, quiet = TRUE) %>%
@@ -1888,7 +1835,7 @@ library(r5r)
 # schedules (GTFS .zip files), downloaded below and cached
 g6_r5r_dir <- file.path(data_dir, "r5r")
 url_osm_pbf <- "https://download.bbbike.org/osm/bbbike/Chicago/Chicago.osm.pbf"
-url_gtfs <- c(cta = "https://www.transitchicago.com/downloads/sch_data/google_transit.zip",
+url_gtfs <- c(cta = url_cta_gtfs, # Group 2
               metra = "https://schedules.metrarail.com/gtfs/schedule.zip")
 # Pace buses can be added, e.g., url_gtfs["pace"] <- "<Pace GTFS URL>"
 
