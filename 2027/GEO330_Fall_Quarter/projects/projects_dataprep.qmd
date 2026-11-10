@@ -1846,21 +1846,23 @@ Today, transit riders reach O'Hare on the CTA Blue Line (O'Hare station, beneath
 The datasets below estimate how long it takes to reach O'Hare by public transit from points throughout each community area, using CTA and Metra timetables (GTFS) and a transit trip planner ([r5r](https://ipeagit.github.io/r5r/), which routes trips on the street network and transit schedules, like Google Maps or the CTA trip planner). Travel times are calculated for today's transit network and for a network with the O'Hare Flyer, so that time savings can be compared among community areas, especially those along the proposed route.
 
 ## Settings
-r5r requires a 64-bit Java Development Kit (JDK), version 21, which R finds through the `JAVA_HOME` environment variable. If installing or loading r5r fails with an error such as "JAVA_HOME cannot be determined", install Java 21 once from R (and restart R) before installing r5r:
+r5r requires a 64-bit Java Development Kit (JDK), version 21, which R (rJava) finds through the `JAVA_HOME` environment variable. When `JAVA_HOME` is not set, rJava on Windows looks for Java in the Registry and, if none is found, stops with the error "JAVA_HOME cannot be determined from the Registry". The chunk below avoids this: if `JAVA_HOME` is not set, it uses [rJavaEnv](https://www.ekotov.pro/rJavaEnv/) to download a JDK 21 once (cached for later sessions) and sets `JAVA_HOME` before r5r loads.
 
-```r
-install.packages("rJavaEnv")
-rJavaEnv::java_quick_install(version = 21) # downloads a JDK and sets JAVA_HOME for this project
-install.packages("r5r")
-```
-
-or install a JDK 21 (e.g., [Eclipse Temurin 21](https://adoptium.net/), choosing the option to set `JAVA_HOME`), restart RStudio and check with `Sys.getenv("JAVA_HOME")`.
+If r5r still fails to load, restart R (Session > Restart R) and run the chunk again. Alternatively, install a JDK 21 yourself (e.g., [Eclipse Temurin 21](https://adoptium.net/), choosing the option to set `JAVA_HOME`), restart RStudio and check with `Sys.getenv("JAVA_HOME")`.
 
 ```{r}
 #| label: group 6 settings
 
 # r5r routes trips with Java (version 21); allocate memory before r5r (rJava) loads
 options(java.parameters = "-Xmx6G")
+
+# rJava needs JAVA_HOME; if it is not set, download (once, cached) a JDK 21 and
+# point JAVA_HOME to it for this R session, before r5r (rJava) loads
+if (!nzchar(Sys.getenv("JAVA_HOME"))) {
+  if (!requireNamespace("rJavaEnv", quietly = TRUE)) install.packages("rJavaEnv")
+  rJavaEnv::rje_consent(provided = TRUE) # allow rJavaEnv to cache the JDK
+  rJavaEnv::use_java(21)                 # sets JAVA_HOME and PATH
+}
 library(r5r)
 
 # r5r network folder: an OpenStreetMap street network (.pbf) and transit
