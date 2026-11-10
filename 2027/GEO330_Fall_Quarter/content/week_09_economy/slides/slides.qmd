@@ -1,0 +1,269 @@
+---
+title: "GEO 3/430 Sustainable Urban Transportation"
+subtitle: "Week #9: The Economic Benefits of<br>Sustainable Urban Transportation"
+author: "C. Scott Smith, PhD AICP"
+institute: "DePaul University"
+format:
+  revealjs:
+    slide-number: true
+    transition: fade
+    css: slides.css
+    footer: "© 2026 C. Scott Smith | DePaul University"
+    scrollable: true
+    progress: true
+    controls: true
+editor_options:
+  chunk_output_type: console
+---
+## Week #9 agenda
+
+:::: {.columns}
+::: {.column width="40%"}
+- Why make an *economic* case?
+- Climate and clean air
+- Household transportation costs
+- Reinvigorating downtowns and main streets
+- Compact development and fiscal health
+- Safety and injury
+- Equity and resilience
+- Discussion and final project Q&A
+:::
+
+::: {.column width="60%"}
+![Bastrop, Texas, used its Main Street Program to revitalize its downtown, including narrower lanes and safer pedestrian crossings. Source: CCR Studios, in Winton (2026), *Planning*](images/bastrop_main_street.jpg){.bordered-img fig-align="center" width="500px"}
+:::
+::::
+
+::: notes
+Welcome back. For eight weeks we've made the case for sustainable transportation mostly in environmental, health and equity terms. Tonight we put on a different hat — the economist's, or really the city budget director's — and ask a blunt question: does sustainable urban transportation *pay*? Who saves money, who earns money, and who avoids costs when people can walk, bike, take transit or share a car instead of owning and driving one for every trip?
+
+This matters for your final projects and for your careers. Most transportation decisions are ultimately budget decisions — a city council choosing between a road widening and a bus lane, a household choosing between a second car and a transit pass, a small town choosing between a new subdivision on the edge and rebuilding its Main Street. If you can only make the moral case, you'll win some of those arguments. If you can also make the economic case, you'll win a lot more of them.
+
+We'll move through six benefit areas — climate and clean air, household costs, downtown vitality, compact development, safety, and equity — drawing on this week's readings: two issues of APA's *Planning* magazine and two recent research articles, one on the monetized co-benefits of cutting transportation emissions and one on carsharing. The photo on the right is from one of the *Planning* articles: Bastrop, Texas, a town of about 15,000 that used its Main Street program — including narrower lanes and safer crossings — to bring its downtown back. Keep it in mind; we'll come back to it.
+:::
+
+---
+
+## Climate and Clean Air: Costs Grow with Car Travel
+
+:::: {.columns}
+::: {.column width="50%"}
+![CO₂ (bars) and pollutant (line) emissions from urban passenger transportation, Fujian Province, China, 2011–2022. Source: Weng et al. (2025)](images/weng2025_emission_trends.jpg){.bordered-img fig-align="center" height="330"}
+:::
+
+::: {.column width="50%"}
+- Urban passenger transportation emissions grow with income and urbanization: CO₂ rose from **5.18 to 19.66 million tons** (2011–2022), pollutants from **25,400 to 66,800 tons** [(Weng et al., 2025)]{.cite}
+- CO₂ and local pollutants (CO, NOx, HC, PM) come from the **same tailpipes**, so policies that cut one usually cut the other — a *co-benefit*
+- Pollution has real costs: cardiovascular and respiratory disease, lost work and school days
+- Los Angeles shows sustained clean-air progress is possible: public demand, policy entrepreneurship, coordination and technology [(Carlson, 2026)]{.cite}
+:::
+::::
+
+::: notes
+Let's start with climate and air quality, because it's where economists have done the most work putting a price on transportation's side effects.
+
+The chart on the left comes from Weng and colleagues, published in *Urban Climate* in 2025. They modeled urban passenger transportation in Fujian Province, a fast-growing coastal province in China. Look at the shape: CO₂ emissions from urban passenger travel nearly quadrupled in a little over a decade, from about 5 million to almost 20 million tons, and local air pollutants — carbon monoxide, nitrogen oxides, hydrocarbons and particulates — rose right alongside. That's what happens when rising incomes and urbanization translate into more and longer car trips. U.S. metros went through the same curve decades earlier.
+
+The key concept here is *co-benefits*. Carbon dioxide and the pollutants that make people sick come out of the same tailpipes. So when a policy reduces driving, you don't just get a climate benefit that shows up decades from now and spread across the globe — you also get cleaner air right now, in the neighborhoods next to busy roads, which shows up in fewer asthma attacks, fewer hospital visits and fewer lost work days. Those are costs that households, employers and health systems pay.
+
+And if this feels intractable, the summer issue of *Planning* reviewed Ann Carlson's new book *Smog and Sunshine*, about how Los Angeles cleaned up its air. The reviewer's takeaway is that it took a sustained combination of public demand, policy entrepreneurs, government coordination and engineering breakthroughs — and that several of those lessons can be applied to greenhouse gases. In other words, transportation emissions have been bent downward before.
+:::
+
+---
+
+## Mode Shift Delivers the Largest Economic Return
+
+:::: {.columns}
+::: {.column width="55%"}
+![Monetized CO₂ (teal) and pollutant (orange) reduction benefits by policy scenario, 100 million RMB: road green space (RPD), technological progress (TP), new energy vehicles (PNEV) and transportation structure optimization (TSO). Source: Weng et al. (2025)](images/weng2025_economic_benefits_single.jpg){.bordered-img fig-align="center" height="330"}
+:::
+
+::: {.column width="45%"}
+- **Transportation structure optimization** (less private car travel, more transit and bus service, capped car growth) had the largest single benefit: **9.11 billion RMB** and a **23.9%** cut in CO₂ by 2035 [(Weng et al., 2025)]{.cite}
+- Electric vehicles cut more *local pollutants* (29.7%), but shifting trips cut more *carbon*
+- Combining policies compounds benefits: **18.44 billion RMB**, **44%** less CO₂ and **49%** fewer pollutants
+- About **83%** of the monetized benefit came from avoided CO₂
+:::
+::::
+
+::: notes
+Here's where Weng and colleagues get explicitly economic. They put a monetary value on the avoided carbon and the avoided air pollution under different policy scenarios, out to 2035, and compared them.
+
+The four single-policy scenarios on the chart are: more green space along roads, technological progress in vehicle efficiency, promoting new energy vehicles — mostly EVs — and what they call transportation structure optimization. That last one is the one to focus on: reducing private car travel by about one percent a year, increasing public transit service, growing the bus fleet, and capping how fast the private car fleet can grow. In plain terms: mode shift.
+
+Look at the bars. Mode shift — TSO — produced the largest economic benefit of any single policy, about 9.1 billion RMB, and the largest cut in CO₂, almost 24 percent below the baseline by 2035. Electric vehicles did better on local pollutants, which makes sense — they eliminate the tailpipe — but changing *how* people travel did more for the climate than changing *what* they drive. And notice that most of the monetized benefit, about 83 percent, came from avoided carbon.
+
+The second lesson is that policies compound. When the authors combined mode shift with EVs, technology and green space, benefits roughly doubled — 18.4 billion RMB, with CO₂ down 44 percent and pollutants down almost half. There's no single silver bullet, but a package that leads with mode shift and adds cleaner vehicles is the economically strongest option. That's a useful framing for any of you whose final project compares policy alternatives.
+:::
+
+---
+
+## Household Expenditures: Transportation Is the Second-Largest Cost
+
+:::: {.columns}
+::: {.column width="50%"}
+- Transportation is typically a household's **second-largest expense after housing**, about **17%** of spending, most of it buying, insuring, fueling and maintaining vehicles [(BLS, 2024)]{.cite}
+- Housing *plus* transportation costs above **45% of income** signal unaffordability; car-dependent locations can erase "cheap" housing savings [(CNT, 2026)]{.cite}
+- Shared and transit options let households **own fewer cars**: carsharing sited at transit interchanges cut private car mode share from **28.0% to 22.8%** and raised carsharing + transit trips [(Zhong et al., 2025)]{.cite}
+- Walkable towns offer "lower living costs, and proximity to daily destinations" [(Winton, 2026)]{.cite}
+:::
+
+::: {.column width="50%"}
+![Mode shares under five carsharing operating schemes; the best scheme locates carsharing at public transit interchanges. Source: Zhong et al. (2025)](images/zhong2025_mode_share.jpg){.bordered-img fig-align="center" height="290"}
+:::
+::::
+
+::: notes
+Now let's move from the planet's budget to the household budget. For most American households, transportation is the second-largest expense after housing — about 17 percent of spending according to the Bureau of Labor Statistics' Consumer Expenditure Survey — and the large majority of that is the cost of owning cars: purchase or loan payments, insurance, gas, maintenance and repairs. Unlike a house, a car loses value every year.
+
+The Center for Neighborhood Technology's Housing + Transportation Affordability Index makes the connection to location. It argues that housing plus transportation should be under about 45 percent of household income, and shows that a "cheap" house at the edge of a region can be expensive once you add the two or three cars needed to live there. That's an economic argument for compact, transit-served neighborhoods that's grounded in household budgets, not abstractions.
+
+So how do households shed a car? Zhong and colleagues, writing in *PLOS ONE*, modeled where and how to operate a carsharing system to maximize both the operator's revenue and broader social benefits. Their best-performing scheme put carsharing sites at transit interchanges and priced them reasonably. In that scenario, the private car mode share dropped from 28 to about 23 percent, and combined carsharing-plus-transit trips grew. Carsharing doesn't replace transit — notice in the chart that some single-mode bus and subway trips shift too — but positioned well, it fills the gaps that otherwise push households into owning another car. And Winton's small-town article reminds us that one of a walkable town's selling points is simply lower living costs and daily destinations within reach.
+:::
+
+---
+
+## Reinvigorating Downtowns and Main Streets
+
+:::: {.columns}
+::: {.column width="55%"}
+![Bastrop, Texas, celebrates its revitalized downtown. Source: CCR Studios, in Winton (2026), *Planning*](images/bastrop_main_street.jpg){.bordered-img fig-align="center" height="330"}
+:::
+
+::: {.column width="45%"}
+- Many towns carry the costs of infrastructure "designed for a different era" while operating far below capacity [(Winton, 2026)]{.cite}
+- **Bastrop, Texas**: narrower lanes, safer pedestrian crossings and a connected grid increased transportation options while reducing long-term infrastructure redundancy and maintenance
+- "Walkability supports local commerce, improves public health, strengthens social connections, and increases safety and independence"
+- Reuse fits small businesses: a 15,000 sq. ft. department store in Washington, Iowa became **six shops**
+:::
+::::
+
+::: notes
+Let's talk about downtowns. One of the most consistent findings in the economics of sustainable transportation is that people on foot, on bikes and on transit are good for local business — they visit more often, linger longer and spend locally — and that streets designed for moving cars quickly through a place tend to hollow it out.
+
+Gregory Winton's piece in the summer *Planning* is about small towns, but the logic scales up to neighborhood business districts in Chicago. He describes towns whose Main Streets are lined with vacant storefronts while they still carry the cost of infrastructure built for a different era. His prescription has four parts, and the one most relevant to us is "reclaim the walkable grid." Most historic towns were built at a human scale for people, not cars, and walkability, he writes, supports local commerce, improves public health, strengthens social connections and increases safety and independence.
+
+Bastrop is his example. Its downtown improvements included narrower lane widths, safer pedestrian crossings and subdivision standards that reinforce a connected grid. Notice the economic claim: those changes increased transportation options *and* reduced long-term infrastructure redundancy and maintenance. Narrower streets are cheaper to maintain. He also points to adaptive reuse, like a former department store in Washington, Iowa, carved into six small shops — the kind of space small, local businesses can actually afford. Think about Chicago's commercial corridors — Milwaukee Avenue, 53rd Street in Hyde Park, Devon — through this same lens.
+:::
+
+---
+
+## Compact Development and Fiscal Health
+
+:::: {.columns}
+::: {.column width="40%"}
+![Photo illustration for "Did the Montana Miracle Answer the State's Housing Prayers?" Source: Miguel Porlan, in Moore (2026), *Planning*](images/montana_miracle_keys.jpg){.bordered-img fig-align="center" height="330"}
+:::
+
+::: {.column width="60%"}
+- Low-density growth can look like a fiscal win, but "initial tax gains may be offset over time by the cost of maintaining" it [(Winton, 2026)]{.cite}
+- **Montana**: population grew **10%** (2010–2020) while housing units grew **7%**; average home prices rose **36%** (2020–2023) [(Moore, 2026)]{.cite}
+- The 2023 "Montana Miracle" laws allowed an ADU by right in single-family areas and multifamily and mixed-use buildings in commercial zones; upheld by the state supreme court
+- "Restricting density in the cities forces development to sprawl outwards, and that takes over a lot of the surrounding rural areas." — Kendall Cotton
+- A rare coalition: environmentalists, property-rights advocates and farmland preservationists
+:::
+::::
+
+::: notes
+Compact development is where transportation economics and land use economics meet. Sprawl isn't only a transportation problem; it's a long-term municipal liability. Every new mile of road, sewer and water main at the edge has to be maintained and eventually replaced, and low-density development often doesn't generate enough tax revenue per acre to pay for it. Winton puts it plainly: initial tax gains from edge growth may be offset over time by the cost of maintaining it.
+
+The Montana story in the same issue shows the housing side. Between 2010 and 2020, Montana's population grew about 10 percent but its housing stock only about 7 percent, and home prices jumped 36 percent in three years. In 2023 a bipartisan coalition passed what the press dubbed the "Montana Miracle": an accessory dwelling unit allowed by right on single-family lots, and multifamily and mixed-use buildings legalized in commercial zones. After a lawsuit, the state supreme court upheld the laws this year.
+
+Read the quote from Kendall Cotton, a task force member: restricting density in cities forces development to sprawl outward into rural areas. What's interesting economically and politically is the coalition — environmentalists, free-market property-rights advocates and conservatives protecting farmland all supported the same reforms for different reasons. For transportation, the payoff is that more homes near existing jobs, shops and transit mean shorter trips, more trips on foot or by transit, and fewer miles of new road to maintain. Planners quoted in the article caution that it's still too early to measure the impact on affordability — a good reminder to look for evidence, not just intentions.
+:::
+
+---
+
+## Safety and Injury: The Hidden Costs of Car Dependence
+
+:::: {.columns}
+::: {.column width="50%"}
+- U.S. traffic crashes cost **$340 billion** in economic costs and **$1.4 trillion** in total societal harm (2019) [(Blincoe et al., 2023)]{.cite}
+- Nearly **41,000** people died on U.S. roads in 2023 [(NHTSA, 2025)]{.cite}
+- Safer street design is also cheaper street design: Bastrop's narrower lanes and safer crossings [(Winton, 2026)]{.cite}
+- The "diminishing play radius": in 1919 a child walked alone **8 miles** to go fishing; a century later, his great-grandson could go no farther than the end of the street, a radius ~30 times smaller; a focus on cars and parking is one cause [(Glenn, 2026)]{.cite}
+:::
+
+::: {.column width="50%"}
+![Pascal and his red balloon explore the streets of post-war Paris in *The Red Balloon* (1956). Source: Janus Films/The Criterion Collection, in Glenn (2026), *Planning*](images/red_balloon_paris.jpg){.bordered-img fig-align="center" height="300"}
+:::
+::::
+
+::: notes
+Safety is usually framed as a moral issue, and it is one. But it's also one of the largest economic costs of our transportation system, and it's paid by everyone. NHTSA's most recent comprehensive estimate put the economic cost of U.S. motor vehicle crashes in 2019 at about 340 billion dollars — medical care, emergency services, lost productivity, property damage, insurance administration, congestion — and the total societal harm, once you include lost quality of life, at about 1.4 trillion. In 2023 alone, nearly 41,000 people died on U.S. roads, and as we saw in Week 2, pedestrian deaths have risen especially fast.
+
+The good news is that safer streets are often cheaper streets. Narrower lanes, shorter crossings and lower design speeds — like Bastrop's — reduce crash severity and cost less to build and maintain than wide, fast arterials.
+
+There's also a cost we rarely count: freedom. Ezra Haber Glenn's essay in the fall *Planning* revisits the 1956 film *The Red Balloon*, in which a young boy roams Paris on his own. He cites research on the "diminishing play radius": in 1919 a child walked alone eight miles to go fishing; less than a century later, his great-grandson couldn't go past the end of the street. A focus on cars and parking is one of the explanations. When children can't walk or bike safely, parents become chauffeurs — that's household time and money — and kids lose independence and physical activity, which carries its own long-term health costs.
+:::
+
+---
+
+## Equity and Resilience: Who Benefits?
+
+:::: {.columns}
+::: {.column width="50%"}
+![A Phoenix transit shelter that improves visibility, ADA access and shade. Source: City of Phoenix, in Trego et al. (2026), *Planning*](images/phoenix_transit_shelter.jpg){.bordered-img fig-align="center" height="200"}
+
+![Shade structure at Cortez Park, Phoenix. Source: City of Phoenix, in Trego et al. (2026), *Planning*](images/phoenix_botanical_canopy.jpg){.bordered-img fig-align="center" height="170"}
+:::
+
+::: {.column width="50%"}
+- Shade reduces the temperature people feel **more than any other single environmental modification**; Phoenix's 2024 Shade Plan adds shade at **bus stops** and along high-traffic "cool corridors" [(Trego et al., 2026)]{.cite}
+- Treats shade as **critical infrastructure** and prioritizes **low- and mid-low-income neighborhoods**
+- Making places reachable by walking, biking, micromobility and transit "isn't just about mobility; it's an equity and participation issue" [(Marquis, 2026)]{.cite}
+- Benefits (cleaner air, lower costs, safer streets) should reach households that drive least and are most exposed
+:::
+::::
+
+::: notes
+The last benefit area is equity, and it ties the others together. Households with lower incomes, older adults, people with disabilities and teenagers are the most likely to rely on walking, biking and transit, and they're often the most exposed to traffic danger, pollution and heat. So the question is not only whether sustainable transportation produces economic benefits, but *who receives them*.
+
+The fall *Planning* article by Trego, Hondula, Keith and Meerow on Phoenix's Shade Plan is a great example of thinking about this, and it's also a climate adaptation story. Research shows shade reduces the temperature people feel more than any other single environmental change. Phoenix adds shade structures at bus stops and along heavily used walking "cool corridors," treats shade as critical infrastructure — like water or power, with budgets for maintenance — and explicitly prioritizes low- and mid-low-income neighborhoods. The transit shelter on the top left isn't a luxury: if you're waiting for a bus at 110 degrees, shade determines whether transit is a viable option at all.
+
+Bridget Marquis makes a parallel point about teens: public spaces must be reachable by walking, biking, micromobility and transit, or the teens who most need them can't use them — "it's an equity and participation issue." Remember Group 5's final project dataset: transit access in underserved Chicago neighborhoods. This is exactly the lens to apply.
+:::
+
+---
+
+## Discussion: Making the Economic Case
+
+- Which **costs** of car dependence are paid by households, by governments, and by society at large? Which are easiest to put a dollar value on?
+- Weng et al. found that **shifting trips** delivered more value than cleaner vehicles alone. Does that hold for Chicago? What would it take?
+- Pick a Chicago corridor (e.g., Ashland Avenue, Milwaukee Avenue, 63rd Street): what would *reclaiming the walkable grid* cost, and who would benefit?
+- For your **final project**: which economic benefit(s) could strengthen your argument, and what data could measure them?
+
+::: notes
+Let's put this to work. In small groups, take about ten minutes on these questions.
+
+First, sort the costs of car dependence by who pays: households (vehicle ownership, fuel, time), governments (road maintenance, emergency services, parking) and society (pollution, climate, crashes). Which of these are easy to price and which are hard? That matters, because what gets priced tends to get counted in decisions.
+
+Second, think about Weng and colleagues' finding that shifting trips out of cars beat cleaner cars alone. Would that hold in Chicago, where we already have a large transit network? What would it take — service, land use, pricing?
+
+Third, pick a Chicago corridor — Ashland, which Group 2 is studying for bus rapid transit, Milwaukee Avenue, or 63rd Street — and apply Winton's small-town logic: what would reclaiming the walkable grid there cost, and who would benefit?
+
+Finally, turn to your final projects. Almost every project in this class has an economic dimension: e-bike safety and crash costs, BRT and travel time savings, motorcycle fatalities, transit access in underserved neighborhoods, travel time to O'Hare. Identify one economic benefit that could strengthen your argument, and the data you'd use to measure it. [Have two or three groups report back, then open the floor for final project questions.]
+:::
+
+---
+
+## References
+
+::: {.references}
+- Blincoe, L., Miller, T., Wang, J.-S., Swedler, D., Coughlin, T., Lawrence, B., Guo, F., Klauer, S., & Dingus, T. (2023). *The economic and societal impact of motor vehicle crashes, 2019 (revised)* (DOT HS 813 403). National Highway Traffic Safety Administration.
+- Carlson, A. (2026). *Smog and sunshine: The surprising story of how Los Angeles cleaned up its air*. University of California Press. Reviewed by D. Press in *Planning*, Summer 2026, p. 21.
+- Center for Neighborhood Technology. (2026). *H+T Affordability Index*. https://htaindex.cnt.org
+- Glenn, E. H. (2026). Can cities still give children the freedom to explore? *Planning*, 92(4), 11.
+- Marquis, B. (2026). Beyond the ban: Designing the third spaces teens need. *Planning*, 92(4), 15–17.
+- Moore, T. (2026). Did the Montana Miracle answer the state's housing prayers? *Planning*, 92(3), 28–32.
+- National Highway Traffic Safety Administration. (2025). *Traffic safety facts: 2023 data*. U.S. Department of Transportation.
+- Trego, S., Hondula, D., Keith, L., & Meerow, S. (2026). Plan for shade as critical infrastructure. *Planning*, 92(4), 13–15.
+- U.S. Bureau of Labor Statistics. (2024). *Consumer expenditures in 2023* (Report 1112). U.S. Department of Labor.
+- Weng, D., Zhang, H., Wen, X., Hu, X., & Zhang, L. (2025). Co-benefits of carbon and pollutant emission reduction in urban transport: Sustainable pathways and economic efficiency. *Urban Climate*, 60, 102348. https://doi.org/10.1016/j.uclim.2025.102348
+- Winton, G. S. (2026). The big advantages of small town USA. *Planning*, 92(3), 16–18.
+- Zhong, Y., Luo, Q., Gao, T., Long, Y., & Liu, L. (2025). Carsharing operation optimization with the comprehensive consideration of economic and social benefits. *PLOS ONE*, 20(2), e0315323. https://doi.org/10.1371/journal.pone.0315323
+:::
+
+::: notes
+Here are the sources cited tonight. The four readings — the two issues of *Planning* and the Weng and Zhong articles — are in the week's literature folder. I've also cited a few standard national sources for household spending, housing-plus-transportation affordability and crash costs: the Bureau of Labor Statistics Consumer Expenditure Survey, the Center for Neighborhood Technology's H+T Index and NHTSA's crash cost and fatality reports. These are good starting points if your final project needs national benchmarks. See you next week.
+:::
