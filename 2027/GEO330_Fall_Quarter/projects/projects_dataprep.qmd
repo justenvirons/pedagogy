@@ -12,6 +12,7 @@ library(tidyverse)
 library(lubridate)
 library(jsonlite) # Chicago Health Atlas API
 library(sf)
+library(readxl) # NITA bus ridership (Excel)
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
 ```
@@ -22,7 +23,9 @@ This document stores the code used to create datasets for the GEO 330 final grou
 | Group | Topic | Datasets |
 |-------|-------|----------|
 | 1 | E-bike safety and legislation in the city of Chicago | Bicycle crashes (points); bicycle crashes by community area and year (polygons) |
-| 2 | Bus rapid transit (BRT) along Ashland Avenue | Ashland and connecting bus routes (lines) and rail stations (points) with current and pre-pandemic ridership; Ashland bus stops; monthly bus and rail ridership |
+| 2 | Bus rapid transit (BRT) along Ashland Avenue | Ashland and connecting bus routes (lines) and nearby rail stations (points) with current and pre-pandemic ridership; Ashland bus stops (points); CTA rail lines; monthly bus and rail ridership |
+| 3 | Pedestrian safety near CTA rail stations | Pedestrian crashes (points); CTA rail stations with pedestrian crash counts within 25, 50 and 100 feet (points and buffers) |
+| 4 | Motorcycle fatalities in the city of Chicago | Fatal motorcycle crashes (points); motorcycle fatalities citywide and by community area and year |
 
 Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 
@@ -485,28 +488,28 @@ Bicycle crashes reported by CPD on city streets, `r min(g1_years)`-`r max(g1_yea
 
 # Group 2: Bus rapid transit (BRT) along Ashland Avenue
 ## Project overview
-Group 2 is studying BRT along Ashland Avenue. The datasets below describe current CTA ridership along the corridor: the Ashland bus route(s), the bus routes that cross or connect with them, and the CTA rail stations near Ashland Avenue. Current ridership (the latest 12 months available) is compared with ridership in 2019, before the COVID-19 pandemic, and monthly ridership is included for trend analyses.
+Group 2 is studying BRT along Ashland Avenue. The datasets below describe current CTA ridership along the corridor: the Ashland bus routes (9 Ashland and X9 Ashland Express), the bus routes that cross or connect with them, and the CTA rail stations near them. Current ridership (the latest 12 months available) is compared with ridership in 2019, before the COVID-19 pandemic, and monthly ridership is included for trend analyses.
 
 ## Settings
 ```{r}
 #| label: group 2 settings
 
-# NITA (formerly RTAMS) CTA ridership files, downloaded from
+# NITA (formerly RTAMS) CTA ridership and GIS files, downloaded from
 # https://datahub.nita.illinois.gov/media/datasets/cta-ridership and saved in the
 # data directory. When NITA posts newer files, save them and update the names below.
-g2_file_bus_ridership <- file.path(data_dir, "CTA_Average_Bus_Ridership_1999_2026.csv")
+g2_file_bus_ridership <- file.path(data_dir, "CTA_Average_Bus_Ridership_1999_2026.xlsx")
 g2_file_rail_ridership <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
+g2_file_bus_routes <- file.path(data_dir, "CTA_Bus_Routes.shp")
+g2_file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
+g2_file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
 
-# CTA rail stations (NITA/RTAMS), already saved for Exercise #3
-g2_file_rail_stations <- "exercises/Exercise_03/data/CTA_RAIL_STATIONS.shp"
+# CTA bus stops (Chicago Data Portal); $limit raises the portal's default of 1,000 rows
+url_bus_stops <- "https://data.cityofchicago.org/resource/hvnx-qtky.geojson?$limit=50000"
 
-# CTA GTFS schedule data (route alignments and bus stops)
-url_cta_gtfs <- "https://www.transitchicago.com/downloads/sch_data/google_transit.zip"
-
-# Ashland Avenue bus routes: 9 Ashland and X9 Ashland Express (when operating)
+# Ashland Avenue bus routes: 9 Ashland and X9 Ashland Express
 g2_routes <- c("9", "X9")
 
-# rail stations within this distance (feet) of the Ashland route(s): a quarter mile
+# rail stations within this distance (feet) of the Ashland routes: a quarter mile
 g2_station_buffer_ft <- 1320
 
 # pre-pandemic comparison year and first year of monthly ridership kept
@@ -519,18 +522,26 @@ g2_rdata <- file.path(data_dir, "group02_ashland_brt.RData")
 ```
 
 ## Data sources
-- [NITA CTA ridership](https://datahub.nita.illinois.gov/media/datasets/cta-ridership) (Northeastern Illinois Transportation Analytics, formerly RTAMS): monthly ridership by bus route and by rail station and day type (weekday, Saturday, Sunday/holiday), with total and average daily rides. Bus ridership counts boardings on each route (a rider who transfers between two routes is counted on both); rail ridership counts station entries. Download the latest bus route and rail station ridership CSV files and save them in `projects/data/`.
-- CTA rail stations (NITA/RTAMS), the same shapefile used in Exercise #3. Station ids match the rail ridership file's `RIDERSHIP_ID`.
-- [CTA GTFS](https://www.transitchicago.com/developers/gtfs/) schedule data: current bus route alignments (from trip shapes) and the bus stops served by the Ashland route(s). The GTFS download is also saved as a cache file.
+- [NITA CTA ridership](https://datahub.nita.illinois.gov/media/datasets/cta-ridership) (Northeastern Illinois Transportation Analytics, formerly RTAMS), saved in `projects/data/`:
+  - `CTA_Average_Bus_Ridership_1999_2026.xlsx`: average daily boardings by bus route, month and day type (weekday, Saturday, Sunday/holiday), January 1999 to June 2026. A rider who transfers between two routes is counted on both.
+  - `CTA_Average_Rail_Station_Ridership_1999_2026.csv`: total and average daily entries by rail station, month and day type, January 1999 to June 2026.
+  - `CTA_Bus_Routes.shp`: current bus route alignments (one line per route), with route number (`ROUTE`), name and type (`KEY` or `SUPPORT` route).
+  - `CTA_RAIL_STATIONS.shp` and `CTA_RAIL_LINES.shp`: rail stations and lines. Station ids (`STATION_ID`) match the rail ridership file's `RIDERSHIP_ID`.
+- [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal): bus stop locations and the routes serving each stop. The download is also saved as a cache file.
 
 ## Functions
 ```{r}
 #| label: group 2 functions
 
-# NITA ridership files are read as text and their columns standardized; each
-# element of lookup lists the column names a standard column may have in the file
-fx_read_nita_ridership <- function(file, lookup, optional = "name") {
-  ridership <- read_csv(file, col_types = cols(.default = col_character()))
+# NITA ridership files (CSV or Excel) are read as text and their columns
+# standardized; each element of lookup lists the column names a standard column
+# may have in the file. Columns in optional may be missing (set to NA).
+fx_read_nita_ridership <- function(file, lookup, optional = c("name", "total_rides")) {
+  ridership <- if (str_detect(file, "\\.xlsx?$")) {
+    read_excel(file, col_types = "text")
+  } else {
+    read_csv(file, col_types = cols(.default = col_character()))
+  }
   names(ridership) <- str_to_upper(str_trim(str_remove(names(ridership), "^﻿")))
   for (new in names(lookup)) {
     old <- intersect(lookup[[new]], names(ridership))[1]
@@ -542,9 +553,9 @@ fx_read_nita_ridership <- function(file, lookup, optional = "name") {
          "\nColumns in the file: ", paste(names(ridership), collapse = ", "),
          "\nAdd the file's column names to the lookup.")
   }
-  if (!"name" %in% names(ridership)) ridership$name <- NA_character_
+  for (col in setdiff(optional, names(ridership))) ridership[[col]] <- NA_character_
   ridership %>%
-    transmute(id = str_remove(str_trim(id), "^0+(?=.)"),
+    transmute(id = str_trim(id),
               name = str_trim(name),
               year = as.integer(year),
               month = as.integer(month),
@@ -559,8 +570,8 @@ fx_read_nita_ridership <- function(file, lookup, optional = "name") {
 }
 
 # current (latest 12 months) and baseline-year average daily rides by day type,
-# total rides over the latest 12 months, current weekday rides as a percent of
-# baseline weekday rides, and rank by current weekday rides among all ids
+# current weekday rides as a percent of baseline weekday rides, and rank by
+# current weekday rides among all ids (routes or stations) in the file
 fx_ridership_summary <- function(ridership, baseline_year) {
   latest <- max(ridership$year_month)
   current_months <- seq(latest %m-% months(11), latest, by = "month")
@@ -568,100 +579,47 @@ fx_ridership_summary <- function(ridership, baseline_year) {
     group_by(id, day_key) %>%
     summarise(current = mean(daily_avg_rides[year_month %in% current_months]),
               baseline = mean(daily_avg_rides[year == baseline_year]),
-              total_current = sum(total_rides[year_month %in% current_months]),
               .groups = "drop") %>%
     mutate(across(c(current, baseline), ~ if_else(is.nan(.x), NA_real_, round(.x)))) %>%
-    group_by(id) %>%
-    mutate(rides_12mo = sum(total_current)) %>%
-    ungroup() %>%
-    select(-total_current) %>%
     pivot_wider(names_from = day_key, values_from = c(current, baseline),
                 names_glue = "avg_{day_key}_{.value}") %>%
     select(id, avg_weekday_current, avg_saturday_current, avg_sunday_holiday_current,
-           avg_weekday_baseline, rides_12mo) %>%
+           avg_weekday_baseline) %>%
     mutate(weekday_pct_of_baseline = round(100 * avg_weekday_current / avg_weekday_baseline, 1),
            weekday_rank = min_rank(desc(avg_weekday_current)))
 }
 ```
 
-## CTA GTFS: bus route alignments and Ashland bus stops
-Bus route alignments are built from the GTFS trip shapes and combined by route. *Connecting* routes are bus routes whose alignments cross or overlap the Ashland route(s); `overlap_mi` is the length (miles) of each route that runs along the Ashland route(s), so routes that share Ashland Avenue for some distance can be distinguished from routes that simply cross it.
+## Bus routes
+*Connecting* routes are bus routes whose alignments cross or overlap the Ashland routes. `overlap_mi` is the length (miles) of each route that runs along the Ashland routes, so routes that share Ashland Avenue for some distance can be distinguished from routes that simply cross it.
 
 ```{r}
-#| label: group 2 gtfs
+#| label: group 2 bus routes
 
-g2_gtfs_dir <- file.path(tempdir(), "cta_gtfs")
-unzip(download_cached(url_cta_gtfs, file.path(data_dir, "cta_gtfs_cache.zip")),
-      files = c("routes.txt", "trips.txt", "shapes.txt", "stops.txt", "stop_times.txt"),
-      exdir = g2_gtfs_dir, overwrite = TRUE)
-
-read_gtfs <- function(file, ...) {
-  read_csv(file.path(g2_gtfs_dir, file), col_types = cols(.default = col_character()), ...)
-}
-
-# bus routes (route_type 3) and their trips
-gtfs_routes <- read_gtfs("routes.txt") %>%
-  filter(route_type == "3") %>%
-  select(route_id, route_name = route_long_name)
-
-gtfs_trips <- read_gtfs("trips.txt") %>%
-  filter(route_id %in% gtfs_routes$route_id) %>%
-  select(route_id, trip_id, shape_id)
-
-# route alignments: one line per trip shape, combined by route
-bus_route_lines <- read_gtfs("shapes.txt") %>%
-  filter(shape_id %in% gtfs_trips$shape_id) %>%
-  mutate(across(c(shape_pt_lat, shape_pt_lon, shape_pt_sequence), as.numeric)) %>%
-  arrange(shape_id, shape_pt_sequence) %>%
-  st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) %>%
-  group_by(shape_id) %>%
-  summarise(do_union = FALSE, .groups = "drop") %>%
-  st_cast("LINESTRING") %>%
-  inner_join(distinct(gtfs_trips, route_id, shape_id), by = "shape_id") %>%
+g2_bus_routes_all <- st_read(g2_file_bus_routes, quiet = TRUE) %>%
   st_transform(3435) %>%
-  group_by(route_id) %>%
-  summarise(.groups = "drop") %>%
-  left_join(gtfs_routes, by = "route_id")
+  transmute(route_id = str_trim(ROUTE),
+            route_name = str_to_title(NAME),
+            route_type = str_to_lower(TYPE))
 
-# Ashland route(s), combined into a single line, and a narrow (100 ft) buffer
-# used to measure how far other routes run along Ashland
-g2_ashland_line <- bus_route_lines %>%
+# Ashland routes, combined into a single line, and a narrow (100 ft) buffer used
+# to measure how far other routes run along Ashland
+g2_ashland_line <- g2_bus_routes_all %>%
   filter(route_id %in% g2_routes) %>%
   st_union()
 if (length(g2_ashland_line) == 0 || st_is_empty(g2_ashland_line)) {
-  stop("None of the Ashland routes (", paste(g2_routes, collapse = ", "), ") are in the GTFS data")
+  stop("None of the Ashland routes (", paste(g2_routes, collapse = ", "), ") are in ", g2_file_bus_routes)
 }
 g2_ashland_narrow <- st_buffer(g2_ashland_line, 100)
 
-g2_bus_routes <- bus_route_lines %>%
+g2_bus_routes <- g2_bus_routes_all %>%
   st_filter(st_buffer(g2_ashland_line, 50)) %>%
   mutate(route_role = if_else(route_id %in% g2_routes, "Ashland", "connecting"),
          route_mi = round(as.numeric(st_length(geometry)) / 5280, 1),
          overlap_mi = map_dbl(geometry, function(g) {
            sum(as.numeric(st_length(st_intersection(st_sfc(g, crs = 3435), g2_ashland_narrow))))
-         }) / 5280,
-         overlap_mi = round(overlap_mi, 1))
-
-# bus stops served by the Ashland route(s), with the routes serving each stop
-g2_ashland_trips <- filter(gtfs_trips, route_id %in% g2_routes)
-g2_stop_routes <- read_gtfs("stop_times.txt", col_select = c(trip_id, stop_id)) %>%
-  filter(trip_id %in% g2_ashland_trips$trip_id) %>%
-  distinct(trip_id, stop_id) %>%
-  inner_join(select(g2_ashland_trips, trip_id, route_id), by = "trip_id") %>%
-  distinct(stop_id, route_id) %>%
-  group_by(stop_id) %>%
-  summarise(routes = paste(sort(route_id), collapse = ", "), .groups = "drop")
-
-ashland_bus_stops <- read_gtfs("stops.txt") %>%
-  inner_join(g2_stop_routes, by = "stop_id") %>%
-  mutate(across(c(stop_lat, stop_lon), as.numeric)) %>%
-  select(stop_id, stop_name, routes, stop_lat, stop_lon) %>%
-  st_as_sf(coords = c("stop_lon", "stop_lat"), crs = 4326, remove = FALSE) %>%
-  st_transform(3435) %>%
-  st_join(select(community_areas, comarea_id, comarea_name)) %>%
-  arrange(desc(stop_lat))
-
-rm(g2_ashland_trips, g2_stop_routes)
+         }),
+         overlap_mi = round(overlap_mi / 5280, 1))
 ```
 
 ## Bus route ridership
@@ -670,13 +628,13 @@ rm(g2_ashland_trips, g2_stop_routes)
 
 g2_bus_all <- fx_read_nita_ridership(
   g2_file_bus_ridership,
-  lookup = list(id = c("ROUTE", "ROUTE_ID", "RT", "ROUTE_NUMBER"),
+  lookup = list(id = c("ROUTE", "ROUTE_ID", "RT"),
                 name = c("ROUTE_NAME", "ROUTENAME", "NAME"),
                 year = "YEAR",
                 month = "MONTH",
                 day_type = c("DAY_TYPE", "DAYTYPE"),
-                total_rides = c("TOTAL_RIDES", "RIDES", "MONTHTOTAL"),
-                daily_avg_rides = c("DAILY_AVG_RIDES", "AVG_RIDES", "AVG_DAILY_RIDES")))
+                total_rides = c("TOTAL_RIDES", "RIDES"),
+                daily_avg_rides = c("AVG_RIDES", "DAILY_AVG_RIDES", "AVG_DAILY_RIDES")))
 
 # latest month of bus ridership
 g2_bus_through <- max(g2_bus_all$year_month)
@@ -684,23 +642,62 @@ g2_bus_through <- max(g2_bus_all$year_month)
 # summary computed for all routes, so ranks are among all CTA bus routes
 ashland_bus_routes <- g2_bus_routes %>%
   left_join(fx_ridership_summary(g2_bus_all, g2_baseline_year), by = c("route_id" = "id")) %>%
-  select(route_id, route_name, route_role, route_mi, overlap_mi, avg_weekday_current,
-         avg_saturday_current, avg_sunday_holiday_current, avg_weekday_baseline,
-         weekday_pct_of_baseline, weekday_rank, rides_12mo) %>%
+  select(route_id, route_name, route_type, route_role, route_mi, overlap_mi,
+         avg_weekday_current, avg_saturday_current, avg_sunday_holiday_current,
+         avg_weekday_baseline, weekday_pct_of_baseline, weekday_rank) %>%
   arrange(route_role, desc(avg_weekday_current))
 
-# monthly ridership for the Ashland and connecting routes
+# monthly ridership for the Ashland and connecting routes (the bus file has
+# average daily rides only)
 ashland_bus_ridership <- g2_bus_all %>%
   filter(id %in% ashland_bus_routes$route_id, year >= g2_trend_start) %>%
   left_join(st_drop_geometry(ashland_bus_routes) %>% select(route_id, route_name, route_role),
             by = c("id" = "route_id")) %>%
   select(route_id = id, route_name, route_role, year, month, year_month, day_type,
-         total_rides, daily_avg_rides) %>%
+         daily_avg_rides) %>%
   arrange(route_id, year_month, day_type)
 ```
 
-## Rail station ridership
-CTA rail stations within a quarter mile (`g2_station_buffer_ft`) of the Ashland route(s) are selected, with their distance from the route.
+## Bus stops
+Bus stops served by the Ashland routes are selected using the routes listed for each stop in the portal's bus stop data. If that column cannot be found, stops within 100 feet of the Ashland routes are selected instead.
+
+```{r}
+#| label: group 2 bus stops
+
+g2_stops_all <- read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson")) %>%
+  st_transform(3435)
+names(g2_stops_all) <- str_to_lower(names(g2_stops_all))
+st_geometry(g2_stops_all) <- "geometry"
+
+# column listing the routes serving each stop (e.g., "9,X9,66")
+g2_routes_col <- str_subset(names(g2_stops_all), "^routes")[1]
+
+if (!is.na(g2_routes_col)) {
+  ashland_bus_stops <- g2_stops_all %>%
+    mutate(routes = str_squish(.data[[g2_routes_col]])) %>%
+    filter(map_lgl(str_split(coalesce(routes, ""), "[,;[:space:]]+"), ~ any(.x %in% g2_routes)))
+} else {
+  message("No routes column found in the bus stop data; selecting stops within 100 feet of the Ashland routes")
+  ashland_bus_stops <- g2_stops_all %>%
+    st_filter(g2_ashland_narrow) %>%
+    mutate(routes = NA_character_)
+}
+
+g2_stop_coords <- st_coordinates(st_transform(ashland_bus_stops, 4326))
+ashland_bus_stops <- ashland_bus_stops %>%
+  mutate(stop_lon = g2_stop_coords[, "X"],
+         stop_lat = g2_stop_coords[, "Y"]) %>%
+  select(any_of(c(stop_id = "systemstop", stop_name = "public_nam", street = "street",
+                  cross_street = "cross_st", direction = "dir")),
+         routes, stop_lat, stop_lon) %>%
+  st_join(select(community_areas, comarea_id, comarea_name)) %>%
+  arrange(desc(stop_lat))
+
+rm(g2_stops_all, g2_stop_coords)
+```
+
+## Rail stations and ridership
+CTA rail stations within a quarter mile (`g2_station_buffer_ft`) of the Ashland routes are selected, with their distance from the routes.
 
 ```{r}
 #| label: group 2 rail ridership
@@ -721,13 +718,11 @@ g2_rail_all <- fx_read_nita_ridership(
 # latest month of rail ridership
 g2_rail_through <- max(g2_rail_all$year_month)
 
-g2_rail_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
+ashland_rail_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
   st_transform(3435) %>%
   transmute(station_id = as.character(as.numeric(STATION_ID)),
             station_name = LONGNAME,
-            station_line = unname(line_names[LEGEND]))
-
-ashland_rail_stations <- g2_rail_stations %>%
+            station_line = unname(line_names[LEGEND])) %>%
   mutate(dist_ashland_ft = round(as.numeric(st_distance(geometry, g2_ashland_line)))) %>%
   filter(dist_ashland_ft <= g2_station_buffer_ft) %>%
   st_join(select(community_areas, comarea_id, comarea_name), join = st_nearest_feature) %>%
@@ -743,7 +738,10 @@ ashland_rail_ridership <- g2_rail_all %>%
          total_rides, daily_avg_rides) %>%
   arrange(station_id, year_month, day_type)
 
-rm(g2_rail_stations)
+# all CTA rail lines, for reference on maps
+cta_rail_lines <- st_read(g2_file_rail_lines, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  select(rail_line = COLOR)
 ```
 
 ## Community areas along Ashland Avenue
@@ -780,10 +778,14 @@ ashland_rail_stations %>% st_drop_geometry() %>% print(n = Inf)
 filter(ashland_bus_routes, is.na(avg_weekday_current))$route_id
 filter(ashland_rail_stations, is.na(avg_weekday_current))$station_name
 
+# Ashland bus stops by route
+count(st_drop_geometry(ashland_bus_stops), routes, sort = TRUE)
+
 # Ashland and connecting routes, bus stops and rail stations
 ggplot() +
   geom_sf(data = community_areas, fill = "grey95", color = "white", linewidth = 0.2) +
   geom_sf(data = filter(ashland_bus_routes, route_role == "connecting"), color = "grey60", linewidth = 0.3) +
+  geom_sf(data = cta_rail_lines, color = "grey30", linewidth = 0.4, linetype = "dashed") +
   geom_sf(data = filter(ashland_bus_routes, route_role == "Ashland"), color = "#1f77b4", linewidth = 1) +
   geom_sf(data = ashland_bus_stops, size = 0.3, color = "#1f77b4") +
   geom_sf(data = ashland_rail_stations, aes(size = avg_weekday_current), color = "#d62728") +
@@ -791,7 +793,7 @@ ggplot() +
   labs(title = "CTA bus routes and rail stations along Ashland Avenue") +
   theme_void()
 
-# average weekday rides on the Ashland route(s)
+# average weekday rides on the Ashland routes
 ashland_bus_ridership %>%
   filter(route_role == "Ashland", str_starts(day_type, "W")) %>%
   ggplot(aes(year_month, daily_avg_rides, color = route_id)) +
@@ -802,6 +804,8 @@ ashland_bus_ridership %>%
 ```
 
 ## Save datasets
+Spatial layers are saved in WGS84 (epsg:4326), as for Group 1.
+
 ```{r}
 #| label: group 2 save datasets
 
@@ -809,6 +813,7 @@ ashland_bus_routes <- st_transform(ashland_bus_routes, 4326)
 ashland_bus_stops <- st_transform(ashland_bus_stops, 4326)
 ashland_rail_stations <- st_transform(ashland_rail_stations, 4326)
 ashland_community_areas <- st_transform(ashland_community_areas, 4326)
+cta_rail_lines <- st_transform(cta_rail_lines, 4326)
 
 # GeoPackage (one layer per dataset)
 if (file.exists(g2_gpkg)) file.remove(g2_gpkg)
@@ -816,6 +821,7 @@ st_write(ashland_bus_routes, g2_gpkg, layer = "ashland_bus_routes", quiet = TRUE
 st_write(ashland_bus_stops, g2_gpkg, layer = "ashland_bus_stops", quiet = TRUE)
 st_write(ashland_rail_stations, g2_gpkg, layer = "ashland_rail_stations", quiet = TRUE)
 st_write(ashland_community_areas, g2_gpkg, layer = "ashland_community_areas", quiet = TRUE)
+st_write(cta_rail_lines, g2_gpkg, layer = "cta_rail_lines", quiet = TRUE)
 
 # CSV tables
 write_csv(st_drop_geometry(ashland_bus_routes), file.path(data_dir, "group02_ashland_bus_routes.csv"))
@@ -826,14 +832,14 @@ write_csv(ashland_rail_ridership, file.path(data_dir, "group02_ashland_rail_ride
 
 # R datasets
 save_with_community_areas(c("ashland_bus_routes", "ashland_bus_stops", "ashland_rail_stations",
-                            "ashland_community_areas", "ashland_bus_ridership",
+                            "ashland_community_areas", "cta_rail_lines", "ashland_bus_ridership",
                             "ashland_rail_ridership", "g2_bus_through", "g2_rail_through",
                             "g2_baseline_year"),
                           g2_rdata)
 ```
 
 ## Dataset descriptions
-Ridership columns are the same for bus routes and rail stations. *Current* is the latest 12 months of ridership available (through `g2_bus_through` for buses and `g2_rail_through` for rail); *baseline* is `g2_baseline_year` (2019).
+Ridership columns are the same for bus routes and rail stations. *Current* is the latest 12 months of ridership available (July 2025 to June 2026 in the 1999-2026 files; see `g2_bus_through` and `g2_rail_through`); *baseline* is `g2_baseline_year` (2019).
 
 | Column | Description |
 |--------|-------------|
@@ -841,31 +847,632 @@ Ridership columns are the same for bus routes and rail stations. *Current* is th
 | `avg_weekday_baseline` | Average weekday rides in 2019 |
 | `weekday_pct_of_baseline` | Current weekday rides as a percent of 2019 weekday rides (ridership recovery) |
 | `weekday_rank` | Rank by current average weekday rides among all CTA bus routes (bus) or rail stations (rail); 1 = busiest |
-| `rides_12mo` | Total rides over the latest 12 months |
 
 ### `ashland_bus_routes` (lines, one row per route)
-The Ashland route(s) and the bus routes that cross or connect with them, with `route_id` and `route_name`, `route_role` (`Ashland` or `connecting`), route length (`route_mi`), miles running along the Ashland route(s) (`overlap_mi`), and the ridership columns above. Ridership is for each entire route, not only the part on or near Ashland Avenue.
+The Ashland routes (9 and X9) and the bus routes that cross or connect with them, with `route_id`, `route_name`, `route_type` (CTA `key` or `support` route), `route_role` (`Ashland` or `connecting`), route length (`route_mi`), miles running along the Ashland routes (`overlap_mi`), and the ridership columns above. Ridership is for each entire route, not only the part on or near Ashland Avenue.
 
 ### `ashland_rail_stations` (points, one row per station)
-CTA rail stations within a quarter mile of the Ashland route(s), with `station_id`, `station_name`, `station_line` (`Multi` for stations served by more than one line), distance from the Ashland route(s) (`dist_ashland_ft`), community area, and the ridership columns above. Rail ridership counts entries at each station; riders transferring between lines within a station are not counted again.
+CTA rail stations within a quarter mile of the Ashland routes, with `station_id`, `station_name`, `station_line` (`Multi` for stations served by more than one line), distance from the Ashland routes (`dist_ashland_ft`), community area, and the ridership columns above. Rail ridership counts entries at each station; riders transferring between lines within a station are not counted again.
 
 ### `ashland_bus_stops` (points, one row per stop)
-Bus stops served by the Ashland route(s) in the current CTA schedule (`stop_id`, `stop_name`, `routes`, latitude and longitude, community area). CTA does not regularly publish stop-level ridership, so stops have no ridership; they can be used to measure stop spacing (a key difference between local bus and BRT service) and to summarize the population or destinations near the corridor.
+Bus stops served by the Ashland routes, with the stop id and name, street, cross street, direction, the routes serving the stop (`routes`), latitude and longitude, and community area. Stops have no ridership (see limitations); they can be used to measure stop spacing (a key difference between local bus and BRT service), identify transfer points and summarize the population or destinations near the corridor.
 
 ### `ashland_community_areas` (polygons, one row per community area)
 Community areas with Ashland bus stops, with population, land area, and the number of Ashland bus stops (`n_bus_stops`) and nearby rail stations (`n_rail_stations`).
 
+### `cta_rail_lines` (lines)
+All CTA rail lines (`rail_line`), for reference on maps.
+
 ### `ashland_bus_ridership` and `ashland_rail_ridership` (tables, one row per route or station, month and day type)
-Monthly ridership since `g2_trend_start` (2012) for the routes and stations above: `total_rides` and `daily_avg_rides` by `day_type`.
+Monthly ridership since `g2_trend_start` (2012) for the routes and stations above: average daily rides (`daily_avg_rides`) by `day_type`, and, for rail stations, total rides (`total_rides`).
 
 ## How these datasets may inform the project
-- **Demand for BRT.** Use `weekday_rank` and `avg_weekday_current` to show how the Ashland route(s) compare with other CTA bus routes; high ridership on a long, continuous arterial is a common argument for BRT. Compare current ridership with 2019 (`weekday_pct_of_baseline`) and with other routes' recovery.
-- **Trends.** Plot the monthly tables to show ridership on the Ashland route(s) and nearby rail stations since 2012, including the period when CTA and the city proposed BRT on Ashland Avenue in the 2010s, the pandemic decline and the recovery since.
+- **Demand for BRT.** Use `weekday_rank` and `avg_weekday_current` to show how the Ashland routes compare with other CTA bus routes; high ridership on a long, continuous arterial is a common argument for BRT. Compare current ridership with 2019 (`weekday_pct_of_baseline`) and with other routes' recovery. The X9 express, which skips most local stops, offers a useful comparison with route 9 local service.
+- **Trends.** Plot the monthly tables to show ridership on the Ashland routes and nearby rail stations since 2012, including the period when CTA and the city proposed BRT on Ashland Avenue in the 2010s, the pandemic decline and the recovery since.
 - **Network connections.** Connecting routes and rail stations show where Ashland riders can transfer; ridership at those routes and stations suggests where BRT stations might be located and how a faster Ashland service could connect neighborhoods with the rail network.
-- **Stop spacing and station locations.** Measure distances between consecutive `ashland_bus_stops` and compare with typical BRT station spacing; locate potential BRT stations at rail stations and busy connecting routes.
+- **Stop spacing and station locations.** Measure distances between consecutive `ashland_bus_stops` (by direction) and compare with typical BRT station spacing; locate potential BRT stations at rail stations and busy connecting routes.
 - **Who is served.** Join `ashland_community_areas` (by `comarea_id`) with Health Atlas indicators (e.g., poverty, ease of walking to transit; Exercises #3 and #4) or census data on car ownership and commuting to describe the neighborhoods along the corridor.
 
 ## Limitations
 - **Route-level bus ridership.** NITA bus ridership is by route and month, not by stop, direction or segment, so it cannot show where along Ashland riders board.
-- **Current schedule only.** Route alignments and stops come from the current CTA schedule; routes that do not currently operate (e.g., X9, if suspended) have no alignment and are left out of `ashland_bus_routes`, though their historical ridership can be found in the bus ridership file.
+- **Average daily rides only for buses.** The bus ridership file has average daily rides but not monthly totals.
 - **Boardings, not riders.** Bus boardings and rail entries count trips, not unique riders, and transfers between buses are counted on each route.
+- **Current alignments.** Route alignments and stops reflect current service; routes that no longer operate are not included in `ashland_bus_routes`, though their historical ridership is in the bus ridership file.
+
+# Group 3: Pedestrian safety near CTA rail stations
+## Project overview
+Group 3 is mapping pedestrian crashes near CTA rail stations. Station areas concentrate people walking to and from trains and buses, often across busy streets, so they are a useful place to examine pedestrian safety. The datasets below use the same Chicago Data Portal crash data and years as Group 1, and the CTA rail stations and rail ridership from Group 2 (run the Group 2 section first), to count pedestrian crashes within three distances of each station.
+
+## Settings
+```{r}
+#| label: group 3 settings
+
+# same years as Group 1
+g3_years <- g1_years
+g3_where_dates <- g1_where_dates
+
+# distances (feet) from each station
+g3_radii_ft <- c(25, 50, 100)
+
+# output files
+g3_gpkg <- file.path(data_dir, "group03_pedestrian_crashes_stations.gpkg")
+g3_rdata <- file.path(data_dir, "group03_pedestrian_crashes_stations.RData")
+```
+
+## Data sources
+- [Traffic Crashes - Crashes](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data) and [Traffic Crashes - People](https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data) (see Group 1). A crash is identified as a **pedestrian crash** when its first crash type is `PEDESTRIAN` *or* at least one person involved was a pedestrian (`person_type = 'PEDESTRIAN'`).
+- CTA rail stations and rail station ridership from NITA (see Group 2).
+
+## Download pedestrian crash records
+```{r}
+#| label: group 3 download crash records
+
+# pedestrians involved in crashes
+g3_people <- read_portal_csv(
+  soql_url(id_people,
+           `$where` = paste(g3_where_dates, "AND person_type = 'PEDESTRIAN'"),
+           `$limit` = soql_limit),
+  file.path(data_dir, "group03_people_pedestrian_cache.csv"))
+
+# crashes with a first crash type of PEDESTRIAN
+g3_crashes_pedestrian <- read_portal_csv(
+  soql_url(id_crashes,
+           `$where` = paste(g3_where_dates, "AND first_crash_type = 'PEDESTRIAN'"),
+           `$limit` = soql_limit),
+  file.path(data_dir, "group03_crashes_pedestrian_cache.csv"))
+
+# other crashes involving a pedestrian
+g3_crashes_other <- read_portal_ids(
+  id_crashes, "crash_record_id",
+  setdiff(unique(g3_people$crash_record_id), g3_crashes_pedestrian$crash_record_id),
+  file.path(data_dir, "group03_crashes_other_cache.csv"))
+
+g3_crashes_raw <- bind_rows(g3_crashes_pedestrian, g3_crashes_other) %>%
+  distinct(crash_record_id, .keep_all = TRUE)
+```
+
+## Pedestrian crash points
+Pedestrian records are summarized by crash (number of pedestrians involved, killed, seriously injured and injured, and the injury classification, age, sex, action and location of the most severely injured pedestrian), joined to the crash records, located with their latitude and longitude, and attributed with their community area and nearest CTA rail station.
+
+```{r}
+#| label: group 3 pedestrian crash points
+
+g3_pedestrians <- g3_people %>%
+  mutate(injury = factor(injury_classification, levels = injury_levels, ordered = TRUE),
+         age = as.numeric(age),
+         age = if_else(age <= 0 | age > 110, NA_real_, age)) %>%
+  arrange(crash_record_id, desc(injury)) %>%
+  group_by(crash_record_id) %>%
+  summarise(n_pedestrians = n(),
+            n_pedestrians_killed = sum(injury == "FATAL", na.rm = TRUE),
+            n_pedestrians_seriously_injured = sum(injury == "INCAPACITATING INJURY", na.rm = TRUE),
+            n_pedestrians_injured = sum(injury >= "NONINCAPACITATING INJURY", na.rm = TRUE),
+            pedestrian_injury = as.character(first(injury)),
+            pedestrian_age = first(age),
+            pedestrian_sex = first(sex),
+            pedestrian_action = first(pedpedal_action),
+            pedestrian_location = first(pedpedal_location),
+            .groups = "drop")
+
+g3_crashes <- g3_crashes_raw %>%
+  mutate(ped_source = case_when(
+    first_crash_type == "PEDESTRIAN" & crash_record_id %in% g3_people$crash_record_id ~ "both",
+    first_crash_type == "PEDESTRIAN" ~ "first crash type",
+    TRUE ~ "pedestrian record")) %>%
+  select(crash_record_id, crash_date, posted_speed_limit, traffic_control_device,
+         weather_condition, lighting_condition, first_crash_type, trafficway_type,
+         roadway_surface_cond, crash_type, intersection_related_i, hit_and_run_i,
+         prim_contributory_cause, sec_contributory_cause, street_no, street_direction,
+         street_name, num_units, most_severe_injury, injuries_total, injuries_fatal,
+         injuries_incapacitating, latitude, longitude, ped_source) %>%
+  mutate(crash_date = ymd_hms(crash_date, tz = "America/Chicago", truncated = 3),
+         crash_year = year(crash_date),
+         crash_month = month(crash_date),
+         crash_hour = hour(crash_date),
+         crash_day_of_week = wday(crash_date, label = TRUE, abbr = TRUE),
+         across(c(posted_speed_limit, num_units, injuries_total, injuries_fatal,
+                  injuries_incapacitating, latitude, longitude), as.numeric),
+         across(c(intersection_related_i, hit_and_run_i), ~ replace_na(.x, "N")),
+         ksi_crash = injuries_fatal + injuries_incapacitating > 0) %>%
+  left_join(g3_pedestrians, by = "crash_record_id") %>%
+  mutate(across(c(n_pedestrians, n_pedestrians_killed, n_pedestrians_seriously_injured,
+                  n_pedestrians_injured), ~ replace_na(.x, 0L))) %>%
+  filter(crash_year %in% g3_years) %>%
+  arrange(crash_date)
+
+# crashes without usable coordinates
+g3_crashes_unlocated <- g3_crashes %>%
+  filter(is.na(latitude) | is.na(longitude) | latitude == 0 | longitude == 0)
+
+# CTA rail stations (Group 2 file) with current and 2019 ridership (Group 2 summary)
+g3_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  transmute(station_id = as.character(as.numeric(STATION_ID)),
+            station_name = LONGNAME,
+            station_line = unname(line_names[LEGEND])) %>%
+  st_join(select(community_areas, comarea_id, comarea_name), join = st_nearest_feature) %>%
+  left_join(fx_ridership_summary(g2_rail_all, g2_baseline_year) %>%
+              select(id, avg_weekday_current, avg_weekday_baseline, weekday_rank),
+            by = c("station_id" = "id"))
+
+pedestrian_crashes <- g3_crashes %>%
+  anti_join(g3_crashes_unlocated, by = "crash_record_id") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435)
+
+# community area (nearest within g1_snap_ft, as for Group 1)
+nearest_ca <- st_nearest_feature(pedestrian_crashes, community_areas)
+nearest_ft <- as.numeric(st_distance(pedestrian_crashes, community_areas[nearest_ca, ], by_element = TRUE))
+
+# nearest CTA rail station and distance (feet)
+nearest_station <- st_nearest_feature(pedestrian_crashes, g3_stations)
+
+pedestrian_crashes <- pedestrian_crashes %>%
+  mutate(comarea_id = if_else(nearest_ft <= g1_snap_ft,
+                              community_areas$comarea_id[nearest_ca], NA_real_),
+         station_id = g3_stations$station_id[nearest_station],
+         station_name = g3_stations$station_name[nearest_station],
+         station_dist_ft = round(as.numeric(st_distance(geometry, g3_stations[nearest_station, ],
+                                                         by_element = TRUE)), 1)) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name),
+            by = "comarea_id") %>%
+  relocate(comarea_id, comarea_name, station_id, station_name, station_dist_ft, .before = ped_source)
+
+# flags for crashes within each distance of the nearest station (e.g., within_25ft)
+for (r in g3_radii_ft) {
+  pedestrian_crashes[[paste0("within_", r, "ft")]] <- pedestrian_crashes$station_dist_ft <= r
+}
+
+rm(nearest_ca, nearest_ft, nearest_station, r)
+```
+
+## Pedestrian crashes by station and distance
+Crashes are counted within each distance (`g3_radii_ft`) of each station. Counts are cumulative: crashes within 25 feet are also counted within 50 and 100 feet. A crash within the distance of two stations is counted for both.
+
+```{r}
+#| label: group 3 crashes by station
+
+# crash-station pairs within the largest distance
+g3_pairs <- st_is_within_distance(pedestrian_crashes, g3_stations, dist = max(g3_radii_ft))
+g3_near <- tibble(crash_i = rep(seq_along(g3_pairs), lengths(g3_pairs)),
+                  station_i = unlist(g3_pairs)) %>%
+  mutate(crash_record_id = pedestrian_crashes$crash_record_id[crash_i],
+         station_id = g3_stations$station_id[station_i],
+         dist_ft = as.numeric(st_distance(pedestrian_crashes[crash_i, ], g3_stations[station_i, ],
+                                          by_element = TRUE))) %>%
+  left_join(st_drop_geometry(pedestrian_crashes) %>%
+              select(crash_record_id, crash_year, ksi_crash, n_pedestrians_injured,
+                     n_pedestrians_seriously_injured, n_pedestrians_killed),
+            by = "crash_record_id") %>%
+  crossing(radius_ft = g3_radii_ft) %>%
+  filter(dist_ft <= radius_ft)
+
+g3_count_cols <- c("crashes", "crashes_ksi", "pedestrians_injured",
+                   "pedestrians_seriously_injured", "pedestrians_killed")
+
+fx_count_ped_crashes <- function(near, ...) {
+  near %>%
+    group_by(station_id, radius_ft, ...) %>%
+    summarise(crashes = n(),
+              crashes_ksi = sum(ksi_crash, na.rm = TRUE),
+              pedestrians_injured = sum(n_pedestrians_injured),
+              pedestrians_seriously_injured = sum(n_pedestrians_seriously_injured),
+              pedestrians_killed = sum(n_pedestrians_killed),
+              .groups = "drop")
+}
+
+# one row per station, distance and year (zeros where no crashes occurred)
+station_ped_crashes_year <- fx_count_ped_crashes(g3_near, crash_year) %>%
+  complete(station_id = g3_stations$station_id, radius_ft = g3_radii_ft, crash_year = g3_years) %>%
+  mutate(across(all_of(g3_count_cols), ~ replace_na(.x, 0L))) %>%
+  left_join(st_drop_geometry(g3_stations) %>% select(station_id, station_name, station_line),
+            by = "station_id") %>%
+  select(station_id, station_name, station_line, radius_ft, crash_year, all_of(g3_count_cols)) %>%
+  arrange(station_id, radius_ft, crash_year)
+
+# one row per station: five-year totals within each distance as columns
+# (e.g., crashes_25ft, crashes_ksi_100ft), with ridership and a crash rate per
+# 1,000 average weekday entries (100 ft)
+station_ped_crashes <- g3_stations %>%
+  left_join(fx_count_ped_crashes(g3_near) %>%
+              pivot_wider(names_from = radius_ft, values_from = all_of(g3_count_cols),
+                          names_glue = "{.value}_{radius_ft}ft"),
+            by = "station_id") %>%
+  mutate(across(matches("_\\d+ft$"), ~ replace_na(.x, 0L)),
+         crashes_per_1k_riders = round(.data[[paste0("crashes_", max(g3_radii_ft), "ft")]] /
+                                         avg_weekday_current * 1000, 2)) %>%
+  arrange(desc(.data[[paste0("crashes_", max(g3_radii_ft), "ft")]]))
+
+# station buffers (one polygon per station and distance), for mapping
+station_buffers <- map(g3_radii_ft, function(r) {
+  g3_stations %>%
+    select(station_id, station_name) %>%
+    mutate(radius_ft = r) %>%
+    st_buffer(r)
+}) %>%
+  bind_rows() %>%
+  left_join(fx_count_ped_crashes(g3_near) %>% select(station_id, radius_ft, crashes),
+            by = c("station_id", "radius_ft")) %>%
+  mutate(crashes = replace_na(crashes, 0L))
+
+rm(g3_pairs)
+```
+
+## Checks
+```{r}
+#| label: group 3 checks
+
+# crashes by identification source, and crashes without coordinates
+count(g3_crashes, ped_source)
+nrow(g3_crashes_unlocated)
+
+# crashes within each distance of a station (each crash counted once)
+sapply(g3_radii_ft, function(r) sum(pedestrian_crashes$station_dist_ft <= r)) %>%
+  setNames(paste0(g3_radii_ft, "ft"))
+
+# stations with the most pedestrian crashes within the largest distance
+station_ped_crashes %>%
+  st_drop_geometry() %>%
+  select(station_name, station_line, starts_with("crashes_"), avg_weekday_current) %>%
+  head(20)
+
+# stations without ridership (ids that do not match the ridership file)
+filter(station_ped_crashes, is.na(avg_weekday_current))$station_name
+
+# pedestrian crashes within the largest distance of a station
+ggplot() +
+  geom_sf(data = community_areas, fill = "grey95", color = "white", linewidth = 0.2) +
+  geom_sf(data = cta_rail_lines, color = "grey50", linewidth = 0.3) +
+  geom_sf(data = station_ped_crashes,
+          aes(size = .data[[paste0("crashes_", max(g3_radii_ft), "ft")]]),
+          color = "#d62728", alpha = 0.7) +
+  scale_size_area(name = sprintf("Pedestrian crashes\nwithin %d ft", max(g3_radii_ft))) +
+  labs(title = sprintf("Pedestrian crashes near CTA rail stations, %d-%d", min(g3_years), max(g3_years))) +
+  theme_void()
+```
+
+## Save datasets
+```{r}
+#| label: group 3 save datasets
+
+pedestrian_crashes <- st_transform(pedestrian_crashes, 4326)
+station_ped_crashes <- st_transform(station_ped_crashes, 4326)
+station_buffers <- st_transform(station_buffers, 4326)
+
+# GeoPackage (one layer per dataset; cta_rail_lines from Group 2)
+if (file.exists(g3_gpkg)) file.remove(g3_gpkg)
+st_write(pedestrian_crashes, g3_gpkg, layer = "pedestrian_crashes", quiet = TRUE)
+st_write(station_ped_crashes, g3_gpkg, layer = "station_ped_crashes", quiet = TRUE)
+st_write(station_buffers, g3_gpkg, layer = "station_buffers", quiet = TRUE)
+st_write(cta_rail_lines, g3_gpkg, layer = "cta_rail_lines", quiet = TRUE)
+
+# CSV tables (crash points include latitude and longitude)
+write_csv(st_drop_geometry(pedestrian_crashes), file.path(data_dir, "group03_pedestrian_crashes.csv"))
+write_csv(st_drop_geometry(station_ped_crashes), file.path(data_dir, "group03_station_ped_crashes.csv"))
+write_csv(station_ped_crashes_year, file.path(data_dir, "group03_station_ped_crashes_year.csv"))
+
+# R datasets
+save_with_community_areas(c("pedestrian_crashes", "station_ped_crashes", "station_ped_crashes_year",
+                            "station_buffers", "cta_rail_lines", "g3_years", "g3_radii_ft"),
+                          g3_rdata)
+```
+
+## Dataset descriptions
+### `pedestrian_crashes` (points, one row per crash)
+Pedestrian crashes reported by CPD on city streets, `r min(g3_years)`-`r max(g3_years)`, citywide. Crash columns are the same as Group 1's `bike_crashes` (date and time, speed limit, traffic control, conditions, first crash type, contributing causes, address, crash-level injuries, `ksi_crash`, latitude and longitude, community area), plus:
+
+| Column | Description |
+|--------|-------------|
+| `n_pedestrians`, `n_pedestrians_injured`, `n_pedestrians_seriously_injured`, `n_pedestrians_killed` | Pedestrians involved, injured (non-incapacitating or worse), seriously injured and killed |
+| `pedestrian_injury`, `pedestrian_age`, `pedestrian_sex` | Injury classification, age and sex of the most severely injured pedestrian |
+| `pedestrian_action`, `pedestrian_location` | What the pedestrian was doing (e.g., crossing with or against the signal) and where (e.g., in crosswalk, not in crosswalk) |
+| `station_id`, `station_name`, `station_dist_ft` | Nearest CTA rail station and distance (feet) |
+| `within_25ft`, `within_50ft`, `within_100ft` | Crash within each distance of the nearest station (TRUE/FALSE) |
+| `ped_source` | How the crash was identified: `first crash type`, `pedestrian record` or `both` |
+
+### `station_ped_crashes` (points, one row per CTA rail station)
+Station id, name, line and community area; current (latest 12 months) and 2019 average weekday entries and rank (as in Group 2); and five-year totals within each distance, named by distance (e.g., `crashes_25ft`, `crashes_50ft`, `crashes_100ft`):
+
+| Column | Description |
+|--------|-------------|
+| `crashes_*ft` | Pedestrian crashes |
+| `crashes_ksi_*ft` | Crashes in which someone was killed or seriously injured |
+| `pedestrians_injured_*ft`, `pedestrians_seriously_injured_*ft`, `pedestrians_killed_*ft` | Pedestrians injured, seriously injured and killed |
+| `crashes_per_1k_riders` | Crashes within the largest distance per 1,000 current average weekday entries |
+
+### `station_ped_crashes_year` (table, one row per station, distance and year)
+The same counts by year (`radius_ft`, `crash_year`), with zeros where no crashes occurred.
+
+### `station_buffers` (polygons, one row per station and distance)
+Circles of each radius around each station, with the number of crashes within each, for mapping.
+
+## How these datasets may inform the project
+- **Where.** Map `station_ped_crashes` (sized or colored by crashes) with `pedestrian_crashes` and `station_buffers` to identify the stations with the most pedestrian crashes nearby, and compare lines and parts of the city.
+- **Distance.** Compare counts at 25, 50 and 100 feet to see whether crashes cluster right at station entrances or on the surrounding streets.
+- **Exposure.** Busier stations bring more pedestrians; compare crash counts with `avg_weekday_current` or use `crashes_per_1k_riders` to identify stations with more crashes than their ridership would suggest.
+- **Conditions and severity.** Use `pedestrian_action`, `pedestrian_location`, `lighting_condition`, `crash_hour`, `traffic_control_device` and `posted_speed_limit` to compare crashes near stations with crashes elsewhere in the city, and to ask which street designs near stations (e.g., wide arterials, signals, crosswalks) are associated with severe crashes.
+- **Trends.** Use `station_ped_crashes_year` to see whether crashes near particular stations are rising or falling, e.g., before and after street safety improvements.
+
+## Limitations
+- **Station locations are points.** Each station is a single point, but stations, especially subway stations and stations with several entrances, can span a block or more, and crash locations are approximate (often geocoded to the nearest intersection or address). Very short distances (25 and 50 feet) may capture few crashes; increase `g3_radii_ft` (e.g., 250 or 500 feet, roughly one or two blocks) if needed.
+- **Station list.** The NITA station file dates from 2020, so stations opened since then are not included.
+- **Underreporting and coverage.** As for Group 1, only crashes reported to CPD on city streets are included.
+
+# Group 4: Motorcycle fatalities in the city of Chicago
+## Project overview
+Group 4 is studying motorcycle fatalities in Chicago. The datasets below locate every fatal crash involving a motorcycle over the same five years as Group 1, and summarize fatalities citywide and by community area and year, so that trends and geographic patterns can be mapped and compared.
+
+## Settings
+```{r}
+#| label: group 4 settings
+
+# same years as Group 1
+g4_years <- g1_years
+g4_where_dates <- g1_where_dates
+
+# Traffic Crashes - Vehicles dataset (one record per vehicle or other unit)
+id_vehicles <- "68nd-jvt3"
+
+# motorcycle vehicle types (Vehicles dataset vehicle_type), matched as SoQL patterns:
+# motorcycles of all sizes, motor driven cycles and autocycles; mopeds and motorized
+# bicycles are included but labeled separately (vehicle_class) so they can be excluded
+g4_vehicle_patterns <- c("%MOTORCYCLE%", "%MOTOR DRIVEN%", "%AUTOCYCLE%", "%MOPED%")
+
+# output files
+g4_gpkg <- file.path(data_dir, "group04_motorcycle_fatalities.gpkg")
+g4_rdata <- file.path(data_dir, "group04_motorcycle_fatalities.RData")
+```
+
+## Data sources
+Three related Chicago Data Portal datasets, joined by `crash_record_id` (and `vehicle_id`):
+
+- [Traffic Crashes - Vehicles](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Vehicles/68nd-jvt3/about_data): one record per vehicle in a crash, with its vehicle type. Motorcycle crashes are crashes involving at least one vehicle of a motorcycle type (`g4_vehicle_patterns`).
+- [Traffic Crashes - Crashes](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data) (see Group 1): crashes with at least one fatality (`injuries_fatal > 0`) are downloaded and matched with the motorcycle crashes.
+- [Traffic Crashes - People](https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data): the people involved in the fatal motorcycle crashes. People in a motorcycle (`vehicle_id`) who were killed are counted as *motorcyclists killed*; anyone else killed (e.g., pedestrians or people in other vehicles) is counted as *others killed*.
+
+## Download fatal motorcycle crash records
+```{r}
+#| label: group 4 download crash records
+
+# motorcycles involved in crashes
+g4_where_vehicles <- paste0(g4_where_dates, " AND (",
+                            paste0("upper(vehicle_type) like '", g4_vehicle_patterns, "'", collapse = " OR "),
+                            ")")
+g4_vehicles <- read_portal_csv(
+  soql_url(id_vehicles, `$where` = g4_where_vehicles, `$limit` = soql_limit),
+  file.path(data_dir, "group04_vehicles_motorcycle_cache.csv")) %>%
+  mutate(vehicle_class = if_else(str_detect(str_to_upper(vehicle_type), "MOPED"),
+                                 "moped or motorized bicycle", "motorcycle"))
+
+# crashes with at least one fatality, matched with the motorcycle crashes
+g4_crashes_fatal <- read_portal_csv(
+  soql_url(id_crashes, `$where` = paste(g4_where_dates, "AND injuries_fatal > 0"), `$limit` = soql_limit),
+  file.path(data_dir, "group04_crashes_fatal_cache.csv")) %>%
+  filter(crash_record_id %in% g4_vehicles$crash_record_id)
+
+# people involved in the fatal motorcycle crashes
+g4_people <- read_portal_ids(id_people, "crash_record_id", unique(g4_crashes_fatal$crash_record_id),
+                             file.path(data_dir, "group04_people_cache.csv"))
+```
+
+## Fatal motorcycle crash points
+People are summarized by crash: motorcyclists and others killed, and the age, sex, safety equipment (e.g., helmet use) and person type (driver or passenger) of the motorcyclist(s) killed.
+
+```{r}
+#| label: group 4 fatal motorcycle crash points
+
+g4_moto_vehicles <- g4_vehicles %>%
+  filter(crash_record_id %in% g4_crashes_fatal$crash_record_id)
+
+# motorcycle types involved in each crash
+g4_crash_vehicles <- g4_moto_vehicles %>%
+  group_by(crash_record_id) %>%
+  summarise(n_motorcycles = n(),
+            motorcycle_type = paste(sort(unique(vehicle_type)), collapse = "; "),
+            vehicle_class = if_else(any(vehicle_class == "motorcycle"), "motorcycle",
+                                    "moped or motorized bicycle"),
+            .groups = "drop")
+
+g4_victims <- g4_people %>%
+  mutate(age = as.numeric(age),
+         age = if_else(age <= 0 | age > 110, NA_real_, age),
+         killed = injury_classification == "FATAL",
+         motorcyclist = !is.na(vehicle_id) & vehicle_id %in% g4_moto_vehicles$vehicle_id) %>%
+  group_by(crash_record_id) %>%
+  summarise(motorcyclists_killed = sum(killed & motorcyclist, na.rm = TRUE),
+            others_killed = sum(killed & !motorcyclist, na.rm = TRUE),
+            motorcyclist_killed_age = paste(na.omit(age[killed & motorcyclist]), collapse = "; "),
+            motorcyclist_killed_sex = paste(na.omit(sex[killed & motorcyclist]), collapse = "; "),
+            motorcyclist_killed_type = paste(na.omit(person_type[killed & motorcyclist]), collapse = "; "),
+            motorcyclist_killed_safety = paste(na.omit(safety_equipment[killed & motorcyclist]), collapse = "; "),
+            .groups = "drop") %>%
+  mutate(across(starts_with("motorcyclist_killed_"), ~ na_if(.x, "")))
+
+g4_crashes <- g4_crashes_fatal %>%
+  select(crash_record_id, crash_date, posted_speed_limit, traffic_control_device,
+         weather_condition, lighting_condition, first_crash_type, trafficway_type,
+         roadway_surface_cond, intersection_related_i, hit_and_run_i,
+         prim_contributory_cause, sec_contributory_cause, street_no, street_direction,
+         street_name, num_units, injuries_total, injuries_fatal, latitude, longitude) %>%
+  mutate(crash_date = ymd_hms(crash_date, tz = "America/Chicago", truncated = 3),
+         crash_year = year(crash_date),
+         crash_month = month(crash_date),
+         crash_hour = hour(crash_date),
+         crash_day_of_week = wday(crash_date, label = TRUE, abbr = TRUE),
+         across(c(posted_speed_limit, num_units, injuries_total, injuries_fatal,
+                  latitude, longitude), as.numeric),
+         across(c(intersection_related_i, hit_and_run_i), ~ replace_na(.x, "N"))) %>%
+  left_join(g4_crash_vehicles, by = "crash_record_id") %>%
+  left_join(g4_victims, by = "crash_record_id") %>%
+  mutate(across(c(motorcyclists_killed, others_killed), ~ replace_na(.x, 0L)),
+         # if the people records have no fatality, use the crash-level count
+         others_killed = if_else(motorcyclists_killed + others_killed == 0,
+                                 as.integer(injuries_fatal), others_killed),
+         total_killed = motorcyclists_killed + others_killed) %>%
+  filter(crash_year %in% g4_years) %>%
+  arrange(crash_date)
+
+# crashes without usable coordinates (counted citywide but not mapped)
+g4_crashes_unlocated <- g4_crashes %>%
+  filter(is.na(latitude) | is.na(longitude) | latitude == 0 | longitude == 0)
+
+motorcycle_fatal_crashes <- g4_crashes %>%
+  anti_join(g4_crashes_unlocated, by = "crash_record_id") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435)
+
+# community area (nearest within g1_snap_ft, as for Group 1)
+nearest_ca <- st_nearest_feature(motorcycle_fatal_crashes, community_areas)
+nearest_ft <- as.numeric(st_distance(motorcycle_fatal_crashes, community_areas[nearest_ca, ], by_element = TRUE))
+
+motorcycle_fatal_crashes <- motorcycle_fatal_crashes %>%
+  mutate(comarea_id = if_else(nearest_ft <= g1_snap_ft,
+                              community_areas$comarea_id[nearest_ca], NA_real_)) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name),
+            by = "comarea_id")
+
+rm(nearest_ca, nearest_ft, g4_moto_vehicles)
+```
+
+## Motorcycle fatalities citywide and by community area
+```{r}
+#| label: group 4 fatalities summaries
+
+g4_count_cols <- c("fatal_crashes", "motorcyclists_killed", "others_killed", "total_killed")
+
+fx_sum_fatalities <- function(crashes, ...) {
+  crashes %>%
+    group_by(...) %>%
+    summarise(fatal_crashes = n(),
+              motorcyclists_killed = sum(motorcyclists_killed),
+              others_killed = sum(others_killed),
+              total_killed = sum(total_killed),
+              .groups = "drop")
+}
+
+# citywide by year (includes crashes without coordinates)
+motorcycle_fatalities_city_year <- g4_crashes %>%
+  fx_sum_fatalities(crash_year) %>%
+  complete(crash_year = g4_years) %>%
+  mutate(across(all_of(g4_count_cols), ~ replace_na(.x, 0L)))
+
+# by community area and year (zeros where no fatal crashes occurred), with rates
+# per 100,000 residents
+motorcycle_fatalities_ca_year_table <- motorcycle_fatal_crashes %>%
+  st_drop_geometry() %>%
+  filter(!is.na(comarea_id)) %>%
+  fx_sum_fatalities(comarea_id, crash_year) %>%
+  complete(comarea_id = community_areas$comarea_id, crash_year = g4_years) %>%
+  mutate(across(all_of(g4_count_cols), ~ replace_na(.x, 0L))) %>%
+  left_join(st_drop_geometry(community_areas), by = "comarea_id") %>%
+  mutate(motorcyclists_killed_per_100k = round(motorcyclists_killed / population * 100000, 2)) %>%
+  select(comarea_id, comarea_name, crash_year, all_of(g4_count_cols),
+         motorcyclists_killed_per_100k, population) %>%
+  arrange(comarea_id, crash_year)
+
+motorcycle_fatalities_ca_year <- community_areas %>%
+  select(comarea_id) %>%
+  right_join(motorcycle_fatalities_ca_year_table, by = "comarea_id") %>%
+  arrange(comarea_id, crash_year)
+
+# one row per community area: motorcyclists killed by year and five-year totals
+motorcycle_fatalities_ca <- community_areas %>%
+  select(comarea_id, comarea_name, population) %>%
+  left_join(motorcycle_fatalities_ca_year_table %>%
+              select(comarea_id, crash_year, motorcyclists_killed) %>%
+              pivot_wider(names_from = crash_year, values_from = motorcyclists_killed,
+                          names_prefix = "motorcyclists_killed_"),
+            by = "comarea_id") %>%
+  left_join(motorcycle_fatalities_ca_year_table %>%
+              group_by(comarea_id) %>%
+              summarise(across(all_of(g4_count_cols), sum, .names = "{.col}_total")),
+            by = "comarea_id") %>%
+  mutate(motorcyclists_killed_total_per_100k = round(motorcyclists_killed_total / population * 100000, 2)) %>%
+  arrange(comarea_id)
+```
+
+## Checks
+```{r}
+#| label: group 4 checks
+
+# motorcycle crashes (all severities) and fatal motorcycle crashes by vehicle class
+count(distinct(g4_vehicles, crash_record_id, vehicle_class), vehicle_class)
+count(g4_crashes, vehicle_class)
+
+# crashes without coordinates
+nrow(g4_crashes_unlocated)
+
+# citywide fatalities by year
+motorcycle_fatalities_city_year
+
+# safety equipment of motorcyclists killed
+count(g4_crashes, motorcyclist_killed_safety, sort = TRUE)
+
+# fatal motorcycle crashes by year
+ggplot() +
+  geom_sf(data = community_areas, fill = "grey95", color = "white", linewidth = 0.2) +
+  geom_sf(data = motorcycle_fatal_crashes, aes(color = factor(crash_year)), size = 1.5) +
+  scale_color_viridis_d(name = "Year") +
+  labs(title = sprintf("Fatal motorcycle crashes, %d-%d", min(g4_years), max(g4_years))) +
+  theme_void()
+```
+
+## Save datasets
+```{r}
+#| label: group 4 save datasets
+
+motorcycle_fatal_crashes <- st_transform(motorcycle_fatal_crashes, 4326)
+motorcycle_fatalities_ca_year <- st_transform(motorcycle_fatalities_ca_year, 4326)
+motorcycle_fatalities_ca <- st_transform(motorcycle_fatalities_ca, 4326)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g4_gpkg)) file.remove(g4_gpkg)
+st_write(motorcycle_fatal_crashes, g4_gpkg, layer = "motorcycle_fatal_crashes", quiet = TRUE)
+st_write(motorcycle_fatalities_ca_year, g4_gpkg, layer = "motorcycle_fatalities_ca_year", quiet = TRUE)
+st_write(motorcycle_fatalities_ca, g4_gpkg, layer = "motorcycle_fatalities_ca", quiet = TRUE)
+
+# CSV tables (crash points include latitude and longitude)
+write_csv(st_drop_geometry(motorcycle_fatal_crashes), file.path(data_dir, "group04_motorcycle_fatal_crashes.csv"))
+write_csv(motorcycle_fatalities_ca_year_table, file.path(data_dir, "group04_motorcycle_fatalities_ca_year.csv"))
+write_csv(st_drop_geometry(motorcycle_fatalities_ca), file.path(data_dir, "group04_motorcycle_fatalities_ca.csv"))
+write_csv(motorcycle_fatalities_city_year, file.path(data_dir, "group04_motorcycle_fatalities_city_year.csv"))
+
+# R datasets
+save_with_community_areas(c("motorcycle_fatal_crashes", "motorcycle_fatalities_ca_year",
+                            "motorcycle_fatalities_ca_year_table", "motorcycle_fatalities_ca",
+                            "motorcycle_fatalities_city_year", "g4_years"),
+                          g4_rdata)
+```
+
+## Dataset descriptions
+### `motorcycle_fatal_crashes` (points, one row per fatal crash involving a motorcycle)
+Crash columns are the same as Group 1's `bike_crashes` (date and time, speed limit, traffic control, conditions, first crash type, contributing causes, address, latitude and longitude, community area), plus:
+
+| Column | Description |
+|--------|-------------|
+| `n_motorcycles`, `motorcycle_type` | Motorcycles involved and their vehicle types |
+| `vehicle_class` | `motorcycle`, or `moped or motorized bicycle` when no motorcycle was involved |
+| `motorcyclists_killed`, `others_killed`, `total_killed` | People killed riding a motorcycle (driver or passenger), other people killed, and all people killed |
+| `motorcyclist_killed_age`, `motorcyclist_killed_sex`, `motorcyclist_killed_type` | Age, sex and person type (driver or passenger) of the motorcyclist(s) killed (separated by `;` when more than one) |
+| `motorcyclist_killed_safety` | Safety equipment recorded for the motorcyclist(s) killed (e.g., helmet used or not used) |
+
+### `motorcycle_fatalities_city_year` (table, one row per year)
+Citywide `fatal_crashes`, `motorcyclists_killed`, `others_killed` and `total_killed` by year, including crashes without coordinates.
+
+### `motorcycle_fatalities_ca_year` (polygons, one row per community area and year)
+The same counts by community area and year (N = 77 x 5 = 385 rows, with zeros), with `motorcyclists_killed_per_100k` (per 100,000 residents) and `population`. `motorcycle_fatalities_ca_year_table` is the same table without boundaries.
+
+### `motorcycle_fatalities_ca` (polygons, one row per community area)
+Motorcyclists killed by year (`motorcyclists_killed_2021`, ..., `motorcyclists_killed_2025`), five-year totals of each count (e.g., `motorcyclists_killed_total`), and motorcyclists killed per 100,000 residents over five years.
+
+## How these datasets may inform the project
+- **Trends.** Plot `motorcycle_fatalities_city_year` to show whether motorcycle deaths are rising or falling, and map `motorcycle_fatal_crashes` by year to see whether fatal crashes are concentrated in particular corridors (e.g., Lake Shore Drive or wide arterials) or spreading.
+- **When and where.** Use `crash_month`, `crash_day_of_week` and `crash_hour` (motorcycle riding is highly seasonal) and `posted_speed_limit`, `trafficway_type` and `lighting_condition` to describe the conditions of fatal crashes.
+- **Causes and protection.** Use `prim_contributory_cause` and `first_crash_type` to compare single-vehicle crashes (e.g., speeding, loss of control) with crashes involving other vehicles (e.g., failing to yield), and `motorcyclist_killed_safety` to examine helmet use; Illinois does not require adult motorcyclists to wear helmets.
+- **Neighborhoods.** Map `motorcycle_fatalities_ca` totals or rates and join it (by `comarea_id`) with Health Atlas or census indicators to ask whether fatalities are concentrated in particular neighborhoods.
+
+## Limitations
+- **Small numbers.** There are relatively few motorcycle fatalities each year, so year-to-year changes and community area rates can vary greatly by chance; five-year totals are more reliable than single years for community areas.
+- **Fatality reporting.** Fatalities are as recorded in the crash data; deaths that occur days after a crash may be added late, and counts may differ from other official sources (e.g., Illinois Department of Transportation or city Vision Zero reports).
+- **Coverage.** Only crashes reported to CPD on city streets are included; crashes on interstate highways (e.g., the Kennedy and Dan Ryan expressways) are not.
+- **Vehicle types.** Motorcycle crashes are identified from the vehicle types recorded by the reporting officer; check `motorcycle_type` and `vehicle_class` and adjust `g4_vehicle_patterns` if needed.
