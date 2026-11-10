@@ -505,8 +505,11 @@ g2_file_bus_routes <- file.path(data_dir, "CTA_Bus_Routes.shp")
 g2_file_rail_stations <- file.path(data_dir, "CTA_RAIL_STATIONS.shp")
 g2_file_rail_lines <- file.path(data_dir, "CTA_RAIL_LINES.shp")
 
-# CTA bus stops (Chicago Data Portal); $limit raises the portal's default of 1,000 rows
+# CTA bus stops (Chicago Data Portal); $limit raises the portal's default of 1,000 rows.
+# If a bus stops shapefile has been exported from the portal page (Export > Shapefile)
+# and saved as g2_file_bus_stops, it is used instead of the portal download.
 url_bus_stops <- "https://data.cityofchicago.org/resource/hvnx-qtky.geojson?$limit=50000"
+g2_file_bus_stops <- file.path(data_dir, "CTA_BusStops.shp")
 
 # Ashland Avenue bus routes: 9 Ashland and X9 Ashland Express
 g2_routes <- c("9", "X9")
@@ -529,7 +532,7 @@ g2_rdata <- file.path(data_dir, "group02_ashland_brt.RData")
   - `CTA_Average_Rail_Station_Ridership_1999_2026.csv`: total and average daily entries by rail station, month and day type, January 1999 to June 2026.
   - `CTA_Bus_Routes.shp`: current bus route alignments (one line per route), with route number (`ROUTE`), name and type (`KEY` or `SUPPORT` route).
   - `CTA_RAIL_STATIONS.shp` and `CTA_RAIL_LINES.shp`: rail stations and lines. Station ids (`STATION_ID`) match the rail ridership file's `RIDERSHIP_ID`.
-- [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal): bus stop locations and the routes serving each stop. The download is also saved as a cache file.
+- [CTA Bus Stops](https://data.cityofchicago.org/Transportation/CTA-Bus-Stops/hvnx-qtky) (Chicago Data Portal): bus stop locations and the routes serving each stop. The download is also saved as a cache file. If the portal download does not work, export the dataset as a shapefile from the portal page and save it in `projects/data/` as `CTA_BusStops.shp` (with its other files); it is then used instead.
 
 ## Functions
 ```{r}
@@ -666,10 +669,41 @@ Bus stops served by the Ashland routes are selected using the routes listed for 
 ```{r}
 #| label: group 2 bus stops
 
-g2_stops_all <- read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson")) %>%
-  st_transform(3435)
-names(g2_stops_all) <- str_to_lower(names(g2_stops_all))
-st_geometry(g2_stops_all) <- "geometry"
+# CTA bus stops: a saved shapefile, if there is one, or the portal download
+fx_read_bus_stops <- function() {
+  stops <- if (file.exists(g2_file_bus_stops)) {
+    st_read(g2_file_bus_stops, quiet = TRUE)
+  } else {
+    read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson"))
+  }
+  names(stops) <- str_to_lower(names(stops))
+  st_geometry(stops) <- "geometry"
+  # stops without point geometry but with coordinate columns (e.g., point_x and
+  # point_y, or longitude and latitude) are located from those columns
+  if (all(st_is_empty(stops))) {
+    table <- st_drop_geometry(stops)
+    x <- intersect(c("point_x", "longitude", "lon", "x"), names(table))[1]
+    y <- intersect(c("point_y", "latitude", "lat", "y"), names(table))[1]
+    if (is.na(x) || is.na(y)) stop("The bus stop data have no locations; columns: ", paste(names(table), collapse = ", "))
+    table <- mutate(table, across(all_of(c(x, y)), as.numeric)) %>% filter(!is.na(.data[[x]]), !is.na(.data[[y]]))
+    stops <- st_as_sf(table, coords = c(x, y), remove = FALSE,
+                      crs = if (abs(median(table[[x]])) <= 180) 4326 else 3435) # degrees or State Plane feet
+    st_geometry(stops) <- "geometry"
+  }
+  if (is.na(st_crs(stops))) stops <- st_set_crs(stops, 4326)
+  st_transform(stops, 3435)
+}
+
+g2_stops_all <- fx_read_bus_stops()
+
+# describe the bus stop data (useful if no Ashland stops are found below)
+fx_describe_stops <- function(stops) {
+  paste0("Bus stops read: ", nrow(stops),
+         "\nGeometry types: ", paste(unique(as.character(st_geometry_type(stops))), collapse = ", "),
+         "\nExtent (WGS84): ", paste(round(st_bbox(st_transform(stops, 4326)), 4), collapse = ", "),
+         "\nColumns: ", paste(names(stops), collapse = ", "))
+}
+message(fx_describe_stops(g2_stops_all))
 
 # split a column of route lists (e.g., "9,X9,66") into route tokens
 fx_route_tokens <- function(x) str_split(str_to_upper(coalesce(as.character(x), "")), "[^A-Z0-9]+")
@@ -691,8 +725,7 @@ g2_routes_col <- if (length(g2_route_match) > 0 && max(g2_route_match) > 0.5) {
 } else {
   NA_character_
 }
-message("Bus stop columns: ", paste(names(g2_stops_all), collapse = ", "),
-        "\nRoutes column: ", g2_routes_col)
+message("Routes column: ", g2_routes_col)
 
 ashland_bus_stops <- if (!is.na(g2_routes_col)) {
   g2_stops_all %>%
@@ -709,7 +742,11 @@ if (nrow(ashland_bus_stops) == 0) {
     st_filter(g2_ashland_narrow) %>%
     mutate(routes = if (!is.na(g2_routes_col)) as.character(.data[[g2_routes_col]]) else NA_character_)
 }
-if (nrow(ashland_bus_stops) == 0) stop("No bus stops found along the Ashland routes; check the bus stop data")
+if (nrow(ashland_bus_stops) == 0) {
+  stop("No bus stops found along the Ashland routes; check the bus stop data (",
+       if (file.exists(g2_file_bus_stops)) g2_file_bus_stops else file.path(data_dir, "bus_stops_cache.geojson"),
+       ")\n", fx_describe_stops(g2_stops_all))
+}
 
 # point coordinates (any multipoint stops are reduced to a single point)
 ashland_bus_stops <- suppressWarnings(st_centroid(ashland_bus_stops))
@@ -1596,8 +1633,7 @@ g5_rail_ca <- fx_miles_by_ca(g5_rail_lines, rail_line) %>%
 ```{r}
 #| label: group 5 bus
 
-g5_bus_stops <- read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stops_cache.geojson")) %>%
-  st_transform(3435) %>%
+g5_bus_stops <- fx_read_bus_stops() %>%
   select(geometry) %>%
   fx_points_by_ca()
 
