@@ -105,28 +105,48 @@ save_with_community_areas <- function(objects, file) {
   save(list = c(objects, "community_areas"), envir = env, file = file)
 }
 
-# portal records for a long list of ids, requested in batches (to keep URLs short)
-# and combined into a single cache file
-read_portal_ids <- function(id, field, ids, cache, batch_size = 40) {
+# portal records for a long list of ids, requested in batches (to keep URLs short).
+# Each batch is retried up to `tries` times, waiting longer after each failure, and
+# saved in a batch folder next to the cache file, so a failed run can be resumed
+# (batches already downloaded are read from the folder). When every batch has been
+# downloaded, the batches are combined into the cache file. If some batches cannot
+# be downloaded, the existing cache file (from an earlier run) is used instead.
+read_portal_ids <- function(id, field, ids, cache, batch_size = 25, tries = 5) {
   if (length(ids) == 0) return(tibble())
-  batches <- split(ids, ceiling(seq_along(ids) / batch_size))
-  result <- tryCatch({
-    map(batches, function(batch) {
-      where <- sprintf("%s in (%s)", field, paste0("'", batch, "'", collapse = ","))
-      read_csv(soql_url(id, `$where` = where, `$limit` = soql_limit),
-               col_types = cols(.default = col_character()))
-    }) %>%
-      bind_rows()
-  }, error = function(e) {
-    message("Download failed: ", conditionMessage(e))
+  batch_dir <- paste0(tools::file_path_sans_ext(cache), "_batches")
+  dir.create(batch_dir, recursive = TRUE, showWarnings = FALSE)
+  batches <- split(sort(ids), ceiling(seq_along(ids) / batch_size))
+
+  read_batch <- function(batch) {
+    batch_file <- file.path(batch_dir, paste0(rlang::hash(batch), ".csv"))
+    if (file.exists(batch_file)) {
+      return(read_csv(batch_file, col_types = cols(.default = col_character())))
+    }
+    where <- sprintf("%s in (%s)", field, paste0("'", batch, "'", collapse = ","))
+    url <- soql_url(id, `$where` = where, `$limit` = soql_limit)
+    for (try in seq_len(tries)) {
+      result <- tryCatch(read_csv(url, col_types = cols(.default = col_character())),
+                         error = function(e) NULL)
+      if (!is.null(result)) {
+        write_csv(result, batch_file)
+        return(result)
+      }
+      Sys.sleep(2^try) # wait 2, 4, 8, 16... seconds before trying again
+    }
     NULL
-  })
-  if (is.null(result)) {
-    if (!file.exists(cache)) stop("Download failed and no cache file found: ", cache)
-    message("Download failed; using cache file ", cache)
+  }
+
+  results <- map(batches, read_batch, .progress = "Downloading portal records")
+  failed <- sum(map_lgl(results, is.null))
+  if (failed > 0) {
+    message(failed, " of ", length(batches), " batches could not be downloaded; run again to resume")
+    if (!file.exists(cache)) stop("Download incomplete and no cache file found: ", cache)
+    message("Using cache file ", cache)
     return(read_csv(cache, col_types = cols(.default = col_character())))
   }
+  result <- bind_rows(results)
   write_csv(result, cache)
+  unlink(batch_dir, recursive = TRUE)
   result
 }
 ```
