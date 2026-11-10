@@ -1721,16 +1721,18 @@ transit_access_ca <- community_areas %>%
 transit_access_by_ccvi <- transit_access_ca %>%
   st_drop_geometry() %>%
   group_by(ccvi_category) %>%
-  summarise(community_areas = n(),
+  # (population-weighted means come first, before population is summed)
+  summarise(across(c(ta_ind, freq_ind, conn_ind, prox_ind, walk_ind),
+                   ~ round(weighted.mean(.x, population, na.rm = TRUE), 2)),
+            community_areas = n(),
             population = sum(population, na.rm = TRUE),
             area_sqmi = sum(area_sqmi),
             ca_no_rail_station = sum(rail_stations == 0),
             rail_stations = sum(rail_stations),
             bus_stops = sum(bus_stops),
             bus_street_mi = sum(bus_street_mi),
-            across(c(ta_ind, freq_ind, conn_ind, prox_ind, walk_ind),
-                   ~ round(weighted.mean(.x, population, na.rm = TRUE), 2)),
             .groups = "drop") %>%
+  relocate(ta_ind, freq_ind, conn_ind, prox_ind, walk_ind, .after = bus_street_mi) %>%
   mutate(rail_stations_per_sqmi = round(rail_stations / area_sqmi, 2),
          bus_stops_per_sqmi = round(bus_stops / area_sqmi, 2),
          bus_stops_per_10k = round(bus_stops / population * 10000, 2),
