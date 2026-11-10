@@ -1,0 +1,1058 @@
+---
+title: "Sustainable Urban Transportation: Final Group Project Datasets"
+subtitle: "Datasets, Maps and Tables Prepared for Each Group"
+author: C. Scott Smith, PhD AICP (Instructor)
+email: c.scott.smith@depaul.edu
+format:
+  html:
+    warning: false
+    message: false
+    echo: false
+    theme: [flatly, styles.scss]
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    reference-location: document
+    fontsize: 0.9em
+    embed-resources: true
+date: 2026-11-17
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+#| label: activate packages and load datasets
+
+library(tidyverse) # data wrangling
+library(sf) # simple features geometry data
+library(leaflet) # interactive maps
+library(leaflet.extras) # map reset and full screen buttons
+library(DT) # interactive tables
+library(htmltools) # map labels
+
+setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/projects")
+
+# web folder where the datasets in data/ are uploaded (links below point here)
+data_url <- "https://justenvirons.org/pedagogy/GEO330/projects/data/"
+
+# CARTO basemap key (set CARTO_API_KEY in .Renviron); without a key, CARTO's
+# public Positron basemap is used
+CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
+
+# datasets created by projects_dataprep.qmd
+for (file in c("group01_bike_crashes.RData", "group02_ashland_brt.RData",
+               "group03_pedestrian_crashes_stations.RData", "group04_motorcycle_fatalities.RData",
+               "group05_transit_access.RData", "group06_ohare_flyer.RData")) {
+  load(file.path("data", file))
+}
+```
+
+```{r}
+#| label: functions for links, maps and tables
+
+# markdown list of dataset files with links, descriptions and file sizes; files
+# is a two-column table of file names and descriptions
+fx_links <- function(files) {
+  sizes <- file.size(file.path("data", files$file))
+  sizes <- map_chr(sizes, ~ if (is.na(.x)) "" else
+    paste0(" (", format(structure(.x, class = "object_size"), units = "auto", standard = "SI"), ")"))
+  cat(paste0("- [", files$file, "](", data_url, files$file, ")", sizes, ": ", files$description,
+             collapse = "\n"), "\n")
+}
+
+# base map: CARTO light basemap, reset and full screen buttons; canvas rendering
+# keeps maps with many points responsive
+fx_basemap <- function(map_data) {
+  map <- leaflet(data = st_transform(map_data, 4326), options = leafletOptions(preferCanvas = TRUE))
+  map <- if (nzchar(CARTO_API_KEY)) {
+    addTiles(map,
+             urlTemplate = paste0("https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=",
+                                  CARTO_API_KEY),
+             attribution = "&copy; OpenStreetMap contributors &copy; CARTO")
+  } else {
+    addProviderTiles(map, providers$CartoDB.Positron)
+  }
+  map %>%
+    addResetMapButton() %>%
+    addFullscreenControl()
+}
+
+# color palette: quintiles of numeric values, or categories (factor). palette is an
+# RColorBrewer or viridis palette name, or a vector of colors. Missing values are
+# light grey.
+fx_pal <- function(values, palette = "YlOrRd", type = "quintile") {
+  if (type == "factor") {
+    levels <- if (is.factor(values)) levels(values) else sort(unique(na.omit(values)))
+    return(colorFactor(palette, levels = levels, na.color = "#e0e0e0"))
+  }
+  breaks <- unique(quantile(values, probs = seq(0, 1, 0.2), na.rm = TRUE))
+  if (length(breaks) < 2) breaks <- c(breaks, breaks + 1)
+  colorBin(palette, domain = values, bins = breaks, na.color = "#e0e0e0")
+}
+
+# legend labels for quintile ranges, rounded to digits
+fx_legend_format <- function(digits = 1) {
+  function(type, cuts, p) {
+    values <- formatC(cuts, format = "f", digits = digits, big.mark = ",")
+    paste0(values[-length(values)], " &ndash; ", values[-1])
+  }
+}
+
+# hover (and click) labels: the value of title_col in bold, then each field in
+# fields (a named vector of column names; names are the labels shown)
+fx_labels <- function(data, title_col, fields, digits = 1) {
+  data <- st_drop_geometry(data)
+  parts <- imap(fields, function(col, name) {
+    x <- data[[col]]
+    value <- if (is.numeric(x)) {
+      whole <- all(x == round(x), na.rm = TRUE)
+      ifelse(is.na(x), "no data", formatC(x, format = "f", digits = if (whole) 0 else digits, big.mark = ","))
+    } else {
+      ifelse(is.na(x), "no data", as.character(x))
+    }
+    paste0("<i>", name, ":</i> ", value, "<br/>")
+  })
+  paste0("<strong>", data[[title_col]], "</strong><br/>", do.call(paste0, unname(parts)))
+}
+
+# add a polygon layer colored by column, and its legend, as one of the layers
+# chosen from the dropdown list (index is the layer's position in the list, from 0)
+fx_add_choropleth <- function(map, data, column, group, index, labels, palette = "YlOrRd",
+                              type = "quintile", digits = 1, title = group) {
+  data <- st_transform(data, 4326)
+  values <- data[[column]]
+  pal <- fx_pal(values, palette, type)
+  map %>%
+    addPolygons(data = data,
+                fillColor = pal(values),
+                fillOpacity = 0.7,
+                color = "white",
+                weight = 1,
+                opacity = 1,
+                label = lapply(labels, HTML),
+                popup = labels,
+                highlightOptions = highlightOptions(weight = 3, color = "#333333", bringToFront = FALSE),
+                group = group) %>%
+    addLegend("bottomleft",
+              pal = pal,
+              values = values,
+              title = if (type == "factor") title else paste0(title, "<br/>(quintiles)"),
+              labFormat = if (type == "factor") labelFormat() else fx_legend_format(digits),
+              opacity = 0.7,
+              className = paste0("info legend indicator-legend indicator-legend-", index))
+}
+
+# add a point layer colored by column, and its legend, as one of the layers chosen
+# from the dropdown list
+fx_add_point_layer <- function(map, data, column, group, index, labels, palette = "YlOrRd",
+                               type = "quintile", digits = 1, title = group, radius = 4) {
+  data <- st_transform(data, 4326)
+  values <- data[[column]]
+  pal <- fx_pal(values, palette, type)
+  map %>%
+    addCircleMarkers(data = data,
+                     radius = radius,
+                     fillColor = pal(values),
+                     fillOpacity = 0.85,
+                     color = "#444444",
+                     weight = 0.5,
+                     label = lapply(labels, HTML),
+                     popup = labels,
+                     group = group) %>%
+    addLegend("bottomleft",
+              pal = pal,
+              values = values,
+              title = if (type == "factor") title else paste0(title, "<br/>(quintiles)"),
+              labFormat = if (type == "factor") labelFormat() else fx_legend_format(digits),
+              opacity = 0.85,
+              className = paste0("info legend indicator-legend indicator-legend-", index))
+}
+
+# add the choropleth layers listed in layers (a table of column, name, palette,
+# type and digits; palette is a list column)
+fx_add_choropleths <- function(map, data, layers, labels, start = 0) {
+  for (i in seq_len(nrow(layers))) {
+    map <- fx_add_choropleth(map, data, layers$column[i], layers$name[i], start + i - 1, labels,
+                             palette = layers$palette[[i]], type = layers$type[i],
+                             digits = layers$digits[i])
+  }
+  map
+}
+
+# add a dropdown list (top right) that shows one layer (and its legend) at a time;
+# groups are the layers' group names in dropdown order, and each layer's legend
+# carries the class "indicator-legend-<position in groups, from 0>"
+fx_add_layer_dropdown <- function(map, groups, selected = 0, label = "Map") {
+  map %>%
+    htmlwidgets::onRender("
+      function(el, x, data) {
+        var map = this;
+        var groups = [].concat(data.groups);
+        function show(i) {
+          groups.forEach(function(g, j) {
+            var layer = map.layerManager.getLayerGroup(g, false);
+            if (layer) { if (j === i) { map.addLayer(layer); } else { map.removeLayer(layer); } }
+          });
+          el.querySelectorAll('.indicator-legend').forEach(function(d) {
+            d.style.display = d.classList.contains('indicator-legend-' + i) ? '' : 'none';
+          });
+        }
+        var control = L.control({position: 'topright'});
+        control.onAdd = function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar');
+          div.style.background = 'white';
+          div.style.padding = '4px 6px';
+          div.innerHTML = '<label style=\"font-weight: bold; margin-right: 4px;\">' + data.label + '</label>';
+          var select = L.DomUtil.create('select', '', div);
+          groups.forEach(function(g, j) {
+            var option = L.DomUtil.create('option', '', select);
+            option.value = j;
+            option.text = g;
+          });
+          select.value = data.selected;
+          select.onchange = function() { show(parseInt(select.value)); };
+          L.DomEvent.disableClickPropagation(div);
+          L.DomEvent.disableScrollPropagation(div);
+          return div;
+        };
+        control.addTo(map);
+        show(data.selected);
+      }", data = list(groups = groups, selected = selected, label = label))
+}
+
+# CTA rail lines in their line colors (non-interactive)
+rail_colors <- c(red = "#c60c30", blue = "#00a1de", brown = "#62361b", green = "#009b3a",
+                 orange = "#f9461c", pink = "#e27ea6", purple = "#522398", yellow = "#f9e300")
+fx_add_rail_lines <- function(map, group = "CTA rail lines") {
+  map %>%
+    addPolylines(data = st_transform(cta_rail_lines, 4326),
+                 color = unname(rail_colors[str_to_lower(cta_rail_lines$rail_line)]),
+                 weight = 2,
+                 opacity = 0.8,
+                 options = pathOptions(interactive = FALSE),
+                 group = group)
+}
+
+# injury severity colors (crash points)
+injury_levels <- c("FATAL", "INCAPACITATING INJURY", "NONINCAPACITATING INJURY",
+                   "REPORTED, NOT EVIDENT", "NO INDICATION OF INJURY")
+injury_pal <- colorFactor(c("#67000d", "#d7301f", "#fc8d59", "#fdcc8a", "#bdbdbd"),
+                          levels = injury_levels, na.color = "#bdbdbd")
+
+# add crash points colored by injury severity (injury_col), with their own legend,
+# as a layer turned on and off with the layers control
+fx_add_crash_points <- function(map, crashes, injury_col, group, labels, title = "Injury severity") {
+  crashes <- st_transform(crashes, 4326)
+  map %>%
+    addCircleMarkers(data = crashes,
+                     radius = 3,
+                     fillColor = injury_pal(crashes[[injury_col]]),
+                     fillOpacity = 0.85,
+                     color = "#444444",
+                     weight = 0.3,
+                     label = lapply(labels, HTML),
+                     popup = labels,
+                     group = group) %>%
+    addLegend("bottomright",
+              colors = c("#67000d", "#d7301f", "#fc8d59", "#fdcc8a", "#bdbdbd"),
+              labels = str_to_sentence(injury_levels),
+              title = title,
+              opacity = 0.85,
+              group = group)
+}
+
+# paginated table (sf geometry dropped; dates formatted; decimals rounded)
+fx_table <- function(data, digits = 2, page_length = 10, paging = TRUE) {
+  if (inherits(data, "sf")) data <- st_drop_geometry(data)
+  data <- data %>%
+    mutate(across(where(~ inherits(.x, "POSIXct")), ~ format(.x, "%Y-%m-%d %H:%M")),
+           across(where(~ inherits(.x, "Date")), as.character),
+           across(where(is.double), ~ round(.x, digits)),
+           across(where(is.logical), ~ if_else(.x, "Yes", "No")))
+  datatable(data,
+            class = "cell-border stripe",
+            rownames = FALSE,
+            selection = "none",
+            filter = if (paging) "top" else "none",
+            options = list(pageLength = page_length,
+                           paging = paging,
+                           searching = paging,
+                           lengthChange = paging,
+                           info = paging,
+                           scrollX = TRUE))
+}
+
+# street address of a crash
+fx_address <- function(crashes) {
+  str_squish(paste(coalesce(as.character(crashes$street_no), ""),
+                   coalesce(crashes$street_direction, ""),
+                   coalesce(crashes$street_name, "")))
+}
+```
+
+# Introduction
+
+This document describes the datasets prepared for each group's final project, with links to download them, interactive maps and tables. The datasets were created from public sources (the [Chicago Data Portal](https://data.cityofchicago.org/), [NITA](https://datahub.nita.illinois.gov/) CTA ridership, the [CTA](https://www.transitchicago.com/developers/gtfs/), [Metra](https://metra.com/developers) and [CMAP](https://datahub.cmap.illinois.gov/)), and summarized by Chicago's 77 community areas where appropriate.
+
+Each group's datasets are available in three formats:
+
+- **GeoPackage (`.gpkg`)**: spatial layers (points, lines and polygons) for QGIS, ArcGIS Pro or R. One GeoPackage holds several layers; choose the layer when adding it to a map.
+- **CSV (`.csv`)**: tables without geometry for Excel, Google Sheets or Tableau. Point tables include latitude and longitude, and community area tables include `comarea_id` and `comarea_name`, which can be joined to community area boundaries.
+- **R data (`.RData`)**: all of a group's datasets (and the community area boundaries) for R or Posit Cloud, e.g., `load(url("https://justenvirons.org/pedagogy/GEO330/projects/data/group01_bike_crashes.RData"))`.
+
+Spatial data are in WGS84 longitude and latitude (EPSG:4326); transform them to Illinois State Plane East (EPSG:3435, feet) to measure distances and areas. Hover over (or click) map features to see their values, use the dropdown lists to change what the maps show, and use the tables' search boxes and column filters to find records.
+
+# Group 1: E-bike safety and legislation in the city of Chicago
+
+```{r}
+#| label: group 1 years
+g1_period <- paste0(min(g1_years), "-", max(g1_years))
+```
+
+Group 1 is examining how e-bike legislation relates to bicyclist injuries in Chicago. These datasets describe every bicycle crash reported by the Chicago Police Department on city streets from `r g1_period`: where and when they occurred, under what conditions, and how severely bicyclists were injured, along with counts by community area and year. A crash is a bicycle crash if its first crash type was a pedalcyclist or a bicyclist was involved. Chicago's crash reports do not distinguish e-bikes from conventional bicycles, so the datasets provide context (trends, locations and conditions of bicycle crashes) rather than e-bike crashes alone.
+
+## Datasets
+
+```{r}
+#| label: group 1 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group01_bike_crashes.gpkg", "GeoPackage with layers `bike_crashes` (points), `bike_crashes_ca_year` and `bike_crashes_ca_wide` (community area polygons)",
+  "group01_bike_crashes.csv", "bicycle crashes, one row per crash (`bike_crashes`)",
+  "group01_bike_crashes_ca_year.csv", "crashes, injuries and rates by community area and year",
+  "group01_bike_crashes_ca_wide.csv", "crashes by community area, with a column for each year, totals and change",
+  "group01_bike_crashes_city_year.csv", "citywide totals by year",
+  "group01_bike_crashes.RData", "all of the above, for R"))
+```
+
+Key columns:
+
+- **Crash points** (`bike_crashes`): date and time; posted speed limit, traffic control, lighting, weather and road conditions; first crash type and primary and secondary contributing causes; dooring and hit-and-run flags; crash-level injuries and whether someone was killed or seriously injured (`ksi_crash`); bicyclists involved, injured, seriously injured and killed; the most severely injured bicyclist's injury, age, sex, action, visibility and location (e.g., in a bike lane); address, latitude and longitude, and community area.
+- **Community areas by year** (`bike_crashes_ca_year`): crashes, injury crashes, killed or seriously injured crashes, dooring and hit-and-run crashes, bicyclists injured, seriously injured and killed, and crashes per 10,000 residents and per square mile.
+
+## Map
+
+```{r}
+#| label: fig-group1-map
+#| fig-cap: Bicycle Crashes by Community Area (Quintiles) and Crash Locations
+
+g1_layers <- tibble(
+  column = c("crashes_total", "crashes_total_per_10k", "crashes_ksi_total", "cyclists_killed_total",
+             "crashes_change", paste0("crashes_", g1_years)),
+  name = c(paste("Bicycle crashes,", g1_period), "Crashes per 10,000 residents",
+           "Killed or seriously injured crashes", "Bicyclists killed",
+           paste0("Change in crashes, ", min(g1_years), " to ", max(g1_years)),
+           paste("Bicycle crashes,", g1_years)),
+  palette = c(as.list(rep("YlOrRd", 4)), list("PuOr"), as.list(rep("YlOrRd", length(g1_years)))),
+  type = "quintile",
+  digits = c(0, 1, 0, 0, 0, rep(0, length(g1_years))))
+
+g1_labels <- fx_labels(bike_crashes_ca_wide, "comarea_name",
+                       c(setNames(c("crashes_total", "crashes_total_per_10k", "crashes_ksi_total",
+                                    "cyclists_killed_total", "crashes_change"),
+                                  c("Crashes", "Per 10,000 residents", "Killed or seriously injured crashes",
+                                    "Bicyclists killed", "Change")),
+                         setNames(paste0("crashes_", g1_years), paste("Crashes,", g1_years))))
+
+g1_point_labels <- fx_labels(mutate(bike_crashes, address = fx_address(bike_crashes),
+                                    date = format(crash_date, "%Y-%m-%d %H:%M")),
+                             "address",
+                             c("Date" = "date", "Bicyclist injury" = "cyclist_injury",
+                               "First crash type" = "first_crash_type",
+                               "Primary cause" = "prim_contributory_cause",
+                               "Speed limit" = "posted_speed_limit", "Lighting" = "lighting_condition",
+                               "Dooring" = "dooring_i", "Hit and run" = "hit_and_run_i"))
+
+fx_basemap(bike_crashes_ca_wide) %>%
+  fx_add_choropleths(bike_crashes_ca_wide, g1_layers, g1_labels) %>%
+  fx_add_crash_points(bike_crashes, "cyclist_injury", "Bicycle crashes (points)", g1_point_labels,
+                      title = "Bicyclist injury") %>%
+  hideGroup("Bicycle crashes (points)") %>%
+  addLayersControl(overlayGroups = "Bicycle crashes (points)", position = "topleft",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  fx_add_layer_dropdown(g1_layers$name)
+```
+
+Turn on *Bicycle crashes (points)* (top left) to show each crash, colored by the most severe injury to a bicyclist.
+
+## Tables
+
+```{r}
+#| label: tbl-group1-city
+#| tbl-cap: Bicycle Crashes Citywide by Year
+
+fx_table(bike_crashes_city_year, paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group1-ca
+#| tbl-cap: Bicycle Crashes by Community Area and Year
+
+fx_table(bike_crashes_ca_year_table)
+```
+
+```{r}
+#| label: tbl-group1-points
+#| tbl-cap: Bicycle Crashes (Selected Columns)
+
+bike_crashes %>%
+  st_drop_geometry() %>%
+  transmute(crash_record_id, crash_date, address = fx_address(bike_crashes), comarea_name,
+            cyclist_injury, n_cyclists, first_crash_type, prim_contributory_cause,
+            posted_speed_limit, lighting_condition, dooring_i, hit_and_run_i,
+            cyclist_age, cyclist_sex, cyclist_location) %>%
+  fx_table()
+```
+
+## How these datasets may inform the project
+
+- **Trends:** compare yearly totals, serious injuries and deaths with the timing of state and city e-bike legislation and policy (e.g., Illinois' three-class e-bike law, effective January 1, 2020, and Divvy's e-bike expansion).
+- **Where:** compare counts with rates per resident or square mile; downtown and North Side community areas have the most crashes but also the most bicycling.
+- **Conditions and severity:** relate bicyclist injury severity to posted speed limits, lighting, time of day, crash type and causes; speed is central to e-bike regulation debates.
+- **Limitations:** e-bikes are not identified; crashes not reported to police (especially minor crashes and crashes not involving a motor vehicle) are missing; crashes on expressways are excluded; and more crashes may simply reflect more bicycling.
+
+# Group 2: Bus rapid transit (BRT) along Ashland Avenue
+
+Group 2 is studying BRT along Ashland Avenue. These datasets describe current CTA ridership along the corridor: the Ashland bus routes (9 Ashland and X9 Ashland Express), the bus routes that cross or connect with them, the CTA rail stations within a quarter mile, the Ashland bus stops, and the community areas along the corridor. *Current* ridership is the average over the latest 12 months available (through `r format(g2_bus_through, "%B %Y")` for buses and `r format(g2_rail_through, "%B %Y")` for rail), compared with `r g2_baseline_year`, before the COVID-19 pandemic.
+
+## Datasets
+
+```{r}
+#| label: group 2 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group02_ashland_brt.gpkg", "GeoPackage with layers `ashland_bus_routes` (lines), `ashland_bus_stops` and `ashland_rail_stations` (points), `ashland_community_areas` (polygons) and `cta_rail_lines` (lines)",
+  "group02_ashland_bus_routes.csv", "Ashland and connecting bus routes with current and 2019 ridership",
+  "group02_ashland_rail_stations.csv", "rail stations within a quarter mile of the Ashland routes with current and 2019 ridership",
+  "group02_ashland_bus_stops.csv", "bus stops served by the Ashland routes",
+  "group02_ashland_bus_ridership_monthly.csv", "monthly average daily rides by route and day type since 2012",
+  "group02_ashland_rail_ridership_monthly.csv", "monthly total and average daily rides by station and day type since 2012",
+  "group02_ashland_brt.RData", "all of the above, for R"))
+```
+
+Key columns for bus routes and rail stations: average daily rides by day type over the latest 12 months (`avg_weekday_current`, `avg_saturday_current`, `avg_sunday_holiday_current`), average weekday rides in 2019 (`avg_weekday_baseline`), current weekday rides as a percent of 2019 (`weekday_pct_of_baseline`), and rank among all CTA bus routes or rail stations by current weekday rides (`weekday_rank`, 1 = busiest). Bus routes also have their role (`Ashland` or `connecting`), length, and miles running along the Ashland routes (`overlap_mi`); rail stations have their distance from the Ashland routes (`dist_ashland_ft`). Bus ridership is for each entire route, not only the part on Ashland Avenue.
+
+## Map
+
+```{r}
+#| label: fig-group2-map
+#| fig-cap: CTA Bus Routes, Bus Stops and Rail Stations along Ashland Avenue
+
+g2_routes_ashland <- filter(ashland_bus_routes, route_role == "Ashland")
+g2_routes_connecting <- filter(ashland_bus_routes, route_role == "connecting")
+g2_route_fields <- c("Role" = "route_role", "Avg. weekday rides (current)" = "avg_weekday_current",
+                     "Avg. weekday rides (2019)" = "avg_weekday_baseline",
+                     "Percent of 2019" = "weekday_pct_of_baseline",
+                     "Weekday rank among CTA routes" = "weekday_rank",
+                     "Miles along Ashland" = "overlap_mi")
+g2_route_label <- function(routes) {
+  fx_labels(mutate(routes, title = paste(route_id, route_name)), "title", g2_route_fields)
+}
+g2_station_labels <- fx_labels(ashland_rail_stations, "station_name",
+                               c("Line" = "station_line",
+                                 "Avg. weekday entries (current)" = "avg_weekday_current",
+                                 "Avg. weekday entries (2019)" = "avg_weekday_baseline",
+                                 "Percent of 2019" = "weekday_pct_of_baseline",
+                                 "Weekday rank among CTA stations" = "weekday_rank",
+                                 "Feet from Ashland routes" = "dist_ashland_ft"))
+g2_stop_labels <- fx_labels(ashland_bus_stops, "stop_name",
+                            c("Stop id" = "stop_id", "Routes" = "routes", "Community area" = "comarea_name"))
+
+g2_connect_pal <- fx_pal(g2_routes_connecting$avg_weekday_current, "YlOrRd")
+g2_station_size <- scales::rescale(sqrt(replace_na(ashland_rail_stations$avg_weekday_current, 0)),
+                                   to = c(5, 16))
+
+fx_basemap(ashland_bus_routes) %>%
+  fx_add_rail_lines() %>%
+  addPolylines(data = g2_routes_connecting,
+               color = g2_connect_pal(g2_routes_connecting$avg_weekday_current),
+               weight = 3,
+               opacity = 0.8,
+               label = lapply(g2_route_label(g2_routes_connecting), HTML),
+               popup = g2_route_label(g2_routes_connecting),
+               group = "Connecting bus routes") %>%
+  addLegend("bottomleft",
+            pal = g2_connect_pal,
+            values = g2_routes_connecting$avg_weekday_current,
+            title = "Connecting routes:<br/>avg. weekday rides<br/>(quintiles)",
+            labFormat = fx_legend_format(0),
+            group = "Connecting bus routes") %>%
+  addPolylines(data = g2_routes_ashland,
+               color = "#08306b",
+               weight = 6,
+               opacity = 0.9,
+               label = lapply(g2_route_label(g2_routes_ashland), HTML),
+               popup = g2_route_label(g2_routes_ashland),
+               group = "Ashland routes (9, X9)") %>%
+  addCircleMarkers(data = ashland_bus_stops,
+                   radius = 2.5,
+                   color = "#08306b",
+                   fillColor = "white",
+                   fillOpacity = 1,
+                   weight = 1.5,
+                   label = lapply(g2_stop_labels, HTML),
+                   popup = g2_stop_labels,
+                   group = "Ashland bus stops") %>%
+  addCircleMarkers(data = ashland_rail_stations,
+                   radius = g2_station_size,
+                   color = "#333333",
+                   fillColor = "#d62728",
+                   fillOpacity = 0.8,
+                   weight = 1,
+                   label = lapply(g2_station_labels, HTML),
+                   popup = g2_station_labels,
+                   group = "Rail stations (sized by ridership)") %>%
+  addLayersControl(overlayGroups = c("Ashland routes (9, X9)", "Ashland bus stops",
+                                     "Rail stations (sized by ridership)", "Connecting bus routes",
+                                     "CTA rail lines"),
+                   position = "topright",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  hideGroup("Ashland bus stops")
+```
+
+## Tables
+
+```{r}
+#| label: tbl-group2-routes
+#| tbl-cap: Ashland and Connecting Bus Routes, Current and 2019 Ridership
+
+fx_table(ashland_bus_routes, digits = 1)
+```
+
+```{r}
+#| label: tbl-group2-stations
+#| tbl-cap: Rail Stations within a Quarter Mile of the Ashland Routes, Current and 2019 Ridership
+
+fx_table(ashland_rail_stations, digits = 1, paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group2-stops
+#| tbl-cap: Bus Stops Served by the Ashland Routes
+
+fx_table(ashland_bus_stops, digits = 5)
+```
+
+```{r}
+#| label: tbl-group2-community-areas
+#| tbl-cap: Community Areas along Ashland Avenue
+
+fx_table(ashland_community_areas, digits = 1)
+```
+
+```{r}
+#| label: tbl-group2-bus-monthly
+#| tbl-cap: Monthly Average Weekday Rides, Ashland and Connecting Bus Routes (all day types are in the CSV file)
+
+ashland_bus_ridership %>%
+  filter(str_starts(day_type, "W")) %>%
+  select(-month, -year_month) %>%
+  fx_table()
+```
+
+```{r}
+#| label: tbl-group2-rail-monthly
+#| tbl-cap: Monthly Weekday Ridership, Rail Stations near Ashland (all day types are in the CSV file)
+
+ashland_rail_ridership %>%
+  filter(str_starts(day_type, "W")) %>%
+  select(-month, -year_month) %>%
+  fx_table()
+```
+
+## How these datasets may inform the project
+
+- **Demand for BRT:** compare the Ashland routes' weekday ridership and rank with other CTA bus routes, and their recovery since 2019; compare the X9 express with the route 9 local.
+- **Trends:** plot the monthly tables to show ridership since 2012, including the period when BRT was proposed on Ashland Avenue, the pandemic decline and recovery.
+- **Network connections and station locations:** connecting routes and rail stations show where riders transfer and where BRT stations might go; distances between consecutive bus stops show how stop spacing compares with typical BRT station spacing.
+- **Who is served:** join the community areas along the corridor with census or Health Atlas indicators.
+- **Limitations:** bus ridership is by route, not by stop or segment; bus boardings and rail entries count trips, not unique riders.
+
+# Group 3: Pedestrian safety near CTA rail stations
+
+```{r}
+#| label: group 3 settings
+g3_period <- paste0(min(g3_years), "-", max(g3_years))
+g3_max <- max(g3_radii_ft)
+g3_radii_text <- paste(paste(head(g3_radii_ft, -1), collapse = ", "), "and", g3_max, "feet")
+```
+
+Group 3 is mapping pedestrian crashes near CTA rail stations. These datasets describe every pedestrian crash reported on city streets from `r g3_period` (a crash is a pedestrian crash if its first crash type was a pedestrian or a pedestrian was involved), with each crash's nearest rail station and distance, and counts of crashes within `r g3_radii_text` of each station, alongside station ridership.
+
+## Datasets
+
+```{r}
+#| label: group 3 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group03_pedestrian_crashes_stations.gpkg", "GeoPackage with layers `pedestrian_crashes` and `station_ped_crashes` (points), `station_buffers` (polygons) and `cta_rail_lines` (lines)",
+  "group03_pedestrian_crashes.csv", "pedestrian crashes citywide, one row per crash, with the nearest station and distance",
+  "group03_station_ped_crashes.csv", "CTA rail stations with pedestrian crash counts within each distance and ridership",
+  "group03_station_ped_crashes_year.csv", "crash counts by station, distance and year",
+  "group03_pedestrian_crashes_stations.RData", "all of the above, for R"))
+```
+
+Key columns:
+
+- **Crash points** (`pedestrian_crashes`): the same crash columns as Group 1, plus pedestrians involved, injured, seriously injured and killed; the most severely injured pedestrian's injury, age, sex, action (e.g., crossing with or against the signal) and location (e.g., in a crosswalk); the nearest station (`station_name`) and distance (`station_dist_ft`); and whether the crash is within each distance of the station (`within_25ft`, ...).
+- **Stations** (`station_ped_crashes`): five-year counts within each distance, named by distance (e.g., `crashes_25ft`, `crashes_ksi_100ft`, `pedestrians_killed_100ft`), current and 2019 average weekday entries, and crashes within the largest distance per 1,000 average weekday entries (`crashes_per_1k_riders`). Counts are cumulative (crashes within 25 feet are also counted within 50 and 100 feet).
+
+## Map
+
+```{r}
+#| label: fig-group3-map
+#| fig-cap: Pedestrian Crashes near CTA Rail Stations
+
+g3_groups <- paste0("Crashes within ", g3_radii_ft, " ft")
+g3_station_labels <- fx_labels(station_ped_crashes, "station_name",
+                               c(c("Line" = "station_line", "Community area" = "comarea_name"),
+                                 setNames(paste0("crashes_", g3_radii_ft, "ft"),
+                                          paste0("Crashes within ", g3_radii_ft, " ft")),
+                                 setNames(paste0("crashes_ksi_", g3_max, "ft"),
+                                          paste0("Killed or seriously injured crashes within ", g3_max, " ft")),
+                                 "Avg. weekday entries (current)" = "avg_weekday_current",
+                                 "Crashes per 1,000 weekday riders" = "crashes_per_1k_riders"))
+
+g3_near <- filter(pedestrian_crashes, .data[[paste0("within_", g3_max, "ft")]])
+g3_point_labels <- fx_labels(mutate(g3_near, address = fx_address(g3_near),
+                                    date = format(crash_date, "%Y-%m-%d %H:%M")),
+                             "address",
+                             c("Date" = "date", "Pedestrian injury" = "pedestrian_injury",
+                               "Pedestrian action" = "pedestrian_action",
+                               "Pedestrian location" = "pedestrian_location",
+                               "Nearest station" = "station_name", "Feet from station" = "station_dist_ft",
+                               "Primary cause" = "prim_contributory_cause"))
+
+g3_map <- fx_basemap(station_ped_crashes) %>%
+  fx_add_rail_lines()
+
+for (i in seq_along(g3_radii_ft)) {
+  r <- g3_radii_ft[i]
+  values <- station_ped_crashes[[paste0("crashes_", r, "ft")]]
+  pal <- fx_pal(values, "YlOrRd")
+  g3_map <- g3_map %>%
+    addPolygons(data = filter(station_buffers, radius_ft == r),
+                fillColor = "#fdae6b",
+                fillOpacity = 0.25,
+                color = "#e6550d",
+                weight = 1,
+                options = pathOptions(interactive = FALSE),
+                group = g3_groups[i]) %>%
+    addCircleMarkers(data = station_ped_crashes,
+                     radius = scales::rescale(sqrt(values), to = c(3, 14), from = c(0, sqrt(max(1, values, na.rm = TRUE)))),
+                     fillColor = pal(values),
+                     fillOpacity = 0.85,
+                     color = "#333333",
+                     weight = 1,
+                     label = lapply(g3_station_labels, HTML),
+                     popup = g3_station_labels,
+                     group = g3_groups[i]) %>%
+    addLegend("bottomleft",
+              pal = pal,
+              values = values,
+              title = paste0("Pedestrian crashes<br/>within ", r, " ft, ", g3_period, "<br/>(quintiles)"),
+              labFormat = fx_legend_format(0),
+              opacity = 0.85,
+              className = paste0("info legend indicator-legend indicator-legend-", i - 1))
+}
+
+g3_map %>%
+  fx_add_crash_points(g3_near, "pedestrian_injury",
+                      paste0("Pedestrian crashes within ", g3_max, " ft (points)"), g3_point_labels,
+                      title = "Pedestrian injury") %>%
+  addLayersControl(overlayGroups = c(paste0("Pedestrian crashes within ", g3_max, " ft (points)"), "CTA rail lines"),
+                   position = "topleft",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  fx_add_layer_dropdown(g3_groups, selected = length(g3_groups) - 1, label = "Distance")
+```
+
+Stations are sized and colored by the number of pedestrian crashes within the distance chosen in the dropdown list; zoom in to see the circles of each distance around the stations and the crashes within them.
+
+## Tables
+
+```{r}
+#| label: tbl-group3-stations
+#| tbl-cap: CTA Rail Stations, Pedestrian Crashes within Each Distance and Ridership
+
+station_ped_crashes %>%
+  arrange(desc(.data[[paste0("crashes_", g3_max, "ft")]])) %>%
+  fx_table()
+```
+
+```{r}
+#| label: tbl-group3-years
+#| tbl-cap: Pedestrian Crashes by Station, Distance and Year
+
+fx_table(station_ped_crashes_year)
+```
+
+```{r}
+#| label: tbl-group3-points
+#| tbl-cap: Pedestrian Crashes within the Largest Distance of a Station (all citywide crashes are in the CSV file)
+
+g3_near %>%
+  st_drop_geometry() %>%
+  transmute(crash_record_id, crash_date, address = fx_address(g3_near), station_name, station_dist_ft,
+            pedestrian_injury, n_pedestrians, pedestrian_action, pedestrian_location,
+            first_crash_type, prim_contributory_cause, traffic_control_device, lighting_condition,
+            posted_speed_limit) %>%
+  fx_table(digits = 1)
+```
+
+## How these datasets may inform the project
+
+- **Where:** identify the stations with the most pedestrian crashes nearby and compare lines and parts of the city.
+- **Distance:** compare counts at each distance to see whether crashes cluster at station entrances or on surrounding streets.
+- **Exposure:** compare crashes with station ridership (`crashes_per_1k_riders`) to find stations with more crashes than their ridership suggests.
+- **Conditions:** relate pedestrian actions and locations, lighting, signals and speed limits near stations to crash severity, and compare with crashes elsewhere in the city.
+- **Limitations:** each station is a single point and crash locations are approximate, so the shortest distances capture few crashes; the station list dates from 2020.
+
+# Group 4: Motorcycle fatalities in the city of Chicago
+
+```{r}
+#| label: group 4 settings
+g4_period <- paste0(min(g4_years), "-", max(g4_years))
+```
+
+Group 4 is studying motorcycle fatalities in Chicago. These datasets locate every fatal crash involving a motorcycle on city streets from `r g4_period` and summarize fatalities citywide and by community area and year. Motorcycle crashes are crashes involving at least one motorcycle (including motor driven cycles and autocycles; mopeds and motorized bicycles are included but labeled separately in `vehicle_class`).
+
+## Datasets
+
+```{r}
+#| label: group 4 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group04_motorcycle_fatalities.gpkg", "GeoPackage with layers `motorcycle_fatal_crashes` (points), `motorcycle_fatalities_ca_year` and `motorcycle_fatalities_ca` (community area polygons)",
+  "group04_motorcycle_fatal_crashes.csv", "fatal motorcycle crashes, one row per crash",
+  "group04_motorcycle_fatalities_ca_year.csv", "fatal crashes and fatalities by community area and year",
+  "group04_motorcycle_fatalities_ca.csv", "motorcyclists killed by community area, with a column for each year and five-year totals",
+  "group04_motorcycle_fatalities_city_year.csv", "citywide totals by year",
+  "group04_motorcycle_fatalities.RData", "all of the above, for R"))
+```
+
+Key columns: motorcyclists killed (riding a motorcycle, as driver or passenger), others killed (e.g., pedestrians or people in other vehicles) and total killed; the age, sex, person type and recorded safety equipment (e.g., helmet use) of the motorcyclist(s) killed; motorcycle types; crash conditions, causes, time and location; and, by community area, motorcyclists killed per 100,000 residents.
+
+## Map
+
+```{r}
+#| label: fig-group4-map
+#| fig-cap: Motorcycle Fatalities by Community Area (Quintiles) and Fatal Crash Locations
+
+g4_layers <- tibble(
+  column = c("motorcyclists_killed_total", "motorcyclists_killed_total_per_100k", "fatal_crashes_total",
+             "total_killed_total", paste0("motorcyclists_killed_", g4_years)),
+  name = c(paste("Motorcyclists killed,", g4_period), "Motorcyclists killed per 100,000 residents",
+           "Fatal motorcycle crashes", "All people killed in motorcycle crashes",
+           paste("Motorcyclists killed,", g4_years)),
+  palette = as.list(rep("Reds", 4 + length(g4_years))),
+  type = "quintile",
+  digits = c(0, 1, 0, 0, rep(0, length(g4_years))))
+
+g4_labels <- fx_labels(motorcycle_fatalities_ca, "comarea_name",
+                       c(setNames(g4_layers$column[1:4], c("Motorcyclists killed", "Per 100,000 residents",
+                                                           "Fatal crashes", "All people killed")),
+                         setNames(paste0("motorcyclists_killed_", g4_years),
+                                  paste("Motorcyclists killed,", g4_years))))
+
+g4_year_pal <- colorFactor("viridis", levels = g4_years)
+g4_point_labels <- fx_labels(mutate(motorcycle_fatal_crashes, address = fx_address(motorcycle_fatal_crashes),
+                                    date = format(crash_date, "%Y-%m-%d %H:%M")),
+                             "address",
+                             c("Date" = "date", "Motorcyclists killed" = "motorcyclists_killed",
+                               "Others killed" = "others_killed", "Motorcycle type" = "motorcycle_type",
+                               "Age of motorcyclist killed" = "motorcyclist_killed_age",
+                               "Safety equipment" = "motorcyclist_killed_safety",
+                               "First crash type" = "first_crash_type",
+                               "Primary cause" = "prim_contributory_cause",
+                               "Speed limit" = "posted_speed_limit"))
+
+fx_basemap(motorcycle_fatalities_ca) %>%
+  fx_add_choropleths(motorcycle_fatalities_ca, g4_layers, g4_labels) %>%
+  addCircleMarkers(data = motorcycle_fatal_crashes,
+                   radius = 5,
+                   fillColor = g4_year_pal(motorcycle_fatal_crashes$crash_year),
+                   fillOpacity = 0.9,
+                   color = "#222222",
+                   weight = 1,
+                   label = lapply(g4_point_labels, HTML),
+                   popup = g4_point_labels,
+                   group = "Fatal crashes (points)") %>%
+  addLegend("bottomright",
+            pal = g4_year_pal,
+            values = g4_years,
+            title = "Fatal crash year",
+            group = "Fatal crashes (points)") %>%
+  addLayersControl(overlayGroups = "Fatal crashes (points)", position = "topleft",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  fx_add_layer_dropdown(g4_layers$name)
+```
+
+## Tables
+
+```{r}
+#| label: tbl-group4-city
+#| tbl-cap: Motorcycle Fatalities Citywide by Year
+
+fx_table(motorcycle_fatalities_city_year, paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group4-ca
+#| tbl-cap: Motorcycle Fatalities by Community Area (Five-Year Totals and by Year)
+
+fx_table(motorcycle_fatalities_ca)
+```
+
+```{r}
+#| label: tbl-group4-ca-year
+#| tbl-cap: Motorcycle Fatalities by Community Area and Year
+
+fx_table(motorcycle_fatalities_ca_year_table)
+```
+
+```{r}
+#| label: tbl-group4-points
+#| tbl-cap: Fatal Motorcycle Crashes (Selected Columns)
+
+motorcycle_fatal_crashes %>%
+  st_drop_geometry() %>%
+  transmute(crash_record_id, crash_date, address = fx_address(motorcycle_fatal_crashes), comarea_name,
+            motorcyclists_killed, others_killed, motorcycle_type, vehicle_class,
+            motorcyclist_killed_age, motorcyclist_killed_sex, motorcyclist_killed_safety,
+            first_crash_type, prim_contributory_cause, posted_speed_limit, lighting_condition) %>%
+  fx_table()
+```
+
+## How these datasets may inform the project
+
+- **Trends:** show whether motorcycle deaths are rising or falling, and map fatal crashes by year to see whether they concentrate on particular corridors.
+- **When and where:** describe the season, day and time of fatal crashes, and the speed limits, street types and lighting where they occur.
+- **Causes and protection:** compare single-vehicle crashes with crashes involving other vehicles, and examine recorded helmet use (Illinois does not require adult motorcyclists to wear helmets).
+- **Limitations:** there are few fatalities each year, so community area rates vary greatly by chance (five-year totals are more reliable); crashes on expressways are excluded; and counts may differ from other official sources.
+
+# Group 5: Public transportation access in underserved Chicago neighborhoods
+
+Group 5 is studying public transportation access in underserved Chicago neighborhoods. This dataset summarizes, for each community area, the CTA transit supply within it (rail stations, bus stops, and miles of rail lines and bus routes), CMAP's 2019 Transit Availability Index (an index of transit service frequency, connectivity, proximity to stops and sidewalk availability, from 1 = lowest to 5 = highest, averaged from CMAP's subzone grid by area), and the city's COVID-19 Community Vulnerability Index (CCVI), used to identify underserved neighborhoods. Community areas in the CCVI's *high* category are treated as underserved, and each community area is classified by vulnerability and transit access (`access_group`).
+
+## Datasets
+
+```{r}
+#| label: group 5 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group05_transit_access.gpkg", "GeoPackage with layers `transit_access_ca` (community area polygons) and `tai_grid_chicago` (Transit Availability Index subzones)",
+  "group05_transit_access_ca.csv", "transit supply, Transit Availability Index and CCVI by community area",
+  "group05_transit_access_by_ccvi.csv", "transit supply and availability by CCVI category (low, medium, high)",
+  "group05_transit_access.RData", "all of the above, for R"))
+```
+
+Key columns: rail stations, rail lines, rail line and track miles, bus stops (each direction counted), bus routes, bus route miles and miles of street with bus service, and their densities per square mile and per 10,000 residents; the Transit Availability Index (`ta_ind`) and its sub-indices for frequency (`freq_ind`), connectivity (`conn_ind`), proximity (`prox_ind`) and sidewalks (`walk_ind`), and the percent of area in each index class (`pct_area_ta_1`, ...); and the CCVI score, category and component ranks (1 = least, 77 = most vulnerable), `underserved`, `low_access` (index below the median community area) and `access_group`.
+
+## Map
+
+```{r}
+#| label: fig-group5-map
+#| fig-cap: Transit Access and Vulnerability by Community Area
+
+g5_layers <- tibble(
+  column = c("ta_ind", "freq_ind", "conn_ind", "prox_ind", "walk_ind", "rail_stations_per_sqmi",
+             "bus_stops_per_sqmi", "bus_street_mi_per_sqmi", "ccvi_score", "ccvi_category", "access_group"),
+  name = c("Transit Availability Index", "Frequency sub-index", "Connectivity sub-index",
+           "Proximity sub-index", "Sidewalk sub-index", "Rail stations per square mile",
+           "Bus stops per square mile", "Miles of bus streets per square mile",
+           "CCVI score (vulnerability)", "CCVI category", "Vulnerability and transit access"),
+  palette = c(as.list(rep("YlGnBu", 8)), list("Purples"),
+              list(c("#fee8c8", "#fdbb84", "#e34a33")),
+              list(c("#b2182b", "#ef8a62", "#67a9cf", "#2166ac"))),
+  type = c(rep("quintile", 9), "factor", "factor"),
+  digits = c(2, 2, 2, 2, 2, 2, 1, 2, 1, 0, 0))
+
+g5_data <- transit_access_ca %>%
+  mutate(access_group = factor(access_group, levels = c("high vulnerability, low access",
+                                                        "high vulnerability, higher access",
+                                                        "lower vulnerability, low access",
+                                                        "lower vulnerability, higher access")))
+
+g5_labels <- fx_labels(g5_data, "comarea_name",
+                       c("Transit Availability Index" = "ta_ind", "Frequency" = "freq_ind",
+                         "Connectivity" = "conn_ind", "Proximity" = "prox_ind", "Sidewalks" = "walk_ind",
+                         "Rail stations" = "rail_stations", "Bus stops" = "bus_stops",
+                         "Bus routes" = "n_bus_routes", "CCVI score" = "ccvi_score",
+                         "CCVI category" = "ccvi_category", "Access group" = "access_group"),
+                       digits = 2)
+
+g5_grid_labels <- fx_labels(mutate(tai_grid_chicago, title = paste("Subzone", subzone17)), "title",
+                            c("Transit Availability Index" = "ta_ind", "Frequency" = "freq_ind",
+                              "Connectivity" = "conn_ind", "Proximity" = "prox_ind",
+                              "Sidewalks" = "walk_ind"))
+
+fx_basemap(g5_data) %>%
+  fx_add_choropleths(g5_data, g5_layers, g5_labels) %>%
+  fx_add_choropleth(mutate(tai_grid_chicago, ta_ind = factor(ta_ind, levels = 1:5)), "ta_ind",
+                    "Transit Availability Index (subzones)", nrow(g5_layers), g5_grid_labels,
+                    palette = "YlGnBu", type = "factor",
+                    title = "Transit Availability Index<br/>(1 = lowest, 5 = highest)") %>%
+  fx_add_layer_dropdown(c(g5_layers$name, "Transit Availability Index (subzones)"))
+```
+
+## Tables
+
+```{r}
+#| label: tbl-group5-ccvi
+#| tbl-cap: Transit Supply and Availability by CCVI Category
+
+fx_table(transit_access_by_ccvi, paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group5-ca
+#| tbl-cap: Transit Access and Vulnerability by Community Area
+
+fx_table(transit_access_ca)
+```
+
+## How these datasets may inform the project
+
+- **Underserved neighborhoods:** compare the high CCVI category with the others, and map the vulnerability and access groups (or a bivariate map, as in Exercise #4) to find community areas with high vulnerability and low transit availability.
+- **Supply vs. availability:** compare where transit runs (stations, stops, route miles) with how useful it is (frequency and connections in the index).
+- **Rail vs. bus:** many community areas, especially on the Far South and Southwest Sides, have no rail station; compare their bus supply and index values with areas served by rail.
+- **Limitations:** index averages are weighted by area, not population; the index reflects 2019 service; and the CCVI, designed for COVID-19 impacts, is one of several possible measures of vulnerability.
+
+# Group 6: The proposed O'Hare Flyer rail connection
+
+Group 6 is examining the proposed O'Hare Flyer, a privately funded express train between a downtown station on Canal Street, just south of Union Station, and O'Hare Terminal 2, using freight railroad right-of-way (Union Pacific, CSX and Canadian National) through the West Side, Forest Park and River Forest. As proposed, trains would take about 15 minutes and run every 15 minutes.
+
+These datasets estimate average public transit travel times to O'Hare from points about every half mile throughout each community area, using CTA and Metra timetables and a transit trip planner ([r5r](https://ipeagit.github.io/r5r/)), for today's network and with the Flyer. Times are the median over departures every minute in three weekday periods (morning peak, midday and afternoon peak, on `r format(g6_date, "%B %d, %Y")`), averaged over the periods. *Current* trips use the CTA Blue Line O'Hare station or Metra's O'Hare Transfer station and the airport people mover; trips *with the Flyer* add the time to reach the Flyer's downtown station, an average wait of `r g6_flyer_headway_min / 2` minutes and the `r g6_flyer_ride_min[["flyer_downtown"]]`-minute ride, and use the Flyer only when it is faster.
+
+## Datasets
+
+```{r}
+#| label: group 6 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group06_ohare_flyer.gpkg", "GeoPackage with layers `ohare_travel_points` (origin points), `ohare_travel_ca` (community area polygons) and `ohare_flyer_places` (O'Hare and station points)",
+  "group06_ohare_travel_points.csv", "travel times from each origin point",
+  "group06_ohare_travel_ca.csv", "average travel times and time saved by community area",
+  "group06_ohare_travel_times_period.csv", "travel times from each origin point by time of day, with the fastest current route (CTA or Metra)",
+  "group06_ohare_flyer.RData", "all of the above, for R"))
+```
+
+Key columns (minutes): current travel time (`minutes_current`), with the Flyer (`minutes_with_flyer`) and minutes saved (`minutes_saved`); for community areas, also the fastest and slowest current times among their points, the percent of points for which the Flyer is faster (`pct_points_flyer_faster`) or Metra is the fastest current route (`pct_points_via_metra`), and whether the community area is along the proposed route (`along_route`).
+
+## Map
+
+```{r}
+#| label: fig-group6-map
+#| fig-cap: Average Transit Travel Time to O'Hare, Current and with the O'Hare Flyer
+
+g6_layers <- tibble(
+  column = c("minutes_current", "minutes_with_flyer", "minutes_saved", "pct_points_flyer_faster",
+             "pct_points_via_metra"),
+  name = c("Travel time to O'Hare, current (minutes)", "Travel time with the Flyer (minutes)",
+           "Minutes saved with the Flyer", "Percent of points where the Flyer is faster",
+           "Percent of points where Metra is fastest today"),
+  palette = list("YlOrRd", "YlOrRd", "YlGnBu", "YlGnBu", "Purples"),
+  type = "quintile",
+  digits = c(1, 1, 1, 0, 0))
+
+g6_labels <- fx_labels(ohare_travel_ca, "comarea_name",
+                       c("Current (minutes)" = "minutes_current", "Fastest point" = "minutes_current_min",
+                         "Slowest point" = "minutes_current_max", "With the Flyer" = "minutes_with_flyer",
+                         "Minutes saved" = "minutes_saved",
+                         "Percent of points Flyer faster" = "pct_points_flyer_faster",
+                         "Percent of points Metra fastest" = "pct_points_via_metra",
+                         "Along the route" = "along_route"))
+
+g6_point_labels <- fx_labels(mutate(ohare_travel_points, title = paste(comarea_name, "point", id)), "title",
+                             c("Current (minutes)" = "minutes_current",
+                               "With the Flyer (minutes)" = "minutes_with_flyer",
+                               "Minutes saved" = "minutes_saved",
+                               "Periods Metra fastest (of 3)" = "periods_via_metra"))
+
+g6_point_groups <- c("Travel time to O'Hare, current (points)", "Minutes saved with the Flyer (points)")
+g6_route_ca <- filter(ohare_travel_ca, along_route %in% TRUE)
+
+g6_map <- fx_basemap(ohare_travel_ca) %>%
+  fx_add_choropleths(ohare_travel_ca, g6_layers, g6_labels) %>%
+  fx_add_point_layer(ohare_travel_points, "minutes_current", g6_point_groups[1], nrow(g6_layers),
+                     g6_point_labels, palette = "YlOrRd", digits = 1,
+                     title = "Travel time, current (minutes)") %>%
+  fx_add_point_layer(ohare_travel_points, "minutes_saved", g6_point_groups[2], nrow(g6_layers) + 1,
+                     g6_point_labels, palette = "YlGnBu", digits = 1,
+                     title = "Minutes saved with the Flyer")
+
+if (nrow(g6_route_ca) > 0) {
+  g6_map <- g6_map %>%
+    addMapPane("route", zIndex = 450) %>%
+    addPolygons(data = g6_route_ca,
+                fill = FALSE,
+                color = "#000000",
+                weight = 2.5,
+                dashArray = "6 4",
+                options = pathOptions(pane = "route", interactive = FALSE),
+                group = "Community areas along the route")
+}
+
+g6_map %>%
+  addCircleMarkers(data = ohare_flyer_places,
+                   radius = 7,
+                   color = "#000000",
+                   fillColor = "#ffd700",
+                   fillOpacity = 1,
+                   weight = 2,
+                   label = ~name,
+                   popup = ~name,
+                   group = "O'Hare and stations") %>%
+  addLayersControl(overlayGroups = c("O'Hare and stations",
+                                     if (nrow(g6_route_ca) > 0) "Community areas along the route"),
+                   position = "topleft",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  fx_add_layer_dropdown(c(g6_layers$name, g6_point_groups))
+```
+
+Community areas along the proposed route are outlined with a dashed black line. Choose a *points* layer from the dropdown list to see travel times from each origin point.
+
+## Tables
+
+```{r}
+#| label: tbl-group6-ca
+#| tbl-cap: Average Transit Travel Time to O'Hare by Community Area (Minutes)
+
+ohare_travel_ca %>%
+  arrange(desc(minutes_saved)) %>%
+  fx_table(digits = 1)
+```
+
+```{r}
+#| label: tbl-group6-points
+#| tbl-cap: Transit Travel Time to O'Hare from Each Origin Point (Minutes)
+
+fx_table(ohare_travel_points, digits = 4)
+```
+
+```{r}
+#| label: tbl-group6-periods
+#| tbl-cap: Transit Travel Time to O'Hare by Origin Point and Time of Day (Minutes)
+
+fx_table(ohare_travel_times_period, digits = 1)
+```
+
+## How these datasets may inform the project
+
+- **Who benefits:** map minutes saved to show which parts of the city would reach O'Hare faster with the Flyer; places near the downtown station benefit most, while places near the Blue Line may not benefit at all.
+- **Along the route:** compare community areas along the route with the rest of the city; a train that passes through neighborhoods without stopping brings their residents no time savings.
+- **Compared with today's options:** compare the Flyer with the Blue Line and Metra, including the time of day (the periods table).
+- **Equity:** join the community area table with Group 5's transit access and vulnerability measures to ask who gains from the project.
+- **Limitations:** the Flyer's route, stations and schedule are proposals; times are scheduled (not actual) weekday times and exclude fares; Metra's O'Hare service is limited; and points are evenly spaced rather than weighted by population.
