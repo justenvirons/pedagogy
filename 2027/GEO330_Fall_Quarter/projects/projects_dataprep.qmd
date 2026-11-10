@@ -22,6 +22,7 @@ This document stores the code used to create datasets for the GEO 330 final grou
 | Group | Topic | Datasets |
 |-------|-------|----------|
 | 1 | E-bike safety and legislation in the city of Chicago | Bicycle crashes (points); bicycle crashes by community area and year (polygons) |
+| 2 | Bus rapid transit (BRT) along Ashland Avenue | Ashland and connecting bus routes (lines) and rail stations (points) with current and pre-pandemic ridership; Ashland bus stops; monthly bus and rail ridership |
 
 Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 
@@ -87,6 +88,16 @@ read_portal_csv <- function(url, cache) {
 
 read_portal_geojson <- function(url, cache) {
   st_read(download_cached(url, cache), quiet = TRUE)
+}
+
+# save a group's datasets (object names) to an .RData file, along with the
+# community area boundaries in WGS84 (epsg:4326)
+save_with_community_areas <- function(objects, file) {
+  caller <- parent.frame()
+  env <- new.env()
+  for (obj in objects) assign(obj, get(obj, envir = caller), envir = env)
+  env$community_areas <- st_transform(community_areas, 4326)
+  save(list = c(objects, "community_areas"), envir = env, file = file)
 }
 
 # portal records for a long list of ids, requested in batches (to keep URLs short)
@@ -399,7 +410,6 @@ Spatial layers are transformed to and saved in WGS84 (epsg:4326) so they can be 
 bike_crashes <- st_transform(bike_crashes, 4326)
 bike_crashes_ca_year <- st_transform(bike_crashes_ca_year, 4326)
 bike_crashes_ca_wide <- st_transform(bike_crashes_ca_wide, 4326)
-community_areas <- st_transform(community_areas, 4326)
 
 # GeoPackage (one layer per dataset)
 if (file.exists(g1_gpkg)) file.remove(g1_gpkg)
@@ -414,9 +424,11 @@ write_csv(st_drop_geometry(bike_crashes_ca_wide), file.path(data_dir, "group01_b
 write_csv(bike_crashes_city_year, file.path(data_dir, "group01_bike_crashes_city_year.csv"))
 
 # R datasets
-save(bike_crashes, bike_crashes_ca_year, bike_crashes_ca_wide, bike_crashes_ca_year_table,
-     bike_crashes_city_year, community_areas, g1_years,
-     file = g1_rdata)
+# (community areas are saved in WGS84 without changing the shared community_areas
+# object, which later groups use in State Plane)
+save_with_community_areas(c("bike_crashes", "bike_crashes_ca_year", "bike_crashes_ca_wide",
+                            "bike_crashes_ca_year_table", "bike_crashes_city_year", "g1_years"),
+                          g1_rdata)
 ```
 
 ## Dataset descriptions
@@ -470,3 +482,390 @@ Bicycle crashes reported by CPD on city streets, `r min(g1_years)`-`r max(g1_yea
 - **Underreporting.** Only crashes reported to CPD are included. Crashes involving only bicyclists (e.g., falls, crashes between two bicyclists or with pedestrians), minor crashes and crashes reported later at police stations are underrepresented, and about half of all crash reports (mostly minor crashes) are self-reported by those involved at a police district rather than recorded at the scene by an officer.
 - **Coverage.** Crashes on interstate highways and other roads patrolled by the Illinois State Police are not included. Crash records can be added or updated months after a crash, so counts for the most recent year may increase slightly when the data are recreated.
 - **Counts are not exposure.** More crashes may simply reflect more bicycling. Rates per resident or square mile are a partial adjustment; bicycling activity (e.g., Divvy trips or bike counts) is a better denominator where available.
+
+# Group 2: Bus rapid transit (BRT) along Ashland Avenue
+## Project overview
+Group 2 is studying BRT along Ashland Avenue. The datasets below describe current CTA ridership along the corridor: the Ashland bus route(s), the bus routes that cross or connect with them, and the CTA rail stations near Ashland Avenue. Current ridership (the latest 12 months available) is compared with ridership in 2019, before the COVID-19 pandemic, and monthly ridership is included for trend analyses.
+
+## Settings
+```{r}
+#| label: group 2 settings
+
+# NITA (formerly RTAMS) CTA ridership files, downloaded from
+# https://datahub.nita.illinois.gov/media/datasets/cta-ridership and saved in the
+# data directory. When NITA posts newer files, save them and update the names below.
+g2_file_bus_ridership <- file.path(data_dir, "CTA_Average_Bus_Ridership_1999_2026.csv")
+g2_file_rail_ridership <- file.path(data_dir, "CTA_Average_Rail_Station_Ridership_1999_2026.csv")
+
+# CTA rail stations (NITA/RTAMS), already saved for Exercise #3
+g2_file_rail_stations <- "exercises/Exercise_03/data/CTA_RAIL_STATIONS.shp"
+
+# CTA GTFS schedule data (route alignments and bus stops)
+url_cta_gtfs <- "https://www.transitchicago.com/downloads/sch_data/google_transit.zip"
+
+# Ashland Avenue bus routes: 9 Ashland and X9 Ashland Express (when operating)
+g2_routes <- c("9", "X9")
+
+# rail stations within this distance (feet) of the Ashland route(s): a quarter mile
+g2_station_buffer_ft <- 1320
+
+# pre-pandemic comparison year and first year of monthly ridership kept
+g2_baseline_year <- 2019
+g2_trend_start <- 2012
+
+# output files
+g2_gpkg <- file.path(data_dir, "group02_ashland_brt.gpkg")
+g2_rdata <- file.path(data_dir, "group02_ashland_brt.RData")
+```
+
+## Data sources
+- [NITA CTA ridership](https://datahub.nita.illinois.gov/media/datasets/cta-ridership) (Northeastern Illinois Transportation Analytics, formerly RTAMS): monthly ridership by bus route and by rail station and day type (weekday, Saturday, Sunday/holiday), with total and average daily rides. Bus ridership counts boardings on each route (a rider who transfers between two routes is counted on both); rail ridership counts station entries. Download the latest bus route and rail station ridership CSV files and save them in `projects/data/`.
+- CTA rail stations (NITA/RTAMS), the same shapefile used in Exercise #3. Station ids match the rail ridership file's `RIDERSHIP_ID`.
+- [CTA GTFS](https://www.transitchicago.com/developers/gtfs/) schedule data: current bus route alignments (from trip shapes) and the bus stops served by the Ashland route(s). The GTFS download is also saved as a cache file.
+
+## Functions
+```{r}
+#| label: group 2 functions
+
+# NITA ridership files are read as text and their columns standardized; each
+# element of lookup lists the column names a standard column may have in the file
+fx_read_nita_ridership <- function(file, lookup, optional = "name") {
+  ridership <- read_csv(file, col_types = cols(.default = col_character()))
+  names(ridership) <- str_to_upper(str_trim(str_remove(names(ridership), "^﻿")))
+  for (new in names(lookup)) {
+    old <- intersect(lookup[[new]], names(ridership))[1]
+    if (!is.na(old)) names(ridership)[names(ridership) == old] <- new
+  }
+  missing <- setdiff(setdiff(names(lookup), optional), names(ridership))
+  if (length(missing) > 0) {
+    stop("Columns not found in ", file, ": ", paste(missing, collapse = ", "),
+         "\nColumns in the file: ", paste(names(ridership), collapse = ", "),
+         "\nAdd the file's column names to the lookup.")
+  }
+  if (!"name" %in% names(ridership)) ridership$name <- NA_character_
+  ridership %>%
+    transmute(id = str_remove(str_trim(id), "^0+(?=.)"),
+              name = str_trim(name),
+              year = as.integer(year),
+              month = as.integer(month),
+              year_month = make_date(year, month, 1),
+              day_type = str_trim(day_type),
+              day_key = case_when(str_detect(str_to_lower(day_type), "^w") ~ "weekday",
+                                  str_detect(str_to_lower(day_type), "^sa") ~ "saturday",
+                                  TRUE ~ "sunday_holiday"),
+              total_rides = parse_number(total_rides),
+              daily_avg_rides = parse_number(daily_avg_rides)) %>%
+    drop_na(id, year_month)
+}
+
+# current (latest 12 months) and baseline-year average daily rides by day type,
+# total rides over the latest 12 months, current weekday rides as a percent of
+# baseline weekday rides, and rank by current weekday rides among all ids
+fx_ridership_summary <- function(ridership, baseline_year) {
+  latest <- max(ridership$year_month)
+  current_months <- seq(latest %m-% months(11), latest, by = "month")
+  ridership %>%
+    group_by(id, day_key) %>%
+    summarise(current = mean(daily_avg_rides[year_month %in% current_months]),
+              baseline = mean(daily_avg_rides[year == baseline_year]),
+              total_current = sum(total_rides[year_month %in% current_months]),
+              .groups = "drop") %>%
+    mutate(across(c(current, baseline), ~ if_else(is.nan(.x), NA_real_, round(.x)))) %>%
+    group_by(id) %>%
+    mutate(rides_12mo = sum(total_current)) %>%
+    ungroup() %>%
+    select(-total_current) %>%
+    pivot_wider(names_from = day_key, values_from = c(current, baseline),
+                names_glue = "avg_{day_key}_{.value}") %>%
+    select(id, avg_weekday_current, avg_saturday_current, avg_sunday_holiday_current,
+           avg_weekday_baseline, rides_12mo) %>%
+    mutate(weekday_pct_of_baseline = round(100 * avg_weekday_current / avg_weekday_baseline, 1),
+           weekday_rank = min_rank(desc(avg_weekday_current)))
+}
+```
+
+## CTA GTFS: bus route alignments and Ashland bus stops
+Bus route alignments are built from the GTFS trip shapes and combined by route. *Connecting* routes are bus routes whose alignments cross or overlap the Ashland route(s); `overlap_mi` is the length (miles) of each route that runs along the Ashland route(s), so routes that share Ashland Avenue for some distance can be distinguished from routes that simply cross it.
+
+```{r}
+#| label: group 2 gtfs
+
+g2_gtfs_dir <- file.path(tempdir(), "cta_gtfs")
+unzip(download_cached(url_cta_gtfs, file.path(data_dir, "cta_gtfs_cache.zip")),
+      files = c("routes.txt", "trips.txt", "shapes.txt", "stops.txt", "stop_times.txt"),
+      exdir = g2_gtfs_dir, overwrite = TRUE)
+
+read_gtfs <- function(file, ...) {
+  read_csv(file.path(g2_gtfs_dir, file), col_types = cols(.default = col_character()), ...)
+}
+
+# bus routes (route_type 3) and their trips
+gtfs_routes <- read_gtfs("routes.txt") %>%
+  filter(route_type == "3") %>%
+  select(route_id, route_name = route_long_name)
+
+gtfs_trips <- read_gtfs("trips.txt") %>%
+  filter(route_id %in% gtfs_routes$route_id) %>%
+  select(route_id, trip_id, shape_id)
+
+# route alignments: one line per trip shape, combined by route
+bus_route_lines <- read_gtfs("shapes.txt") %>%
+  filter(shape_id %in% gtfs_trips$shape_id) %>%
+  mutate(across(c(shape_pt_lat, shape_pt_lon, shape_pt_sequence), as.numeric)) %>%
+  arrange(shape_id, shape_pt_sequence) %>%
+  st_as_sf(coords = c("shape_pt_lon", "shape_pt_lat"), crs = 4326) %>%
+  group_by(shape_id) %>%
+  summarise(do_union = FALSE, .groups = "drop") %>%
+  st_cast("LINESTRING") %>%
+  inner_join(distinct(gtfs_trips, route_id, shape_id), by = "shape_id") %>%
+  st_transform(3435) %>%
+  group_by(route_id) %>%
+  summarise(.groups = "drop") %>%
+  left_join(gtfs_routes, by = "route_id")
+
+# Ashland route(s), combined into a single line, and a narrow (100 ft) buffer
+# used to measure how far other routes run along Ashland
+g2_ashland_line <- bus_route_lines %>%
+  filter(route_id %in% g2_routes) %>%
+  st_union()
+if (length(g2_ashland_line) == 0 || st_is_empty(g2_ashland_line)) {
+  stop("None of the Ashland routes (", paste(g2_routes, collapse = ", "), ") are in the GTFS data")
+}
+g2_ashland_narrow <- st_buffer(g2_ashland_line, 100)
+
+g2_bus_routes <- bus_route_lines %>%
+  st_filter(st_buffer(g2_ashland_line, 50)) %>%
+  mutate(route_role = if_else(route_id %in% g2_routes, "Ashland", "connecting"),
+         route_mi = round(as.numeric(st_length(geometry)) / 5280, 1),
+         overlap_mi = map_dbl(geometry, function(g) {
+           sum(as.numeric(st_length(st_intersection(st_sfc(g, crs = 3435), g2_ashland_narrow))))
+         }) / 5280,
+         overlap_mi = round(overlap_mi, 1))
+
+# bus stops served by the Ashland route(s), with the routes serving each stop
+g2_ashland_trips <- filter(gtfs_trips, route_id %in% g2_routes)
+g2_stop_routes <- read_gtfs("stop_times.txt", col_select = c(trip_id, stop_id)) %>%
+  filter(trip_id %in% g2_ashland_trips$trip_id) %>%
+  distinct(trip_id, stop_id) %>%
+  inner_join(select(g2_ashland_trips, trip_id, route_id), by = "trip_id") %>%
+  distinct(stop_id, route_id) %>%
+  group_by(stop_id) %>%
+  summarise(routes = paste(sort(route_id), collapse = ", "), .groups = "drop")
+
+ashland_bus_stops <- read_gtfs("stops.txt") %>%
+  inner_join(g2_stop_routes, by = "stop_id") %>%
+  mutate(across(c(stop_lat, stop_lon), as.numeric)) %>%
+  select(stop_id, stop_name, routes, stop_lat, stop_lon) %>%
+  st_as_sf(coords = c("stop_lon", "stop_lat"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435) %>%
+  st_join(select(community_areas, comarea_id, comarea_name)) %>%
+  arrange(desc(stop_lat))
+
+rm(g2_ashland_trips, g2_stop_routes)
+```
+
+## Bus route ridership
+```{r}
+#| label: group 2 bus ridership
+
+g2_bus_all <- fx_read_nita_ridership(
+  g2_file_bus_ridership,
+  lookup = list(id = c("ROUTE", "ROUTE_ID", "RT", "ROUTE_NUMBER"),
+                name = c("ROUTE_NAME", "ROUTENAME", "NAME"),
+                year = "YEAR",
+                month = "MONTH",
+                day_type = c("DAY_TYPE", "DAYTYPE"),
+                total_rides = c("TOTAL_RIDES", "RIDES", "MONTHTOTAL"),
+                daily_avg_rides = c("DAILY_AVG_RIDES", "AVG_RIDES", "AVG_DAILY_RIDES")))
+
+# latest month of bus ridership
+g2_bus_through <- max(g2_bus_all$year_month)
+
+# summary computed for all routes, so ranks are among all CTA bus routes
+ashland_bus_routes <- g2_bus_routes %>%
+  left_join(fx_ridership_summary(g2_bus_all, g2_baseline_year), by = c("route_id" = "id")) %>%
+  select(route_id, route_name, route_role, route_mi, overlap_mi, avg_weekday_current,
+         avg_saturday_current, avg_sunday_holiday_current, avg_weekday_baseline,
+         weekday_pct_of_baseline, weekday_rank, rides_12mo) %>%
+  arrange(route_role, desc(avg_weekday_current))
+
+# monthly ridership for the Ashland and connecting routes
+ashland_bus_ridership <- g2_bus_all %>%
+  filter(id %in% ashland_bus_routes$route_id, year >= g2_trend_start) %>%
+  left_join(st_drop_geometry(ashland_bus_routes) %>% select(route_id, route_name, route_role),
+            by = c("id" = "route_id")) %>%
+  select(route_id = id, route_name, route_role, year, month, year_month, day_type,
+         total_rides, daily_avg_rides) %>%
+  arrange(route_id, year_month, day_type)
+```
+
+## Rail station ridership
+CTA rail stations within a quarter mile (`g2_station_buffer_ft`) of the Ashland route(s) are selected, with their distance from the route.
+
+```{r}
+#| label: group 2 rail ridership
+
+line_names <- c(BL = "Blue", BR = "Brown", GR = "Green", ML = "Multi",
+                OR = "Orange", PK = "Pink", PR = "Purple", RD = "Red", YL = "Yellow")
+
+g2_rail_all <- fx_read_nita_ridership(
+  g2_file_rail_ridership,
+  lookup = list(id = c("RIDERSHIP_ID", "STATION_ID"),
+                name = c("NAME", "STATION_NAME", "STATIONNAME"),
+                year = "YEAR",
+                month = "MONTH",
+                day_type = c("DAY_TYPE", "DAYTYPE"),
+                total_rides = c("TOTAL_RIDES", "RIDES"),
+                daily_avg_rides = c("DAILY_AVG_RIDES", "AVG_RIDES", "AVG_DAILY_RIDES")))
+
+# latest month of rail ridership
+g2_rail_through <- max(g2_rail_all$year_month)
+
+g2_rail_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
+  st_transform(3435) %>%
+  transmute(station_id = as.character(as.numeric(STATION_ID)),
+            station_name = LONGNAME,
+            station_line = unname(line_names[LEGEND]))
+
+ashland_rail_stations <- g2_rail_stations %>%
+  mutate(dist_ashland_ft = round(as.numeric(st_distance(geometry, g2_ashland_line)))) %>%
+  filter(dist_ashland_ft <= g2_station_buffer_ft) %>%
+  st_join(select(community_areas, comarea_id, comarea_name), join = st_nearest_feature) %>%
+  left_join(fx_ridership_summary(g2_rail_all, g2_baseline_year), by = c("station_id" = "id")) %>%
+  arrange(desc(st_coordinates(geometry)[, "Y"]))
+
+# monthly ridership for the stations near Ashland
+ashland_rail_ridership <- g2_rail_all %>%
+  filter(id %in% ashland_rail_stations$station_id, year >= g2_trend_start) %>%
+  left_join(st_drop_geometry(ashland_rail_stations) %>% select(station_id, station_name, station_line),
+            by = c("id" = "station_id")) %>%
+  select(station_id = id, station_name, station_line, year, month, year_month, day_type,
+         total_rides, daily_avg_rides) %>%
+  arrange(station_id, year_month, day_type)
+
+rm(g2_rail_stations)
+```
+
+## Community areas along Ashland Avenue
+```{r}
+#| label: group 2 community areas
+
+ashland_community_areas <- community_areas %>%
+  inner_join(ashland_bus_stops %>%
+               st_drop_geometry() %>%
+               count(comarea_id, name = "n_bus_stops"),
+             by = "comarea_id") %>%
+  left_join(ashland_rail_stations %>%
+              st_drop_geometry() %>%
+              count(comarea_id, name = "n_rail_stations"),
+            by = "comarea_id") %>%
+  mutate(n_rail_stations = replace_na(n_rail_stations, 0L),
+         area_sqmi = round(area_sqmi, 2)) %>%
+  arrange(comarea_id)
+```
+
+## Checks
+```{r}
+#| label: group 2 checks
+
+# latest month of ridership
+g2_bus_through
+g2_rail_through
+
+# Ashland and connecting routes, and stations near Ashland, with current ridership
+ashland_bus_routes %>% st_drop_geometry() %>% print(n = Inf)
+ashland_rail_stations %>% st_drop_geometry() %>% print(n = Inf)
+
+# routes and stations without ridership (ids that do not match the ridership files)
+filter(ashland_bus_routes, is.na(avg_weekday_current))$route_id
+filter(ashland_rail_stations, is.na(avg_weekday_current))$station_name
+
+# Ashland and connecting routes, bus stops and rail stations
+ggplot() +
+  geom_sf(data = community_areas, fill = "grey95", color = "white", linewidth = 0.2) +
+  geom_sf(data = filter(ashland_bus_routes, route_role == "connecting"), color = "grey60", linewidth = 0.3) +
+  geom_sf(data = filter(ashland_bus_routes, route_role == "Ashland"), color = "#1f77b4", linewidth = 1) +
+  geom_sf(data = ashland_bus_stops, size = 0.3, color = "#1f77b4") +
+  geom_sf(data = ashland_rail_stations, aes(size = avg_weekday_current), color = "#d62728") +
+  scale_size_area(name = "Avg. weekday\nrail entries") +
+  labs(title = "CTA bus routes and rail stations along Ashland Avenue") +
+  theme_void()
+
+# average weekday rides on the Ashland route(s)
+ashland_bus_ridership %>%
+  filter(route_role == "Ashland", str_starts(day_type, "W")) %>%
+  ggplot(aes(year_month, daily_avg_rides, color = route_id)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = NULL, y = "Average weekday rides", color = "Route") +
+  theme_minimal()
+```
+
+## Save datasets
+```{r}
+#| label: group 2 save datasets
+
+ashland_bus_routes <- st_transform(ashland_bus_routes, 4326)
+ashland_bus_stops <- st_transform(ashland_bus_stops, 4326)
+ashland_rail_stations <- st_transform(ashland_rail_stations, 4326)
+ashland_community_areas <- st_transform(ashland_community_areas, 4326)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g2_gpkg)) file.remove(g2_gpkg)
+st_write(ashland_bus_routes, g2_gpkg, layer = "ashland_bus_routes", quiet = TRUE)
+st_write(ashland_bus_stops, g2_gpkg, layer = "ashland_bus_stops", quiet = TRUE)
+st_write(ashland_rail_stations, g2_gpkg, layer = "ashland_rail_stations", quiet = TRUE)
+st_write(ashland_community_areas, g2_gpkg, layer = "ashland_community_areas", quiet = TRUE)
+
+# CSV tables
+write_csv(st_drop_geometry(ashland_bus_routes), file.path(data_dir, "group02_ashland_bus_routes.csv"))
+write_csv(st_drop_geometry(ashland_bus_stops), file.path(data_dir, "group02_ashland_bus_stops.csv"))
+write_csv(st_drop_geometry(ashland_rail_stations), file.path(data_dir, "group02_ashland_rail_stations.csv"))
+write_csv(ashland_bus_ridership, file.path(data_dir, "group02_ashland_bus_ridership_monthly.csv"))
+write_csv(ashland_rail_ridership, file.path(data_dir, "group02_ashland_rail_ridership_monthly.csv"))
+
+# R datasets
+save_with_community_areas(c("ashland_bus_routes", "ashland_bus_stops", "ashland_rail_stations",
+                            "ashland_community_areas", "ashland_bus_ridership",
+                            "ashland_rail_ridership", "g2_bus_through", "g2_rail_through",
+                            "g2_baseline_year"),
+                          g2_rdata)
+```
+
+## Dataset descriptions
+Ridership columns are the same for bus routes and rail stations. *Current* is the latest 12 months of ridership available (through `g2_bus_through` for buses and `g2_rail_through` for rail); *baseline* is `g2_baseline_year` (2019).
+
+| Column | Description |
+|--------|-------------|
+| `avg_weekday_current`, `avg_saturday_current`, `avg_sunday_holiday_current` | Average daily rides (bus boardings or rail station entries) by day type, latest 12 months |
+| `avg_weekday_baseline` | Average weekday rides in 2019 |
+| `weekday_pct_of_baseline` | Current weekday rides as a percent of 2019 weekday rides (ridership recovery) |
+| `weekday_rank` | Rank by current average weekday rides among all CTA bus routes (bus) or rail stations (rail); 1 = busiest |
+| `rides_12mo` | Total rides over the latest 12 months |
+
+### `ashland_bus_routes` (lines, one row per route)
+The Ashland route(s) and the bus routes that cross or connect with them, with `route_id` and `route_name`, `route_role` (`Ashland` or `connecting`), route length (`route_mi`), miles running along the Ashland route(s) (`overlap_mi`), and the ridership columns above. Ridership is for each entire route, not only the part on or near Ashland Avenue.
+
+### `ashland_rail_stations` (points, one row per station)
+CTA rail stations within a quarter mile of the Ashland route(s), with `station_id`, `station_name`, `station_line` (`Multi` for stations served by more than one line), distance from the Ashland route(s) (`dist_ashland_ft`), community area, and the ridership columns above. Rail ridership counts entries at each station; riders transferring between lines within a station are not counted again.
+
+### `ashland_bus_stops` (points, one row per stop)
+Bus stops served by the Ashland route(s) in the current CTA schedule (`stop_id`, `stop_name`, `routes`, latitude and longitude, community area). CTA does not regularly publish stop-level ridership, so stops have no ridership; they can be used to measure stop spacing (a key difference between local bus and BRT service) and to summarize the population or destinations near the corridor.
+
+### `ashland_community_areas` (polygons, one row per community area)
+Community areas with Ashland bus stops, with population, land area, and the number of Ashland bus stops (`n_bus_stops`) and nearby rail stations (`n_rail_stations`).
+
+### `ashland_bus_ridership` and `ashland_rail_ridership` (tables, one row per route or station, month and day type)
+Monthly ridership since `g2_trend_start` (2012) for the routes and stations above: `total_rides` and `daily_avg_rides` by `day_type`.
+
+## How these datasets may inform the project
+- **Demand for BRT.** Use `weekday_rank` and `avg_weekday_current` to show how the Ashland route(s) compare with other CTA bus routes; high ridership on a long, continuous arterial is a common argument for BRT. Compare current ridership with 2019 (`weekday_pct_of_baseline`) and with other routes' recovery.
+- **Trends.** Plot the monthly tables to show ridership on the Ashland route(s) and nearby rail stations since 2012, including the period when CTA and the city proposed BRT on Ashland Avenue in the 2010s, the pandemic decline and the recovery since.
+- **Network connections.** Connecting routes and rail stations show where Ashland riders can transfer; ridership at those routes and stations suggests where BRT stations might be located and how a faster Ashland service could connect neighborhoods with the rail network.
+- **Stop spacing and station locations.** Measure distances between consecutive `ashland_bus_stops` and compare with typical BRT station spacing; locate potential BRT stations at rail stations and busy connecting routes.
+- **Who is served.** Join `ashland_community_areas` (by `comarea_id`) with Health Atlas indicators (e.g., poverty, ease of walking to transit; Exercises #3 and #4) or census data on car ownership and commuting to describe the neighborhoods along the corridor.
+
+## Limitations
+- **Route-level bus ridership.** NITA bus ridership is by route and month, not by stop, direction or segment, so it cannot show where along Ashland riders board.
+- **Current schedule only.** Route alignments and stops come from the current CTA schedule; routes that do not currently operate (e.g., X9, if suspended) have no alignment and are left out of `ashland_bus_routes`, though their historical ridership can be found in the bus ridership file.
+- **Boardings, not riders.** Bus boardings and rail entries count trips, not unique riders, and transfers between buses are counted on each route.
