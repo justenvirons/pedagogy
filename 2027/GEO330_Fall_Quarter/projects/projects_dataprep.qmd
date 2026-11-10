@@ -661,7 +661,7 @@ ashland_bus_ridership <- g2_bus_all %>%
 ```
 
 ## Bus stops
-Bus stops served by the Ashland routes are selected using the routes listed for each stop in the portal's bus stop data. If that column cannot be found, stops within 100 feet of the Ashland routes are selected instead.
+Bus stops served by the Ashland routes are selected using the routes listed for each stop in the portal's bus stop data (the column is found by its values, since column names differ between portal exports). If no stops are found that way, stops within 100 feet of the Ashland routes are selected instead.
 
 ```{r}
 #| label: group 2 bus stops
@@ -671,31 +671,61 @@ g2_stops_all <- read_portal_geojson(url_bus_stops, file.path(data_dir, "bus_stop
 names(g2_stops_all) <- str_to_lower(names(g2_stops_all))
 st_geometry(g2_stops_all) <- "geometry"
 
-# column listing the routes serving each stop (e.g., "9,X9,66")
-g2_routes_col <- str_subset(names(g2_stops_all), "^routes")[1]
+# split a column of route lists (e.g., "9,X9,66") into route tokens
+fx_route_tokens <- function(x) str_split(str_to_upper(coalesce(as.character(x), "")), "[^A-Z0-9]+")
 
-if (!is.na(g2_routes_col)) {
-  ashland_bus_stops <- g2_stops_all %>%
-    mutate(routes = str_squish(.data[[g2_routes_col]])) %>%
-    filter(map_lgl(str_split(coalesce(routes, ""), "[,;[:space:]]+"), ~ any(.x %in% g2_routes)))
+# column listing the routes serving each stop: among columns named like "route"
+# (or, if none, text columns with comma-separated values), the column whose values
+# contain the most CTA route numbers (column names differ between portal exports)
+g2_route_ids <- str_to_upper(g2_bus_routes_all$route_id)
+g2_stops_table <- st_drop_geometry(g2_stops_all)
+g2_route_candidates <- str_subset(names(g2_stops_table), "rout")
+if (length(g2_route_candidates) == 0) {
+  g2_route_candidates <- names(select(g2_stops_table, where(~ is.character(.x) && any(str_detect(.x, ","), na.rm = TRUE))))
+}
+g2_route_match <- g2_stops_table %>%
+  select(all_of(g2_route_candidates)) %>%
+  map_dbl(~ mean(map_lgl(fx_route_tokens(.x), function(tokens) any(tokens %in% g2_route_ids))))
+g2_routes_col <- if (length(g2_route_match) > 0 && max(g2_route_match) > 0.5) {
+  names(which.max(g2_route_match))
 } else {
-  message("No routes column found in the bus stop data; selecting stops within 100 feet of the Ashland routes")
-  ashland_bus_stops <- g2_stops_all %>%
-    st_filter(g2_ashland_narrow) %>%
-    mutate(routes = NA_character_)
+  NA_character_
+}
+message("Bus stop columns: ", paste(names(g2_stops_all), collapse = ", "),
+        "\nRoutes column: ", g2_routes_col)
+
+ashland_bus_stops <- if (!is.na(g2_routes_col)) {
+  g2_stops_all %>%
+    mutate(routes = str_squish(as.character(.data[[g2_routes_col]]))) %>%
+    filter(map_lgl(fx_route_tokens(routes), ~ any(.x %in% str_to_upper(g2_routes))))
+} else {
+  g2_stops_all[0, ]
 }
 
+# if no stops are found by route, select stops within 100 feet of the Ashland routes
+if (nrow(ashland_bus_stops) == 0) {
+  message("No stops found by route; selecting stops within 100 feet of the Ashland routes")
+  ashland_bus_stops <- g2_stops_all %>%
+    st_filter(g2_ashland_narrow) %>%
+    mutate(routes = if (!is.na(g2_routes_col)) as.character(.data[[g2_routes_col]]) else NA_character_)
+}
+if (nrow(ashland_bus_stops) == 0) stop("No bus stops found along the Ashland routes; check the bus stop data")
+
+# point coordinates (any multipoint stops are reduced to a single point)
+ashland_bus_stops <- suppressWarnings(st_centroid(ashland_bus_stops))
 g2_stop_coords <- st_coordinates(st_transform(ashland_bus_stops, 4326))
+
 ashland_bus_stops <- ashland_bus_stops %>%
-  mutate(stop_lon = g2_stop_coords[, "X"],
-         stop_lat = g2_stop_coords[, "Y"]) %>%
-  select(any_of(c(stop_id = "systemstop", stop_name = "public_nam", street = "street",
-                  cross_street = "cross_st", direction = "dir")),
+  mutate(stop_lon = g2_stop_coords[, 1],
+         stop_lat = g2_stop_coords[, 2]) %>%
+  select(any_of(c(stop_id = "systemstop", stop_id = "stop_id", stop_name = "public_nam",
+                  stop_name = "stop_name", street = "street", cross_street = "cross_st",
+                  direction = "dir")),
          routes, stop_lat, stop_lon) %>%
   st_join(select(community_areas, comarea_id, comarea_name)) %>%
   arrange(desc(stop_lat))
 
-rm(g2_stops_all, g2_stop_coords)
+rm(g2_stops_all, g2_stops_table, g2_stop_coords, g2_route_candidates, g2_route_match, g2_route_ids)
 ```
 
 ## Rail stations and ridership
@@ -729,7 +759,7 @@ ashland_rail_stations <- st_read(g2_file_rail_stations, quiet = TRUE) %>%
   filter(dist_ashland_ft <= g2_station_buffer_ft) %>%
   st_join(select(community_areas, comarea_id, comarea_name), join = st_nearest_feature) %>%
   left_join(fx_ridership_summary(g2_rail_all, g2_baseline_year), by = c("station_id" = "id")) %>%
-  arrange(desc(st_coordinates(geometry)[, "Y"]))
+  arrange(desc(st_coordinates(geometry)[, 2]))
 
 # monthly ridership for the stations near Ashland
 ashland_rail_ridership <- g2_rail_all %>%
@@ -1922,8 +1952,8 @@ g6_origins <- community_areas %>%
   st_transform(4326)
 
 g6_origins <- g6_origins %>%
-  mutate(lon = st_coordinates(g6_origins)[, "X"],
-         lat = st_coordinates(g6_origins)[, "Y"])
+  mutate(lon = st_coordinates(g6_origins)[, 1],
+         lat = st_coordinates(g6_origins)[, 2])
 
 rm(g6_grid)
 ```
