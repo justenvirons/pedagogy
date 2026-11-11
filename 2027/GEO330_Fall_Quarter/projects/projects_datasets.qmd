@@ -608,7 +608,7 @@ if (length(g3_add_ft) > 0) {
                         station_i = unlist(g3_pairs)) %>%
     mutate(station_id = g3_stations_sp$station_id[station_i],
            dist_ft = as.numeric(st_distance(g3_crashes_sp[crash_i, ], g3_stations_sp[station_i, ],
-                                            by_element = TRUE),
+                                            by_element = TRUE)),
            crash_year = pedestrian_crashes$crash_year[crash_i],
            ksi_crash = pedestrian_crashes$ksi_crash[crash_i],
            n_pedestrians_injured = pedestrian_crashes$n_pedestrians_injured[crash_i],
