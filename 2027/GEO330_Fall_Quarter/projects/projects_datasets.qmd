@@ -1156,8 +1156,22 @@ g7_labels <- fx_labels(case_study_ca, "comarea_name",
 g7_iso_pal <- colorFactor(c("#253494", "#2c7fb8", "#41b6c4", "#a1dab4"), levels = g7_cutoffs)
 g7_iso_groups <- paste(g7_names, "isochrones")
 
+# dropdown option that shows community area boundaries only (no thematic colors),
+# so the isochrones are easier to see
+g7_boundaries_group <- "Community area boundaries only"
+
 g7_map <- fx_basemap(case_study_ca) %>%
   fx_add_choropleths(case_study_ca, g7_layers, g7_labels) %>%
+  addPolygons(data = fx_simplify(case_study_ca),
+              fill = TRUE,
+              fillOpacity = 0,
+              color = "#636363",
+              weight = 1,
+              opacity = 0.8,
+              label = lapply(g7_labels, HTML),
+              popup = g7_labels,
+              highlightOptions = highlightOptions(weight = 3, color = "#333333", bringToFront = FALSE),
+              group = g7_boundaries_group) %>%
   addMapPane("isochrones", zIndex = 420) %>%
   addMapPane("case_study", zIndex = 450)
 
@@ -1207,10 +1221,10 @@ g7_map %>%
                                      "CTA rail lines"),
                    position = "topleft",
                    options = layersControlOptions(collapsed = FALSE)) %>%
-  fx_add_layer_dropdown(g7_layers$name)
+  fx_add_layer_dropdown(c(g7_layers$name, g7_boundaries_group))
 ```
 
-Roseland and Lincoln Park are outlined in black, with their worker-weighted centers (circles). Turn the isochrones for each area on and off (top left); hover over an isochrone to see the jobs reached within it. Choose a community area measure from the dropdown list.
+Roseland and Lincoln Park are outlined in black, with their worker-weighted centers (circles). Turn the isochrones for each area on and off (top left); hover over an isochrone to see the jobs reached within it. Choose a community area measure from the dropdown list, or *Community area boundaries only* to see the isochrones without thematic colors.
 
 ## Jobs reached by transit
 
