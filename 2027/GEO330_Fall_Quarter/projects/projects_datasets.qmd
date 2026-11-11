@@ -616,7 +616,7 @@ fx_links(tribble(
 Key columns:
 
 - **Crash points** (`pedestrian_crashes`): the same crash columns as Group 1, plus pedestrians involved, injured, seriously injured and killed; the most severely injured pedestrian's injury, age, sex, action (e.g., crossing with or against the signal) and location (e.g., in a crosswalk); the nearest station (`station_name`) and distance (`station_dist_ft`); and whether the crash is within each distance of the station (`within_25ft`, ...).
-- **Stations** (`station_ped_crashes`): five-year counts within each distance, named by distance (e.g., `crashes_25ft`, `crashes_ksi_100ft`, `pedestrians_killed_100ft`), current and 2019 average weekday entries, and crashes within the largest distance per 1,000 average weekday entries (`crashes_per_1k_riders`). Counts are cumulative (crashes within 25 feet are also counted within 50 and 100 feet).
+- **Stations** (`station_ped_crashes`): five-year counts within each distance, named by distance (e.g., `crashes_25ft`, `crashes_ksi_250ft`, `pedestrians_killed_250ft`), current and 2019 average weekday entries, and crashes within the largest distance per 1,000 average weekday entries (`crashes_per_1k_riders`). Counts are cumulative (crashes within 25 feet are also counted within 50, 100 and 250 feet).
 
 ### Data sources
 
@@ -680,6 +680,20 @@ for (i in seq_along(g3_radii_ft)) {
                   className = paste0("info legend indicator-legend indicator-legend-", i - 1))
 }
 
+# dropdown option that shows community area boundaries only (no station circles
+# or buffers), so the crash points are easier to see
+g3_boundaries_group <- "Community area boundaries only"
+g3_map <- g3_map %>%
+  addPolygons(data = fx_simplify(community_areas),
+              fill = TRUE,
+              fillOpacity = 0,
+              color = "#636363",
+              weight = 1,
+              opacity = 0.8,
+              label = ~comarea_name,
+              highlightOptions = highlightOptions(weight = 3, color = "#333333", bringToFront = FALSE),
+              group = g3_boundaries_group)
+
 g3_map %>%
   fx_add_crash_points(g3_near, "pedestrian_injury",
                       paste0("Pedestrian crashes within ", g3_max, " ft (points)"), g3_point_labels,
@@ -687,10 +701,10 @@ g3_map %>%
   addLayersControl(overlayGroups = c(paste0("Pedestrian crashes within ", g3_max, " ft (points)"), "CTA rail lines"),
                    position = "topleft",
                    options = layersControlOptions(collapsed = FALSE)) %>%
-  fx_add_layer_dropdown(g3_groups, selected = length(g3_groups) - 1, label = "Distance")
+  fx_add_layer_dropdown(c(g3_groups, g3_boundaries_group), selected = length(g3_groups) - 1, label = "Distance")
 ```
 
-Stations are sized and colored by the number of pedestrian crashes within the distance chosen in the dropdown list; zoom in to see the circles of each distance around the stations and the crashes within them.
+Stations are sized and colored by the number of pedestrian crashes within the distance chosen in the dropdown list; zoom in to see the circles of each distance around the stations and the crashes within them. Choose *Community area boundaries only* to hide the station circles and see the crash points more clearly.
 
 ## Tables
 

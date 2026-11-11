@@ -25,7 +25,7 @@ This document stores the code used to create datasets for the GEO 330 final grou
 |-------|-------|----------|
 | 1 | E-bike safety and legislation in the city of Chicago | Bicycle crashes (points); bicycle crashes by community area and year (polygons) |
 | 2 | Bus rapid transit (BRT) along Ashland Avenue | Ashland and connecting bus routes (lines) and nearby rail stations (points) with current and pre-pandemic ridership; Ashland bus stops (points); CTA rail lines; monthly bus and rail ridership |
-| 3 | Pedestrian safety near CTA rail stations | Pedestrian crashes (points); CTA rail stations with pedestrian crash counts within 25, 50 and 100 feet (points and buffers) |
+| 3 | Pedestrian safety near CTA rail stations | Pedestrian crashes (points); CTA rail stations with pedestrian crash counts within 25, 50, 100 and 250 feet (points and buffers) |
 | 4 | Motorcycle fatalities in the city of Chicago | Fatal motorcycle crashes (points); motorcycle fatalities citywide and by community area and year |
 | 5 | Public transportation access in underserved Chicago neighborhoods | CTA rail stations, bus stops, rail line and bus route miles, CMAP Transit Availability Index and COVID-19 Community Vulnerability Index by community area (polygons); summary by vulnerability category; Transit Availability Index grid for Chicago |
 | 6 | The proposed O'Hare Flyer rail connection | Average transit travel times to O'Hare, current and with the O'Hare Flyer, from points within each community area (points) and by community area (polygons) |
@@ -919,7 +919,7 @@ Monthly ridership since `g2_trend_start` (2012) for the routes and stations abov
 
 # Group 3: Pedestrian safety near CTA rail stations
 ## Project overview
-Group 3 is mapping pedestrian crashes near CTA rail stations. Station areas concentrate people walking to and from trains and buses, often across busy streets, so they are a useful place to examine pedestrian safety. The datasets below use the same Chicago Data Portal crash data and years as Group 1, and the CTA rail stations and rail ridership from Group 2 (run the Group 2 section first), to count pedestrian crashes within three distances of each station.
+Group 3 is mapping pedestrian crashes near CTA rail stations. Station areas concentrate people walking to and from trains and buses, often across busy streets, so they are a useful place to examine pedestrian safety. The datasets below use the same Chicago Data Portal crash data and years as Group 1, and the CTA rail stations and rail ridership from Group 2 (run the Group 2 section first), to count pedestrian crashes within four distances of each station (25, 50, 100 and 250 feet; 250 feet is about one short city block).
 
 ## Settings
 ```{r}
@@ -930,7 +930,7 @@ g3_years <- g1_years
 g3_where_dates <- g1_where_dates
 
 # distances (feet) from each station
-g3_radii_ft <- c(25, 50, 100)
+g3_radii_ft <- c(25, 50, 100, 250)
 
 # output files
 g3_gpkg <- file.path(data_dir, "group03_pedestrian_crashes_stations.gpkg")
@@ -1065,7 +1065,7 @@ rm(nearest_ca, nearest_ft, nearest_station, r)
 ```
 
 ## Pedestrian crashes by station and distance
-Crashes are counted within each distance (`g3_radii_ft`) of each station. Counts are cumulative: crashes within 25 feet are also counted within 50 and 100 feet. A crash within the distance of two stations is counted for both.
+Crashes are counted within each distance (`g3_radii_ft`) of each station. Counts are cumulative: crashes within 25 feet are also counted within 50, 100 and 250 feet. A crash within the distance of two stations is counted for both.
 
 ```{r}
 #| label: group 3 crashes by station
@@ -1110,7 +1110,7 @@ station_ped_crashes_year <- fx_count_ped_crashes(g3_near, crash_year) %>%
 
 # one row per station: five-year totals within each distance as columns
 # (e.g., crashes_25ft, crashes_ksi_100ft), with ridership and a crash rate per
-# 1,000 average weekday entries (100 ft)
+# 1,000 average weekday entries (largest distance, 250 ft)
 station_ped_crashes <- g3_stations %>%
   left_join(fx_count_ped_crashes(g3_near) %>%
               pivot_wider(names_from = radius_ft, values_from = all_of(g3_count_cols),
@@ -1205,11 +1205,11 @@ Pedestrian crashes reported by CPD on city streets, `r min(g3_years)`-`r max(g3_
 | `pedestrian_injury`, `pedestrian_age`, `pedestrian_sex` | Injury classification, age and sex of the most severely injured pedestrian |
 | `pedestrian_action`, `pedestrian_location` | What the pedestrian was doing (e.g., crossing with or against the signal) and where (e.g., in crosswalk, not in crosswalk) |
 | `station_id`, `station_name`, `station_dist_ft` | Nearest CTA rail station and distance (feet) |
-| `within_25ft`, `within_50ft`, `within_100ft` | Crash within each distance of the nearest station (TRUE/FALSE) |
+| `within_25ft`, `within_50ft`, `within_100ft`, `within_250ft` | Crash within each distance of the nearest station (TRUE/FALSE) |
 | `ped_source` | How the crash was identified: `first crash type`, `pedestrian record` or `both` |
 
 ### `station_ped_crashes` (points, one row per CTA rail station)
-Station id, name, line and community area; current (latest 12 months) and 2019 average weekday entries and rank (as in Group 2); and five-year totals within each distance, named by distance (e.g., `crashes_25ft`, `crashes_50ft`, `crashes_100ft`):
+Station id, name, line and community area; current (latest 12 months) and 2019 average weekday entries and rank (as in Group 2); and five-year totals within each distance, named by distance (e.g., `crashes_25ft`, `crashes_50ft`, `crashes_100ft`, `crashes_250ft`):
 
 | Column | Description |
 |--------|-------------|
@@ -1226,13 +1226,13 @@ Circles of each radius around each station, with the number of crashes within ea
 
 ## How these datasets may inform the project
 - **Where.** Map `station_ped_crashes` (sized or colored by crashes) with `pedestrian_crashes` and `station_buffers` to identify the stations with the most pedestrian crashes nearby, and compare lines and parts of the city.
-- **Distance.** Compare counts at 25, 50 and 100 feet to see whether crashes cluster right at station entrances or on the surrounding streets.
+- **Distance.** Compare counts at 25, 50, 100 and 250 feet to see whether crashes cluster right at station entrances or on the surrounding streets and intersections within about a block.
 - **Exposure.** Busier stations bring more pedestrians; compare crash counts with `avg_weekday_current` or use `crashes_per_1k_riders` to identify stations with more crashes than their ridership would suggest.
 - **Conditions and severity.** Use `pedestrian_action`, `pedestrian_location`, `lighting_condition`, `crash_hour`, `traffic_control_device` and `posted_speed_limit` to compare crashes near stations with crashes elsewhere in the city, and to ask which street designs near stations (e.g., wide arterials, signals, crosswalks) are associated with severe crashes.
 - **Trends.** Use `station_ped_crashes_year` to see whether crashes near particular stations are rising or falling, e.g., before and after street safety improvements.
 
 ## Limitations
-- **Station locations are points.** Each station is a single point, but stations, especially subway stations and stations with several entrances, can span a block or more, and crash locations are approximate (often geocoded to the nearest intersection or address). Very short distances (25 and 50 feet) may capture few crashes; increase `g3_radii_ft` (e.g., 250 or 500 feet, roughly one or two blocks) if needed.
+- **Station locations are points.** Each station is a single point, but stations, especially subway stations and stations with several entrances, can span a block or more, and crash locations are approximate (often geocoded to the nearest intersection or address). Very short distances (25 and 50 feet) may capture few crashes; the 250-foot distance (about one short block) captures crashes on the streets and intersections around each station, and `g3_radii_ft` can be extended further (e.g., 500 feet) if needed. At 250 feet, the areas around closely spaced stations (e.g., in the Loop) overlap, so some crashes are counted for more than one station.
 - **Station list.** The NITA station file dates from 2020, so stations opened since then are not included.
 - **Underreporting and coverage.** As for Group 1, only crashes reported to CPD on city streets are included.
 
