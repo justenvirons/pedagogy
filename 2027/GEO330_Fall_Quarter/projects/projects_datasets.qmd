@@ -29,6 +29,7 @@ library(leaflet) # interactive maps
 library(leaflet.extras) # map reset and full screen buttons
 library(DT) # interactive tables
 library(htmltools) # map labels
+library(plotly) # interactive plots
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter/projects")
 
@@ -42,7 +43,8 @@ CARTO_API_KEY <- Sys.getenv("CARTO_API_KEY")
 # datasets created by projects_dataprep.qmd
 for (file in c("group01_bike_crashes.RData", "group02_ashland_brt.RData",
                "group03_pedestrian_crashes_stations.RData", "group04_motorcycle_fatalities.RData",
-               "group05_transit_access.RData", "group06_ohare_flyer.RData")) {
+               "group05_transit_access.RData", "group06_ohare_flyer.RData",
+               "group07_case_study.RData")) {
   load(file.path("data", file))
 }
 ```
@@ -327,7 +329,7 @@ fx_address <- function(crashes) {
 
 # Introduction
 
-This document describes the datasets prepared for each group's final project, with links to download them, interactive maps and tables. The datasets were created from public sources (the [Chicago Data Portal](https://data.cityofchicago.org/), [NITA](https://datahub.nita.illinois.gov/) CTA ridership, the [CTA](https://www.transitchicago.com/developers/gtfs/), [Metra](https://metra.com/developers) and [CMAP](https://datahub.cmap.illinois.gov/)), and summarized by Chicago's 77 community areas where appropriate.
+This document describes the datasets prepared for each group's final project, with links to download them, interactive maps and tables. The datasets were created from public sources (the [Chicago Data Portal](https://data.cityofchicago.org/), [NITA](https://datahub.nita.illinois.gov/) CTA ridership, the [CTA](https://www.transitchicago.com/developers/gtfs/), [Metra](https://metra.com/developers), [CMAP](https://datahub.cmap.illinois.gov/) and the [U.S. Census Bureau](https://www.census.gov/) (American Community Survey and LODES jobs data)), and summarized by Chicago's 77 community areas where appropriate.
 
 Each group's datasets are available in three formats:
 
@@ -1066,3 +1068,259 @@ fx_table(ohare_travel_points, digits = 4)
 - **Compared with today's options:** compare the Flyer with the Blue Line and Metra, including the time of day (`group06_ohare_travel_times_period.csv`).
 - **Equity:** join the community area table with Group 5's transit access and vulnerability measures to ask who gains from the project.
 - **Limitations:** the Flyer's route, stations and schedule are proposals; times are scheduled (not actual) weekday times and exclude fares; Metra's O'Hare service is limited; and points are evenly spaced rather than weighted by population.
+
+# Group 7: Transit job access and socioeconomic outcomes in Roseland and Lincoln Park
+
+```{r}
+#| label: group 7 settings
+
+g7_names <- st_drop_geometry(case_study_origins) %>% select(id, comarea_name) %>% deframe()
+g7_colors <- setNames(c("#d95f02", "#1b9e77"), names(g7_names)) # Roseland, Lincoln Park
+# date the data were accessed, e.g., "November 9, 2026" (for citations)
+g7_accessed_text <- paste0(format(g7_accessed, "%B "), as.numeric(format(g7_accessed, "%d")),
+                           format(g7_accessed, ", %Y"))
+```
+
+Group 7 is preparing a case study comparing **Roseland** (Far South Side) and **Lincoln Park** (North Side), focusing on access to jobs by public transit and socioeconomic outcomes. These datasets describe population, workers (16 and older), commute mode shares, household income, unemployment and poverty for every community area (from the `r g7_acs_period` American Community Survey 5-year estimates for census tracts, summed to community areas using the city's 2020 tract to community area lookup), and the number of jobs located in each community area (from the Census Bureau's LODES data for `r g7_lodes_year_used`).
+
+Access to jobs is measured from the *worker-weighted center* of each case study area (the average location of its census tracts, weighted by resident workers): the number of jobs anywhere in the seven-county region, inside or beyond the community area's boundaries, that can be reached by walking and public transit (CTA and Metra) within `r paste(g7_cutoffs, collapse = ", ")` minutes. Travel times are the median over departures every minute from `r g7_departure` to `r format(as.POSIXct(g7_departure, format = "%H:%M") + g7_time_window * 60, "%H:%M")` on `r format(g7_date, "%A, %B %d, %Y")`. Isochrones show the area reached within each travel time.
+
+## Datasets
+
+```{r}
+#| label: group 7 links
+#| output: asis
+
+fx_links(tribble(
+  ~file, ~description,
+  "group07_case_study.gpkg", "GeoPackage with layers `case_study_ca` (community area polygons), `case_study_tracts` (census tract polygons), `case_study_origins` (worker-weighted centers), `case_study_isochrones` (travel time polygons) and `case_study_job_blocks` (census blocks with jobs reached, points)",
+  "group07_case_study_ca.csv", "sociodemographic, commuting and jobs measures by community area",
+  "group07_case_study_tracts.csv", "sociodemographic and commuting measures by census tract",
+  "group07_case_study_compare.csv", "Roseland, Lincoln Park and Chicago compared, one row per measure",
+  "group07_job_access.csv", "cumulative jobs reached by transit within each travel time from each case study area",
+  "group07_job_access_compare.csv", "jobs reached from Roseland and Lincoln Park side by side, by travel time",
+  "group07_job_blocks.csv", "census blocks with jobs reached within 60 minutes, with travel times from each origin",
+  "group07_case_study.RData", "all of the above, for R"))
+```
+
+Key columns:
+
+- **Community areas and tracts** (`case_study_ca`, `case_study_tracts`): population (`pop`) and workers 16 and older (`workers`); commute mode shares as percentages of workers (`pct_drive_alone`, `pct_transit`, `pct_bicycle`, `pct_walk`, `pct_work_from_home`, `pct_other_mode`, where other is carpools, taxicabs, motorcycles and other means); mean travel time to work (`mean_commute_min`); households with no vehicle (`pct_no_vehicle`); race and ethnicity; mean and estimated median household income (`mean_hh_income`, `median_hh_income_est`); `unemployment_rate` and `poverty_rate`; and, for community areas, jobs located in the area (`jobs`, by monthly earnings: `jobs_low_wage`, `jobs_mid_wage`, `jobs_high_wage`), `jobs_per_sqmi` and `jobs_per_worker`. Columns ending in `_moe` are approximate margins of error.
+- **Job access** (`case_study_job_access`): cumulative jobs reached within each travel time (`cutoff_min`), by earnings and by location (`jobs_home_ca`, `jobs_rest_of_chicago`, `jobs_outside_chicago`, `jobs_outside_home_ca`), jobs added in each travel time band (`jobs_added`), the percent of the region's `r format(g7_region_jobs, big.mark = ",")` jobs (`pct_region_jobs`) and the isochrone's area.
+
+### Data sources
+
+- Chicago Transit Authority. "CTA General Transit Feed Specification (GTFS) Schedule Data." Accessed `r g7_accessed_text`. <https://www.transitchicago.com/developers/gtfs/>.
+- City of Chicago. "Boundaries - Census Tracts - 2020." Chicago Data Portal. Accessed `r g7_accessed_text`. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Census-Tracts-2020/7qjk-677h>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed `r g7_accessed_text`. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
+- Metra. "Metra GTFS Schedule Data." Accessed `r g7_accessed_text`. <https://metra.com/developers>.
+- OpenStreetMap contributors. "Chicago OpenStreetMap Extract." BBBike.org. Accessed `r g7_accessed_text`. <https://download.bbbike.org/osm/bbbike/Chicago/>.
+- Pereira, Rafael H. M., Marcus Saraiva, Daniel Herszenhut, Carlos Kaue Vieira Braga, and Matthew Wigginton Conway. "r5r: Rapid Realistic Routing on Multimodal Transport Networks with R^5^ in R." *Findings*, March 2021. <https://doi.org/10.32866/001c.21262>.
+- U.S. Census Bureau. "American Community Survey 5-Year Estimates, `r g7_acs_period`." Tables B01003, B03002, B08013, B08201, B08301, B17001, B19001, B19013, B19025 and B23025, census tracts, Cook County, Illinois. Retrieved with the tidycensus R package. Accessed `r g7_accessed_text`. <https://www.census.gov/programs-surveys/acs>.
+- U.S. Census Bureau. "LEHD Origin-Destination Employment Statistics (LODES), Version 8: Workplace Area Characteristics, Illinois, `r g7_lodes_year_used`." Longitudinal Employer-Household Dynamics Program. Accessed `r g7_accessed_text`. <https://lehd.ces.census.gov/data/>.
+- Walker, Kyle, and Matt Herman. *tidycensus: Load US Census Boundary and Attribute Data as 'tidyverse' and 'sf'-Ready Data Frames*. R package. <https://walker-data.com/tidycensus/>.
+
+## Map
+
+```{r}
+#| label: fig-group7-map
+#| fig-cap: Commuting, Socioeconomic Outcomes and Jobs by Community Area, with Transit Isochrones from Roseland and Lincoln Park
+
+g7_layers <- tibble(
+  column = c("pct_transit", "pct_drive_alone", "pct_work_from_home", "mean_commute_min", "pct_no_vehicle",
+             "median_hh_income_est", "poverty_rate", "unemployment_rate", "jobs", "jobs_per_sqmi",
+             "jobs_per_worker"),
+  name = c("Commute share: public transit (%)", "Commute share: drive alone (%)",
+           "Commute share: work from home (%)", "Mean travel time to work (minutes)",
+           "Households with no vehicle (%)", "Median household income (estimated)", "Poverty rate (%)",
+           "Unemployment rate (%)", "Jobs located in the area", "Jobs per square mile",
+           "Jobs per resident worker"),
+  palette = list("YlGnBu", "YlOrBr", "Purples", "YlOrRd", "YlGnBu", "Greens", "OrRd", "OrRd",
+                 "BuPu", "BuPu", "BuPu"),
+  type = "quintile",
+  digits = c(1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 2))
+
+g7_labels <- fx_labels(case_study_ca, "comarea_name",
+                       c("Population" = "pop", "Workers (16+)" = "workers",
+                         "Public transit (%)" = "pct_transit", "Drive alone (%)" = "pct_drive_alone",
+                         "Bicycle (%)" = "pct_bicycle", "Walk (%)" = "pct_walk",
+                         "Work from home (%)" = "pct_work_from_home", "Other (%)" = "pct_other_mode",
+                         "Mean commute (minutes)" = "mean_commute_min",
+                         "No vehicle (%)" = "pct_no_vehicle",
+                         "Median household income (est.)" = "median_hh_income_est",
+                         "Poverty rate (%)" = "poverty_rate", "Unemployment rate (%)" = "unemployment_rate",
+                         "Jobs" = "jobs", "Jobs per resident worker" = "jobs_per_worker"))
+
+# isochrones: one overlay group per case study area, colored by travel time
+# (largest drawn first, so shorter travel times are on top)
+g7_iso_pal <- colorFactor(c("#253494", "#2c7fb8", "#41b6c4", "#a1dab4"), levels = g7_cutoffs)
+g7_iso_groups <- paste(g7_names, "isochrones")
+
+g7_map <- fx_basemap(case_study_ca) %>%
+  fx_add_choropleths(case_study_ca, g7_layers, g7_labels) %>%
+  addMapPane("isochrones", zIndex = 420) %>%
+  addMapPane("case_study", zIndex = 450)
+
+for (i in seq_along(g7_names)) {
+  iso <- case_study_isochrones %>%
+    filter(origin_id == names(g7_names)[i]) %>%
+    arrange(desc(cutoff_min)) %>%
+    left_join(select(case_study_job_access, origin_id, cutoff_min, jobs, pct_region_jobs),
+              by = c("origin_id", "cutoff_min")) %>%
+    mutate(title = paste0(comarea_name, ": within ", cutoff_min, " minutes"))
+  g7_map <- g7_map %>%
+    addPolygons(data = fx_simplify(iso, tol_ft = 100),
+                fillColor = g7_iso_pal(iso$cutoff_min),
+                fillOpacity = 0.3,
+                color = g7_iso_pal(iso$cutoff_min),
+                weight = 1.5,
+                label = lapply(fx_labels(iso, "title", c("Jobs reached" = "jobs",
+                                                          "Percent of region's jobs" = "pct_region_jobs",
+                                                          "Area (square miles)" = "area_sqmi"),
+                                         digits = 2), HTML),
+                options = pathOptions(pane = "isochrones"),
+                group = g7_iso_groups[i])
+}
+
+g7_map %>%
+  addPolygons(data = fx_simplify(filter(case_study_ca, case_study)),
+              fill = FALSE,
+              color = "#000000",
+              weight = 3,
+              options = pathOptions(pane = "case_study", interactive = FALSE),
+              group = "Case study areas") %>%
+  fx_add_rail_lines() %>%
+  addCircleMarkers(data = case_study_origins,
+                   radius = 7,
+                   color = "#000000",
+                   fillColor = unname(g7_colors[case_study_origins$id]),
+                   fillOpacity = 1,
+                   weight = 2,
+                   label = ~paste0(comarea_name, " worker-weighted center (",
+                                   format(workers, big.mark = ","), " workers)"),
+                   options = pathOptions(pane = "case_study"),
+                   group = "Worker-weighted centers") %>%
+  addLegend("bottomright", colors = g7_iso_pal(g7_cutoffs), labels = paste(g7_cutoffs, "minutes"),
+            title = "Transit + walking<br/>travel time", opacity = 0.5) %>%
+  hideGroup("CTA rail lines") %>%
+  addLayersControl(overlayGroups = c(g7_iso_groups, "Case study areas", "Worker-weighted centers",
+                                     "CTA rail lines"),
+                   position = "topleft",
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  fx_add_layer_dropdown(g7_layers$name)
+```
+
+Roseland and Lincoln Park are outlined in black, with their worker-weighted centers (circles). Turn the isochrones for each area on and off (top left); hover over an isochrone to see the jobs reached within it. Choose a community area measure from the dropdown list.
+
+## Jobs reached by transit
+
+```{r}
+#| label: fig-group7-jobs
+#| fig-cap: Cumulative Jobs Reached by Transit and Walking from Roseland and Lincoln Park
+
+g7_plot_measures <- c("All jobs" = "jobs",
+                      "Low-wage jobs ($1,250/month or less)" = "jobs_low_wage",
+                      "Middle-wage jobs ($1,251 to $3,333/month)" = "jobs_mid_wage",
+                      "High-wage jobs (more than $3,333/month)" = "jobs_high_wage",
+                      "Jobs beyond the home community area" = "jobs_outside_home_ca",
+                      "Jobs outside Chicago" = "jobs_outside_chicago")
+
+g7_plot_data <- case_study_job_access %>%
+  mutate(cutoff = factor(paste(cutoff_min, "min"), levels = paste(g7_cutoffs, "min")))
+
+g7_plot <- plot_ly()
+for (m in seq_along(g7_plot_measures)) {
+  for (id in names(g7_names)) {
+    d <- filter(g7_plot_data, origin_id == id)
+    g7_plot <- g7_plot %>%
+      add_bars(x = d$cutoff,
+               y = d[[g7_plot_measures[m]]],
+               name = g7_names[[id]],
+               marker = list(color = g7_colors[[id]]),
+               visible = m == 1,
+               text = paste0("<b>", g7_names[[id]], ", within ", d$cutoff, "</b><br>",
+                             names(g7_plot_measures)[m], ": ",
+                             format(d[[g7_plot_measures[m]]], big.mark = ","),
+                             "<br>All jobs: ", format(d$jobs, big.mark = ","),
+                             " (", d$pct_region_jobs, "% of the region's jobs)",
+                             "<br>In ", g7_names[[id]], ": ", format(d$jobs_home_ca, big.mark = ","),
+                             "<br>Elsewhere in Chicago: ", format(d$jobs_rest_of_chicago, big.mark = ","),
+                             "<br>Outside Chicago: ", format(d$jobs_outside_chicago, big.mark = ",")),
+               textposition = "none",
+               hovertemplate = "%{text}<extra></extra>")
+  }
+}
+
+g7_buttons <- imap(unname(g7_plot_measures), function(col, m) {
+  list(method = "update",
+       label = names(g7_plot_measures)[m],
+       args = list(list(visible = rep(seq_along(g7_plot_measures) == m, each = length(g7_names))),
+                   list(yaxis = list(title = names(g7_plot_measures)[m], tickformat = ",",
+                                     rangemode = "tozero"))))
+})
+
+g7_plot %>%
+  layout(barmode = "group",
+         xaxis = list(title = "Travel time by public transit and walking"),
+         yaxis = list(title = names(g7_plot_measures)[1], tickformat = ",", rangemode = "tozero"),
+         legend = list(orientation = "h", x = 0, y = -0.2),
+         updatemenus = list(list(type = "dropdown", buttons = g7_buttons, x = 0, xanchor = "left",
+                                 y = 1.18, yanchor = "top")),
+         margin = list(t = 60)) %>%
+  config(displaylogo = FALSE)
+```
+
+Choose a group of jobs from the dropdown list (top left); hover over a bar to see the jobs reached and where they are located. Bars are cumulative: the 60-minute bar includes the jobs reached within 15, 30 and 45 minutes.
+
+## Tables
+
+```{r}
+#| label: tbl-group7-compare
+#| tbl-cap: Roseland, Lincoln Park and Chicago Compared
+
+fx_table(case_study_compare, digits = 1, paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group7-access
+#| tbl-cap: Cumulative Jobs Reached by Transit and Walking, by Travel Time
+
+case_study_job_access %>%
+  select(comarea_name, cutoff_min, jobs, pct_region_jobs, jobs_added, jobs_low_wage, jobs_mid_wage,
+         jobs_high_wage, jobs_home_ca, jobs_rest_of_chicago, jobs_outside_chicago, pct_outside_home_ca,
+         isochrone_sqmi) %>%
+  fx_table(paging = FALSE)
+```
+
+```{r}
+#| label: tbl-group7-ca
+#| tbl-cap: Sociodemographics, Commuting and Jobs by Community Area
+
+case_study_ca %>%
+  select(comarea_id, comarea_name, case_study, pop, workers, pct_drive_alone, pct_transit, pct_bicycle,
+         pct_walk, pct_work_from_home, pct_other_mode, mean_commute_min, pct_no_vehicle,
+         median_hh_income_est, mean_hh_income, unemployment_rate, poverty_rate, jobs, jobs_per_sqmi,
+         jobs_per_worker) %>%
+  fx_table(digits = 1)
+```
+
+```{r}
+#| label: tbl-group7-tracts
+#| tbl-cap: Census Tracts in Roseland and Lincoln Park
+
+case_study_tracts %>%
+  filter(case_study) %>%
+  select(geoid, comarea_name, pop, workers, pct_drive_alone, pct_transit, pct_work_from_home,
+         mean_commute_min, pct_no_vehicle, median_hh_income, median_hh_income_moe, unemployment_rate,
+         unemployment_rate_moe, poverty_rate, poverty_rate_moe) %>%
+  arrange(comarea_name, geoid) %>%
+  fx_table(digits = 1)
+```
+
+## How these datasets may inform the project
+
+- **Two neighborhoods:** use the comparison table to describe differences in income, poverty, unemployment, vehicle availability and commuting between Roseland and Lincoln Park, and the community area table and map to place both in the context of the city.
+- **Job access:** compare the jobs reached within each travel time and the ratio between the two areas (`group07_job_access_compare.csv`); note how quickly access grows with travel time and where the jobs reached are (in the home community area, elsewhere in Chicago or in the suburbs).
+- **Which jobs:** compare access to low-, middle- and high-wage jobs, and relate access to residents' commute times, transit use and employment outcomes.
+- **Within each area:** the tract table and `case_study_tracts` layer show variation within each community area; access is measured from a single central point, so it differs across each area.
+- **Limitations:** ACS estimates have margins of error and the five-year period includes pandemic years; tracts are assigned to a single community area; LODES excludes self-employment and may assign some jobs to headquarters; and travel times use scheduled CTA and Metra service (no Pace or South Shore Line) for a single weekday morning departure window.

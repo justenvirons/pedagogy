@@ -13,6 +13,7 @@ library(lubridate)
 library(jsonlite) # Chicago Health Atlas API
 library(sf)
 library(readxl) # NITA bus ridership (Excel)
+library(tidycensus) # ACS estimates (Group 7)
 
 setwd("C:/Users/juste/OneDrive - DePaul University/gitrepos/pedagogy/2027/GEO330_Fall_Quarter")
 ```
@@ -28,6 +29,7 @@ This document stores the code used to create datasets for the GEO 330 final grou
 | 4 | Motorcycle fatalities in the city of Chicago | Fatal motorcycle crashes (points); motorcycle fatalities citywide and by community area and year |
 | 5 | Public transportation access in underserved Chicago neighborhoods | CTA rail stations, bus stops, rail line and bus route miles, CMAP Transit Availability Index and COVID-19 Community Vulnerability Index by community area (polygons); summary by vulnerability category; Transit Availability Index grid for Chicago |
 | 6 | The proposed O'Hare Flyer rail connection | Average transit travel times to O'Hare, current and with the O'Hare Flyer, from points within each community area (points) and by community area (polygons) |
+| 7 | Transit job access and socioeconomic outcomes: Roseland and Lincoln Park | ACS sociodemographic and commuting measures and LODES jobs by community area and census tract (polygons); worker-weighted origins (points); 15-, 30-, 45- and 60-minute transit isochrones (polygons); cumulative jobs reached by transit; case study comparison |
 
 Each dataset is saved to `projects/data/` as a GeoPackage (spatial layers), CSV files (tables, for Excel or Tableau) and an `.RData` file (for R and Posit Cloud). Each download is also saved as a cache file in the data directory, which is read instead when the source cannot be reached.
 
@@ -2205,3 +2207,722 @@ O'Hare, Metra's O'Hare Transfer station and the proposed O'Hare Flyer stations u
 - **Airport connections.** Metra trips end at O'Hare Transfer station; the ATS time (`g6_ats_min`) is an assumption, not part of the timetables. Metra's North Central Service runs on weekdays only, with limited trains.
 - **Route alignment.** Community areas along the route are estimated from the published route map; digitize the route (e.g., in QGIS or geojson.io) and save it as `ohare_flyer_route.geojson` for a more accurate selection.
 - **Grid origins.** Origins are evenly spaced, not weighted by population, so averages describe places, not residents; parks and industrial areas count as much as residential blocks.
+
+# Group 7: Transit job access and socioeconomic outcomes in Roseland and Lincoln Park
+## Project overview
+Group 7 is preparing a case study comparing two community areas: **Roseland** (community area 49, on the Far South Side) and **Lincoln Park** (community area 7, on the North Side). The case study examines how access to jobs by public transit relates to socioeconomic outcomes. The datasets below include sociodemographic and commuting characteristics for all 77 community areas, so the two case study areas can be compared with each other and with the rest of the city. They also include the number of jobs in each community area, and the number of jobs that can be reached by public transit and walking within 15, 30, 45 and 60 minutes from a central point in each case study area.
+
+- **Sociodemographic and commuting data** come from the latest American Community Survey (ACS) 5-year estimates for census tracts, downloaded with the [tidycensus](https://walker-data.com/tidycensus/) package. They are summed to community areas using the city's 2020 census tract to community area lookup (each tract is assigned to one community area). Rates and shares are calculated from the summed counts, and margins of error (MOEs) are approximated for the main rates.
+- **Jobs** come from the Census Bureau's LEHD Origin-Destination Employment Statistics (LODES) Workplace Area Characteristics, which count jobs by census block where people work. Jobs are summed to community areas using each block's internal point.
+- **Transit job access** is calculated with [r5r](https://ipeagit.github.io/r5r/), using the same CTA and Metra timetables and OpenStreetMap street network as Group 6. The origin in each case study area is its *worker-weighted center*: the average location of its census tracts, weighted by the number of workers (16 and older) living in each tract. From each origin, r5r calculates travel times by walking and transit to every census block with jobs in the seven-county CMAP region. The jobs in blocks reached within each travel time are summed (cumulative jobs), whether they are inside or beyond the community area's boundaries. Travel time isochrones (polygons of the area reachable within each travel time) are also created for mapping.
+
+## Settings
+tidycensus downloads ACS data with a free Census API key ([request a key](https://api.census.gov/data/key_signup.html)). Install the key once with `tidycensus::census_api_key("YOUR KEY", install = TRUE)`, which saves it in `.Renviron` as `CENSUS_API_KEY`, and restart R.
+
+r5r requires Java (JDK 21), as for Group 6. If Group 6 has not been run in this R session, the chunk below sets up Java and loads r5r in the same way.
+
+```{r}
+#| label: group 7 settings
+
+library(tidycensus) # ACS estimates (Census API)
+
+# r5r (Java) setup, as for Group 6, if r5r is not loaded yet
+if (!"r5r" %in% .packages()) {
+  options(java.parameters = "-Xmx6G")
+  if (!nzchar(Sys.getenv("JAVA_HOME"))) {
+    if (!requireNamespace("rJavaEnv", quietly = TRUE)) install.packages("rJavaEnv")
+    rJavaEnv::rje_consent(provided = TRUE)
+    rJavaEnv::use_java(21)
+  }
+  library(r5r)
+}
+
+# case study community areas (community area numbers); names are used as ids
+g7_focus <- c(roseland = 49, lincoln_park = 7)
+
+# Chicago Data Portal: Boundaries - Census Tracts - 2020, with each tract's
+# community area (the tract to community area lookup)
+id_tracts_2020 <- "7qjk-677h"
+url_tracts_2020 <- paste0("https://data.cityofchicago.org/resource/", id_tracts_2020, ".geojson?$limit=5000")
+
+# latest ACS 5-year estimates (the end year, e.g., 2024 for 2020-2024). If that
+# year is not available, earlier years are tried
+g7_acs_year <- 2024
+
+# ACS variables (tracts): total population; race and ethnicity; workers 16 and
+# older by means of transportation to work; aggregate travel time to work;
+# households by income, aggregate and median household income; households by
+# vehicles available; labor force and unemployment; poverty status
+g7_income_bins <- sprintf("hhinc_%02d", 1:16)
+g7_acs_vars <- c(
+  pop = "B01003_001",
+  race_total = "B03002_001", nh_white = "B03002_003", nh_black = "B03002_004",
+  nh_asian = "B03002_006", hispanic = "B03002_012",
+  workers = "B08301_001", drove_alone = "B08301_003", carpooled = "B08301_004",
+  transit = "B08301_010", taxicab = "B08301_016", motorcycle = "B08301_017",
+  bicycle = "B08301_018", walked = "B08301_019", other_means = "B08301_020",
+  work_from_home = "B08301_021",
+  agg_commute_min = "B08013_001",
+  households = "B19001_001", setNames(sprintf("B19001_%03d", 2:17), g7_income_bins),
+  agg_hh_income = "B19025_001", median_hh_income = "B19013_001",
+  hh_vehicle_universe = "B08201_001", hh_no_vehicle = "B08201_002",
+  labor_force = "B23025_003", unemployed = "B23025_005",
+  poverty_universe = "B17001_001", poverty_below = "B17001_002")
+
+# lower limits of the household income brackets (B19001), in dollars
+g7_income_lower <- c(0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 100, 125, 150, 200) * 1000
+
+# LODES (version 8) Workplace Area Characteristics, all jobs (JT00, S000), for
+# the latest year available; if that year is not available, earlier years are tried
+g7_lodes_year <- 2023
+g7_lodes_state <- "il"
+url_lodes <- "https://lehd.ces.census.gov/data/lodes/LODES8"
+
+# jobs counted in the seven-county CMAP region: Cook, DuPage, Kane, Kendall, Lake,
+# McHenry and Will counties
+g7_region_counties <- c("17031", "17043", "17089", "17093", "17097", "17111", "17197")
+
+# travel time cutoffs (minutes), weekday departure time and time window
+# (minutes after the departure time; travel times are the median over departures
+# every minute), and maximum walking time to, from and between stops (minutes)
+g7_cutoffs <- c(15, 30, 45, 60)
+g7_departure <- "07:30"
+g7_time_window <- 60
+g7_max_walk_min <- 20
+
+# r5r network folder, street network and timetables (shared with Group 6; defined
+# here too in case Groups 2 and 6 have not been run in this R session)
+g7_r5r_dir <- file.path(data_dir, "r5r")
+if (!exists("url_cta_gtfs")) url_cta_gtfs <- "https://www.transitchicago.com/downloads/sch_data/google_transit.zip"
+if (!exists("url_osm_pbf")) url_osm_pbf <- "https://download.bbbike.org/osm/bbbike/Chicago/Chicago.osm.pbf"
+if (!exists("url_gtfs")) url_gtfs <- c(cta = url_cta_gtfs, metra = "https://schedules.metrarail.com/gtfs/schedule.zip")
+
+# date the data were accessed (for citations)
+g7_accessed <- Sys.Date()
+
+# output files
+g7_gpkg <- file.path(data_dir, "group07_case_study.gpkg")
+g7_rdata <- file.path(data_dir, "group07_case_study.RData")
+```
+
+## Data sources
+- [Boundaries - Census Tracts - 2020](https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Census-Tracts-2020/7qjk-677h) (Chicago Data Portal): the 2020 census tracts in Chicago, with the community area of each tract. This is the tract to community area lookup. Tracts do not always nest within community areas, so each tract's data are assigned to a single community area.
+- [American Community Survey (ACS) 5-year estimates](https://www.census.gov/programs-surveys/acs) (U.S. Census Bureau), for census tracts in Cook County, downloaded with [tidycensus](https://walker-data.com/tidycensus/): tables B01003 (total population), B03002 (Hispanic or Latino origin by race), B08301 (means of transportation to work, workers 16 and older), B08013 (aggregate travel time to work), B08201 (household vehicles available), B17001 (poverty status), B19001, B19013 and B19025 (household income), and B23025 (employment status). The download is also saved as a cache file.
+- [LEHD Origin-Destination Employment Statistics (LODES)](https://lehd.ces.census.gov/data/) (U.S. Census Bureau), version 8: Workplace Area Characteristics (WAC) for Illinois, all jobs (`JT00`), by 2020 census block, with jobs by monthly earnings (`CE01`: $1,250 or less; `CE02`: $1,251 to $3,333; `CE03`: more than $3,333); and the LODES geography crosswalk, with each block's internal point (latitude and longitude). The downloads are also saved as cache files.
+- CTA and Metra GTFS timetables and the OpenStreetMap street network (see Group 6).
+- Community areas (shared section above).
+
+## Functions
+```{r}
+#| label: group 7 functions
+
+# percent and its approximate margin of error (tidycensus::moe_prop); NA where
+# the denominator is zero
+fx_pct <- function(n, d) if_else(d > 0, 100 * n / d, NA_real_)
+fx_pct_moe <- function(n, d, n_moe, d_moe) {
+  suppressWarnings(if_else(d > 0, 100 * moe_prop(n, d, n_moe, d_moe), NA_real_))
+}
+
+# median household income estimated from the counts of households in each income
+# bracket (B19001), by linear interpolation within the bracket containing the
+# median. Medians in the top bracket ($200,000 or more) are reported as 200,000.
+# Published ACS medians cannot be summed, so medians for community areas and the
+# city are estimated this way.
+fx_binned_median <- function(bins) {
+  if (inherits(bins, "sf")) bins <- st_drop_geometry(bins)
+  width <- c(diff(g7_income_lower), NA)
+  apply(as.matrix(bins), 1, function(n) {
+    total <- sum(n, na.rm = TRUE)
+    if (total == 0) return(NA_real_)
+    cum <- cumsum(n)
+    i <- which(cum >= total / 2)[1]
+    if (i == length(n)) return(g7_income_lower[i])
+    below <- if (i == 1) 0 else cum[i - 1]
+    g7_income_lower[i] + (total / 2 - below) / n[i] * width[i]
+  })
+}
+
+# ACS counts summed by any grouping columns (e.g., community area); margins of
+# error of sums are approximated as the square root of the sum of squared MOEs
+g7_sum_vars <- setdiff(names(g7_acs_vars), "median_hh_income")
+fx_acs_sum <- function(data, ...) {
+  data %>%
+    group_by(...) %>%
+    summarise(n_tracts = n(),
+              across(all_of(paste0(g7_sum_vars, "_moe")), ~ sqrt(sum(.x^2, na.rm = TRUE))),
+              across(all_of(g7_sum_vars), ~ sum(.x, na.rm = TRUE)),
+              .groups = "drop")
+}
+
+# rates, shares and averages calculated from ACS counts (tracts, community areas
+# or the city). Commute mode shares are percentages of all workers 16 and older,
+# including those who work from home; "other" combines carpools, taxicabs,
+# motorcycles and other means.
+fx_acs_measures <- function(data) {
+  data <- data %>%
+    mutate(other_mode = carpooled + taxicab + motorcycle + other_means,
+           other_mode_moe = sqrt(carpooled_moe^2 + taxicab_moe^2 + motorcycle_moe^2 + other_means_moe^2))
+  modes <- c(drive_alone = "drove_alone", transit = "transit", bicycle = "bicycle",
+             walk = "walked", work_from_home = "work_from_home", other_mode = "other_mode")
+  for (i in seq_along(modes)) {
+    n <- data[[modes[i]]]
+    n_moe <- data[[paste0(modes[i], "_moe")]]
+    data[[paste0("pct_", names(modes)[i])]] <- fx_pct(n, data$workers)
+    data[[paste0("pct_", names(modes)[i], "_moe")]] <- fx_pct_moe(n, data$workers, n_moe, data$workers_moe)
+  }
+  data %>%
+    mutate(mean_commute_min = if_else(workers > work_from_home,
+                                      agg_commute_min / (workers - work_from_home), NA_real_),
+           mean_hh_income = if_else(households > 0, agg_hh_income / households, NA_real_),
+           median_hh_income_est = fx_binned_median(pick(all_of(g7_income_bins))),
+           pct_no_vehicle = fx_pct(hh_no_vehicle, hh_vehicle_universe),
+           unemployment_rate = fx_pct(unemployed, labor_force),
+           unemployment_rate_moe = fx_pct_moe(unemployed, labor_force, unemployed_moe, labor_force_moe),
+           poverty_rate = fx_pct(poverty_below, poverty_universe),
+           poverty_rate_moe = fx_pct_moe(poverty_below, poverty_universe, poverty_below_moe, poverty_universe_moe),
+           pct_white = fx_pct(nh_white, race_total),
+           pct_black = fx_pct(nh_black, race_total),
+           pct_asian = fx_pct(nh_asian, race_total),
+           pct_hispanic = fx_pct(hispanic, race_total),
+           pct_other_race = 100 - pct_white - pct_black - pct_asian - pct_hispanic,
+           across(c(starts_with("pct_"), ends_with("_rate"), ends_with("_rate_moe"), mean_commute_min), ~ round(.x, 1)),
+           across(c(mean_hh_income, median_hh_income_est), ~ round(.x, 0)))
+}
+
+# first column whose name matches one of patterns (portal column names vary)
+fx_find_col <- function(data, patterns) {
+  for (p in patterns) {
+    hit <- grep(p, names(data), value = TRUE, ignore.case = TRUE)
+    if (length(hit) > 0) return(hit[1])
+  }
+  stop("No column matching ", paste(patterns, collapse = " or "), " in ", paste(names(data), collapse = ", "))
+}
+
+# download the first available year of a file (url_fun(year) gives the URL),
+# trying years from the latest down; cache files are named by year
+fx_download_year <- function(years, url_fun, cache_fun) {
+  for (year in years) {
+    file <- tryCatch(download_cached(url_fun(year), cache_fun(year)), error = function(e) NULL)
+    if (!is.null(file)) return(list(file = file, year = year))
+  }
+  stop("No file could be downloaded or found in the cache for years ", paste(years, collapse = ", "))
+}
+```
+
+## Census tract to community area lookup
+```{r}
+#| label: group 7 tract lookup
+
+g7_tracts_raw <- read_portal_geojson(url_tracts_2020, file.path(data_dir, "census_tracts_2020_cache.geojson"))
+
+g7_geoid_col <- fx_find_col(g7_tracts_raw, c("^geoid20$", "^geoid"))
+g7_ca_col <- fx_find_col(g7_tracts_raw, c("^commarea_n$", "^commarea$", "^community_area_number$", "^area_numbe"))
+
+g7_tracts_geo <- g7_tracts_raw %>%
+  transmute(geoid = str_pad(as.character(.data[[g7_geoid_col]]), 11, pad = "0"),
+            comarea_id = as.numeric(.data[[g7_ca_col]])) %>%
+  st_transform(3435) %>%
+  filter(!is.na(comarea_id)) %>%
+  distinct(geoid, .keep_all = TRUE)
+```
+
+## ACS estimates
+The ACS estimates are downloaded for all census tracts in Cook County (or read from the cache file) and joined to the Chicago tracts in the lookup.
+
+```{r}
+#| label: group 7 acs
+
+g7_acs_cache <- file.path(data_dir, "group07_acs_tracts_cache.csv")
+
+g7_acs_raw <- NULL
+for (year in g7_acs_year:(g7_acs_year - 3)) {
+  g7_acs_raw <- tryCatch(get_acs(geography = "tract", state = "IL", county = "Cook",
+                                 variables = g7_acs_vars, year = year, survey = "acs5",
+                                 output = "wide"),
+                         error = function(e) {
+                           message("ACS ", year, " not downloaded: ", conditionMessage(e))
+                           NULL
+                         })
+  if (!is.null(g7_acs_raw)) {
+    g7_acs_raw$acs_year <- year
+    write_csv(g7_acs_raw, g7_acs_cache)
+    break
+  }
+}
+if (is.null(g7_acs_raw)) {
+  if (!file.exists(g7_acs_cache)) stop("ACS download failed and no cache file found: ", g7_acs_cache)
+  message("Using cache file ", g7_acs_cache)
+  g7_acs_raw <- read_csv(g7_acs_cache, col_types = cols(GEOID = col_character(), NAME = col_character(),
+                                                         .default = col_double()))
+}
+g7_acs_year_used <- unique(g7_acs_raw$acs_year)
+g7_acs_period <- paste0(g7_acs_year_used - 4, "-", g7_acs_year_used)
+
+# columns: estimates named by variable (e.g., pop) and MOEs with _moe (e.g., pop_moe)
+g7_acs_tracts <- g7_acs_raw %>%
+  rename_with(~ str_remove(.x, "E$"), all_of(paste0(names(g7_acs_vars), "E"))) %>%
+  rename_with(~ str_replace(.x, "M$", "_moe"), all_of(paste0(names(g7_acs_vars), "M"))) %>%
+  rename(geoid = GEOID, tract_name = NAME) %>%
+  select(-acs_year)
+
+# Chicago tracts (lookup) with their ACS estimates
+g7_tracts <- g7_tracts_geo %>%
+  inner_join(g7_acs_tracts, by = "geoid")
+```
+
+## Jobs (LODES)
+Jobs are counted at each census block's internal point. Blocks with jobs are kept for the seven-county region, and assigned to the community area they fall within (blocks outside the city have no community area).
+
+```{r}
+#| label: group 7 jobs
+
+g7_wac <- fx_download_year(
+  g7_lodes_year:(g7_lodes_year - 3),
+  function(year) sprintf("%s/%s/wac/%s_wac_S000_JT00_%d.csv.gz", url_lodes, g7_lodes_state, g7_lodes_state, year),
+  function(year) file.path(data_dir, sprintf("lodes_%s_wac_S000_JT00_%d_cache.csv.gz", g7_lodes_state, year)))
+g7_lodes_year_used <- g7_wac$year
+
+g7_xwalk_file <- download_cached(sprintf("%s/%s/%s_xwalk.csv.gz", url_lodes, g7_lodes_state, g7_lodes_state),
+                                 file.path(data_dir, sprintf("lodes_%s_xwalk_cache.csv.gz", g7_lodes_state)))
+
+g7_xwalk <- read_csv(g7_xwalk_file, col_select = c(tabblk2020, blklatdd, blklondd),
+                     col_types = cols(.default = col_character()))
+
+g7_blocks <- read_csv(g7_wac$file, col_types = cols(w_geocode = col_character(),
+                                                     createdate = col_character(),
+                                                     .default = col_double())) %>%
+  transmute(block = w_geocode,
+            county = str_sub(block, 1, 5),
+            jobs = C000,
+            jobs_low_wage = CE01,
+            jobs_mid_wage = CE02,
+            jobs_high_wage = CE03) %>%
+  filter(county %in% g7_region_counties, jobs > 0) %>%
+  inner_join(g7_xwalk, by = c("block" = "tabblk2020")) %>%
+  mutate(lat = as.numeric(blklatdd), lon = as.numeric(blklondd)) %>%
+  select(-blklatdd, -blklondd) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326, remove = FALSE) %>%
+  st_transform(3435) %>%
+  st_join(select(community_areas, comarea_id))
+
+rm(g7_xwalk)
+
+# all jobs in the region (denominator for the share of the region's jobs reached)
+g7_region_jobs <- sum(g7_blocks$jobs)
+
+# jobs by community area
+g7_jobs_ca <- g7_blocks %>%
+  st_drop_geometry() %>%
+  filter(!is.na(comarea_id)) %>%
+  group_by(comarea_id) %>%
+  summarise(across(c(jobs, jobs_low_wage, jobs_mid_wage, jobs_high_wage), sum), .groups = "drop")
+```
+
+## Sociodemographics, commuting and jobs by community area
+```{r}
+#| label: group 7 community areas
+
+case_study_ca <- community_areas %>%
+  select(comarea_id, comarea_name, area_sqmi) %>%
+  left_join(fx_acs_measures(fx_acs_sum(st_drop_geometry(g7_tracts), comarea_id)), by = "comarea_id") %>%
+  left_join(g7_jobs_ca, by = "comarea_id") %>%
+  mutate(across(c(jobs, jobs_low_wage, jobs_mid_wage, jobs_high_wage), ~ replace_na(.x, 0)),
+         jobs_per_sqmi = round(jobs / area_sqmi, 0),
+         jobs_per_worker = round(jobs / workers, 2), # jobs located in the area per resident worker
+         case_study = comarea_id %in% g7_focus) %>%
+  select(comarea_id, comarea_name, case_study, area_sqmi, n_tracts, pop, pop_moe, workers, workers_moe,
+         starts_with("pct_"), mean_commute_min, households, mean_hh_income, median_hh_income_est,
+         labor_force, unemployed, unemployment_rate, unemployment_rate_moe,
+         poverty_universe, poverty_below, poverty_rate, poverty_rate_moe,
+         jobs, jobs_low_wage, jobs_mid_wage, jobs_high_wage, jobs_per_sqmi, jobs_per_worker,
+         drove_alone, transit, bicycle, walked, work_from_home, other_mode) %>%
+  arrange(comarea_id)
+
+# citywide totals (all tracts in the lookup, and all jobs within community areas)
+g7_city <- fx_acs_measures(fx_acs_sum(st_drop_geometry(g7_tracts))) %>%
+  mutate(comarea_name = "Chicago",
+         area_sqmi = sum(community_areas$area_sqmi),
+         jobs = sum(g7_jobs_ca$jobs),
+         jobs_low_wage = sum(g7_jobs_ca$jobs_low_wage),
+         jobs_mid_wage = sum(g7_jobs_ca$jobs_mid_wage),
+         jobs_high_wage = sum(g7_jobs_ca$jobs_high_wage),
+         jobs_per_sqmi = round(jobs / area_sqmi, 0),
+         jobs_per_worker = round(jobs / workers, 2))
+
+# census tracts in Chicago, with the same measures and the published ACS median
+# household income
+case_study_tracts <- g7_tracts %>%
+  fx_acs_measures() %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name), by = "comarea_id") %>%
+  mutate(case_study = comarea_id %in% g7_focus) %>%
+  select(geoid, tract_name, comarea_id, comarea_name, case_study, pop, pop_moe, workers, workers_moe,
+         starts_with("pct_"), mean_commute_min, households, mean_hh_income, median_hh_income,
+         median_hh_income_moe, median_hh_income_est, unemployment_rate, unemployment_rate_moe,
+         poverty_rate, poverty_rate_moe)
+```
+
+## Worker-weighted centers (origins)
+Each case study area's origin is the average location of its census tracts (each tract's internal point), weighted by the number of workers 16 and older who live in the tract. If the weighted center falls outside the community area (possible for irregular shapes), the community area's internal point is used instead.
+
+```{r}
+#| label: group 7 origins
+
+g7_tract_points <- g7_tracts %>%
+  filter(comarea_id %in% g7_focus) %>%
+  select(comarea_id, workers) %>%
+  st_point_on_surface()
+
+case_study_origins <- g7_tract_points %>%
+  mutate(x = st_coordinates(g7_tract_points)[, 1],
+         y = st_coordinates(g7_tract_points)[, 2]) %>%
+  st_drop_geometry() %>%
+  group_by(comarea_id) %>%
+  summarise(x = weighted.mean(x, workers), y = weighted.mean(y, workers),
+            workers = sum(workers), n_tracts = n(), .groups = "drop") %>%
+  st_as_sf(coords = c("x", "y"), crs = 3435) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, comarea_name), by = "comarea_id") %>%
+  mutate(id = names(g7_focus)[match(comarea_id, g7_focus)])
+
+# use the community area's internal point if the weighted center is outside it
+for (i in seq_len(nrow(case_study_origins))) {
+  ca <- filter(community_areas, comarea_id == case_study_origins$comarea_id[i])
+  if (lengths(st_within(case_study_origins[i, ], ca)) == 0) {
+    message("Weighted center outside ", ca$comarea_name, "; using its internal point")
+    st_geometry(case_study_origins)[i] <- st_geometry(st_point_on_surface(ca))
+  }
+}
+
+case_study_origins <- st_transform(case_study_origins, 4326)
+case_study_origins <- case_study_origins %>%
+  mutate(lon = st_coordinates(case_study_origins)[, 1],
+         lat = st_coordinates(case_study_origins)[, 2]) %>%
+  select(id, comarea_id, comarea_name, workers, n_tracts, lat, lon)
+
+rm(g7_tract_points)
+```
+
+## Build the transit network
+The same street network and CTA and Metra timetables as Group 6 are used (downloaded, or read from the cache, if Group 6 has not been run). Travel times are calculated for a Tuesday within the timetables' service dates.
+
+```{r}
+#| label: group 7 network
+
+dir.create(g7_r5r_dir, recursive = TRUE, showWarnings = FALSE)
+download_cached(url_osm_pbf, file.path(g7_r5r_dir, basename(url_osm_pbf)))
+g7_gtfs_files <- imap_chr(url_gtfs, ~ download_cached(.x, file.path(g7_r5r_dir, paste0(.y, "_gtfs.zip"))))
+
+# first Tuesday on or after today (or the CTA timetables' start date) and before their end date
+g7_calendar <- read_csv(unz(g7_gtfs_files[["cta"]], "calendar.txt"), col_types = cols(.default = "c"))
+g7_service_start <- max(Sys.Date(), min(ymd(g7_calendar$start_date)))
+g7_date <- g7_service_start + (2 - wday(g7_service_start, week_start = 1)) %% 7
+if (g7_date > max(ymd(g7_calendar$end_date))) stop("No Tuesday within the CTA timetables' service dates; download newer GTFS files")
+g7_departure_time <- as.POSIXct(paste(g7_date, g7_departure), tz = "America/Chicago")
+
+g7_r5r <- if (exists("build_network", envir = asNamespace("r5r"))) {
+  r5r::build_network(g7_r5r_dir, verbose = FALSE)
+} else {
+  r5r::setup_r5(g7_r5r_dir, verbose = FALSE)
+}
+```
+
+## Travel times to jobs and isochrones
+r5r calculates the median travel time (walking and transit, departures every minute in the time window) from each origin to every block with jobs in the region, up to the longest cutoff. Jobs in blocks reached within each cutoff are summed. Isochrone polygons, for mapping, are created by r5r from travel times to points on the street network. Travel times are saved to a cache file.
+
+```{r}
+#| label: group 7 travel times
+
+g7_cache <- file.path(data_dir, "group07_travel_times_cache.csv")
+
+g7_ttm <- travel_time_matrix(g7_r5r,
+                             origins = st_drop_geometry(select(case_study_origins, id, lat, lon)),
+                             destinations = st_drop_geometry(g7_blocks) %>% select(id = block, lat, lon),
+                             mode = c("WALK", "TRANSIT"),
+                             departure_datetime = g7_departure_time,
+                             time_window = g7_time_window,
+                             percentiles = 50,
+                             max_walk_time = g7_max_walk_min,
+                             max_trip_duration = max(g7_cutoffs),
+                             verbose = FALSE,
+                             progress = FALSE)
+names(g7_ttm)[str_starts(names(g7_ttm), "travel_time")][1] <- "minutes"
+g7_ttm <- as_tibble(g7_ttm) %>%
+  transmute(origin_id = from_id, block = to_id, minutes) %>%
+  filter(!is.na(minutes))
+write_csv(g7_ttm, g7_cache)
+# to skip routing on later runs, read the cache instead:
+# g7_ttm <- read_csv(g7_cache, col_types = cols(origin_id = "c", block = "c", minutes = "d"))
+
+# isochrone polygons (cumulative: each polygon is the area reached within its cutoff)
+case_study_isochrones <- isochrone(g7_r5r,
+                                   origins = st_drop_geometry(select(case_study_origins, id, lat, lon)),
+                                   mode = c("WALK", "TRANSIT"),
+                                   departure_datetime = g7_departure_time,
+                                   cutoffs = g7_cutoffs,
+                                   time_window = g7_time_window,
+                                   max_walk_time = g7_max_walk_min,
+                                   max_trip_duration = max(g7_cutoffs),
+                                   polygon_output = TRUE,
+                                   verbose = FALSE,
+                                   progress = FALSE) %>%
+  st_make_valid() %>%
+  transmute(origin_id = id, cutoff_min = as.numeric(as.character(isochrone))) %>%
+  filter(cutoff_min %in% g7_cutoffs) %>%
+  left_join(st_drop_geometry(case_study_origins) %>% select(origin_id = id, comarea_id, comarea_name),
+            by = "origin_id") %>%
+  arrange(origin_id, desc(cutoff_min))
+case_study_isochrones$area_sqmi <- round(as.numeric(st_area(st_transform(case_study_isochrones, 3435))) / 27878400, 1)
+```
+
+## Cumulative jobs by travel time
+```{r}
+#| label: group 7 job access
+
+g7_reached <- g7_ttm %>%
+  inner_join(st_drop_geometry(g7_blocks) %>% select(block, comarea_id, starts_with("jobs")), by = "block") %>%
+  left_join(st_drop_geometry(case_study_origins) %>% select(origin_id = id, origin_ca = comarea_id),
+            by = "origin_id") %>%
+  mutate(location = case_when(!is.na(comarea_id) & comarea_id == origin_ca ~ "home",
+                              !is.na(comarea_id) ~ "rest_of_chicago",
+                              TRUE ~ "outside_chicago"))
+
+# cumulative jobs within each cutoff, in total, by earnings and by location: in the
+# home community area, elsewhere in Chicago and outside Chicago
+case_study_job_access <- map(g7_cutoffs, function(cutoff) {
+  g7_reached %>%
+    filter(minutes <= cutoff) %>%
+    group_by(origin_id) %>%
+    summarise(blocks_reached = n(),
+              jobs = sum(jobs),
+              jobs_low_wage = sum(jobs_low_wage),
+              jobs_mid_wage = sum(jobs_mid_wage),
+              jobs_high_wage = sum(jobs_high_wage),
+              jobs_home_ca = sum(jobs[location == "home"]),
+              jobs_rest_of_chicago = sum(jobs[location == "rest_of_chicago"]),
+              jobs_outside_chicago = sum(jobs[location == "outside_chicago"]),
+              .groups = "drop") %>%
+    mutate(cutoff_min = cutoff)
+}) %>%
+  bind_rows()
+
+case_study_job_access <- st_drop_geometry(case_study_origins) %>%
+  select(origin_id = id, comarea_id, comarea_name) %>%
+  crossing(cutoff_min = g7_cutoffs) %>%
+  left_join(case_study_job_access, by = c("origin_id", "cutoff_min")) %>%
+  mutate(across(c(blocks_reached, starts_with("jobs")), ~ replace_na(.x, 0))) %>%
+  arrange(origin_id, cutoff_min) %>%
+  group_by(origin_id) %>%
+  mutate(jobs_added = jobs - lag(jobs, default = 0)) %>% # jobs reached in this band only
+  ungroup() %>%
+  mutate(jobs_outside_home_ca = jobs - jobs_home_ca,
+         pct_outside_home_ca = round(fx_pct(jobs_outside_home_ca, jobs), 1),
+         pct_region_jobs = round(100 * jobs / g7_region_jobs, 2)) %>%
+  left_join(st_drop_geometry(case_study_isochrones) %>% select(origin_id, cutoff_min, isochrone_sqmi = area_sqmi),
+            by = c("origin_id", "cutoff_min"))
+
+# side-by-side comparison by cutoff; jobs_ratio is the second case study area's
+# jobs divided by the first's (Lincoln Park / Roseland)
+g7_ids <- names(g7_focus)
+case_study_job_access_compare <- case_study_job_access %>%
+  select(origin_id, cutoff_min, jobs, jobs_low_wage, jobs_high_wage, jobs_outside_home_ca, pct_region_jobs) %>%
+  pivot_wider(names_from = origin_id, values_from = -c(origin_id, cutoff_min)) %>%
+  mutate(jobs_ratio = round(.data[[paste0("jobs_", g7_ids[2])]] / .data[[paste0("jobs_", g7_ids[1])]], 2))
+```
+
+## Case study comparison
+A table of the main measures for the two case study areas and the city as a whole.
+
+```{r}
+#| label: group 7 comparison
+
+g7_measures <- c(
+  "Population" = "pop", "Workers (16 and older)" = "workers",
+  "Percent Hispanic or Latino" = "pct_hispanic", "Percent non-Hispanic Black" = "pct_black",
+  "Percent non-Hispanic white" = "pct_white", "Percent non-Hispanic Asian" = "pct_asian",
+  "Commute share: drive alone (%)" = "pct_drive_alone", "Commute share: public transit (%)" = "pct_transit",
+  "Commute share: bicycle (%)" = "pct_bicycle", "Commute share: walk (%)" = "pct_walk",
+  "Commute share: work from home (%)" = "pct_work_from_home", "Commute share: other (%)" = "pct_other_mode",
+  "Mean travel time to work (minutes)" = "mean_commute_min",
+  "Households with no vehicle (%)" = "pct_no_vehicle",
+  "Median household income (estimated, $)" = "median_hh_income_est",
+  "Mean household income ($)" = "mean_hh_income",
+  "Unemployment rate (%)" = "unemployment_rate", "Poverty rate (%)" = "poverty_rate",
+  "Jobs located in the area" = "jobs", "Jobs per square mile" = "jobs_per_sqmi",
+  "Jobs located in the area per resident worker" = "jobs_per_worker")
+
+g7_access_rows <- case_study_job_access %>%
+  transmute(comarea_name, measure = paste0("Jobs reached within ", cutoff_min, " minutes by transit"),
+            value = jobs)
+
+case_study_compare <- bind_rows(st_drop_geometry(filter(case_study_ca, case_study)), g7_city) %>%
+  select(comarea_name, all_of(unname(g7_measures))) %>%
+  mutate(across(-comarea_name, as.numeric)) %>%
+  pivot_longer(-comarea_name, names_to = "column", values_to = "value") %>%
+  mutate(measure = names(g7_measures)[match(column, g7_measures)]) %>%
+  select(-column) %>%
+  bind_rows(g7_access_rows) %>%
+  mutate(measure = factor(measure, levels = unique(measure))) %>%
+  pivot_wider(names_from = comarea_name, values_from = value) %>%
+  mutate(measure = as.character(measure))
+```
+
+## Checks
+```{r}
+#| label: group 7 checks
+
+# ACS and LODES years, departure date
+g7_acs_period
+g7_lodes_year_used
+g7_date
+
+# tracts in the lookup, tracts with ACS estimates, and tracts per community area
+nrow(g7_tracts_geo)
+nrow(g7_tracts)
+count(st_drop_geometry(g7_tracts), comarea_id) %>% arrange(n) %>% head()
+
+# ACS population by community area compared with the Health Atlas population
+st_drop_geometry(case_study_ca) %>%
+  left_join(st_drop_geometry(community_areas) %>% select(comarea_id, population), by = "comarea_id") %>%
+  summarise(acs_pop = sum(pop), health_atlas_pop = sum(population, na.rm = TRUE),
+            correlation = cor(pop, population, use = "complete.obs"))
+
+# mode shares should total 100 (except for rounding)
+st_drop_geometry(case_study_ca) %>%
+  transmute(comarea_name, total = pct_drive_alone + pct_transit + pct_bicycle + pct_walk +
+              pct_work_from_home + pct_other_mode) %>%
+  summary()
+
+# jobs in the region and in Chicago
+g7_region_jobs
+g7_city$jobs
+
+# origins, jobs reached and comparison
+case_study_origins
+case_study_job_access_compare
+case_study_compare
+
+# cross-check: jobs in blocks within the isochrone polygons (approximately equal to
+# the travel time counts; polygons are approximations)
+st_join(st_transform(g7_blocks, 4326), case_study_isochrones, left = FALSE) %>%
+  st_drop_geometry() %>%
+  group_by(origin_id, cutoff_min) %>%
+  summarise(jobs_in_polygon = sum(jobs), .groups = "drop") %>%
+  left_join(select(case_study_job_access, origin_id, cutoff_min, jobs), by = c("origin_id", "cutoff_min"))
+
+# isochrones from the two origins
+ggplot() +
+  geom_sf(data = community_areas, fill = "grey95", color = "white", linewidth = 0.2) +
+  geom_sf(data = case_study_isochrones, aes(fill = factor(cutoff_min)), alpha = 0.4, color = NA) +
+  geom_sf(data = case_study_origins, size = 2) +
+  facet_wrap(~ comarea_name) +
+  scale_fill_viridis_d(name = "Minutes", direction = -1) +
+  theme_void()
+```
+
+## Save datasets
+```{r}
+#| label: group 7 save datasets
+
+case_study_ca <- st_transform(case_study_ca, 4326)
+case_study_tracts <- st_transform(case_study_tracts, 4326)
+
+# blocks with jobs reached within the longest cutoff from either origin, with the
+# travel time (minutes) from each origin
+case_study_job_blocks <- g7_blocks %>%
+  inner_join(g7_ttm %>% pivot_wider(names_from = origin_id, values_from = minutes, names_prefix = "minutes_"),
+             by = "block") %>%
+  st_transform(4326) %>%
+  select(block, county, comarea_id, jobs, jobs_low_wage, jobs_mid_wage, jobs_high_wage,
+         starts_with("minutes_"), lat, lon)
+
+# GeoPackage (one layer per dataset)
+if (file.exists(g7_gpkg)) file.remove(g7_gpkg)
+st_write(case_study_ca, g7_gpkg, layer = "case_study_ca", quiet = TRUE)
+st_write(case_study_tracts, g7_gpkg, layer = "case_study_tracts", quiet = TRUE)
+st_write(case_study_origins, g7_gpkg, layer = "case_study_origins", quiet = TRUE)
+st_write(case_study_isochrones, g7_gpkg, layer = "case_study_isochrones", quiet = TRUE)
+st_write(case_study_job_blocks, g7_gpkg, layer = "case_study_job_blocks", quiet = TRUE)
+
+# CSV tables
+write_csv(st_drop_geometry(case_study_ca), file.path(data_dir, "group07_case_study_ca.csv"))
+write_csv(st_drop_geometry(case_study_tracts), file.path(data_dir, "group07_case_study_tracts.csv"))
+write_csv(case_study_compare, file.path(data_dir, "group07_case_study_compare.csv"))
+write_csv(case_study_job_access, file.path(data_dir, "group07_job_access.csv"))
+write_csv(case_study_job_access_compare, file.path(data_dir, "group07_job_access_compare.csv"))
+write_csv(st_drop_geometry(case_study_job_blocks), file.path(data_dir, "group07_job_blocks.csv"))
+
+# R datasets
+save_with_community_areas(c("case_study_ca", "case_study_tracts", "case_study_origins",
+                            "case_study_isochrones", "case_study_job_access",
+                            "case_study_job_access_compare", "case_study_compare",
+                            "case_study_job_blocks", "g7_focus", "g7_acs_year_used", "g7_acs_period",
+                            "g7_lodes_year_used", "g7_date", "g7_departure", "g7_time_window",
+                            "g7_cutoffs", "g7_max_walk_min", "g7_region_jobs", "g7_accessed"),
+                          g7_rdata)
+
+# stop the r5r Java process
+r5r::stop_r5(g7_r5r)
+rJava::.jgc(R.gc = TRUE)
+```
+
+## Dataset descriptions
+ACS estimates are for `g7_acs_period` (5-year estimates); jobs are LODES jobs for `g7_lodes_year_used`. Columns ending in `_moe` are approximate 90% margins of error.
+
+### `case_study_ca` (polygons, one row per community area)
+| Column | Description |
+|--------|-------------|
+| `comarea_id`, `comarea_name`, `case_study`, `area_sqmi`, `n_tracts` | Community area, whether it is a case study area (TRUE/FALSE), land area (square miles) and number of census tracts assigned to it |
+| `pop`, `workers` | Total population, and workers 16 and older (by place of residence) |
+| `pct_drive_alone`, `pct_transit`, `pct_bicycle`, `pct_walk`, `pct_work_from_home`, `pct_other_mode` | Commute mode shares (percent of workers); other is carpools, taxicabs, motorcycles and other means. The counts are also included (`drove_alone`, `transit`, ...) |
+| `mean_commute_min` | Mean travel time to work (minutes), for workers who do not work from home |
+| `pct_no_vehicle` | Percent of households with no vehicle available |
+| `pct_white`, `pct_black`, `pct_asian`, `pct_hispanic`, `pct_other_race` | Race and ethnicity (non-Hispanic white, Black and Asian; Hispanic or Latino of any race; all others) |
+| `households`, `mean_hh_income`, `median_hh_income_est` | Households, mean household income (aggregate income divided by households) and median household income estimated from income brackets (dollars) |
+| `labor_force`, `unemployed`, `unemployment_rate` | Civilian labor force, unemployed and unemployment rate (%) |
+| `poverty_universe`, `poverty_below`, `poverty_rate` | People for whom poverty status is determined, people below the poverty level and poverty rate (%) |
+| `jobs`, `jobs_low_wage`, `jobs_mid_wage`, `jobs_high_wage` | Jobs located in the community area (LODES), in total and by monthly earnings ($1,250 or less; $1,251 to $3,333; more than $3,333) |
+| `jobs_per_sqmi`, `jobs_per_worker` | Jobs per square mile, and jobs located in the area per resident worker |
+
+### `case_study_tracts` (polygons, one row per census tract in Chicago)
+The same ACS measures for each census tract, with its community area, and the published ACS median household income (`median_hh_income`, `median_hh_income_moe`).
+
+### `case_study_origins` (points)
+The worker-weighted center of each case study area (`id`: `roseland` or `lincoln_park`), with the workers and tracts used to calculate it.
+
+### `case_study_isochrones` (polygons, one row per origin and cutoff)
+The area reached by walking and transit within each cutoff (`cutoff_min`: 15, 30, 45 and 60 minutes) from each origin (`origin_id`), and its area (square miles). Polygons are cumulative (the 60-minute polygon includes the area reached within 15, 30 and 45 minutes).
+
+### `case_study_job_access` (table, one row per origin and cutoff)
+| Column | Description |
+|--------|-------------|
+| `origin_id`, `comarea_id`, `comarea_name`, `cutoff_min` | Origin (case study area) and travel time cutoff (minutes) |
+| `blocks_reached`, `jobs` | Census blocks with jobs reached within the cutoff, and their jobs (cumulative) |
+| `jobs_low_wage`, `jobs_mid_wage`, `jobs_high_wage` | Jobs reached, by monthly earnings |
+| `jobs_home_ca`, `jobs_rest_of_chicago`, `jobs_outside_chicago`, `jobs_outside_home_ca`, `pct_outside_home_ca` | Jobs reached in the home community area, elsewhere in Chicago and outside Chicago; jobs beyond the home community area and their percent of jobs reached |
+| `jobs_added` | Jobs reached in this travel time band only (e.g., between 15 and 30 minutes) |
+| `pct_region_jobs` | Jobs reached as a percent of all jobs in the seven-county region (`g7_region_jobs`) |
+| `isochrone_sqmi` | Area of the isochrone (square miles) |
+
+### `case_study_job_access_compare` (table, one row per cutoff)
+Jobs reached from each origin side by side (e.g., `jobs_roseland`, `jobs_lincoln_park`), by earnings, beyond the home community area and as a percent of the region's jobs, and `jobs_ratio` (Lincoln Park divided by Roseland).
+
+### `case_study_compare` (table, one row per measure)
+The main measures for Roseland, Lincoln Park and Chicago, including jobs reached within each cutoff.
+
+### `case_study_job_blocks` (points, one row per census block)
+Census blocks with jobs reached within 60 minutes from either origin, with their jobs, community area (missing outside Chicago) and travel time from each origin (`minutes_roseland`, `minutes_lincoln_park`; missing if not reached within 60 minutes).
+
+## How these datasets may inform the project
+- **Two neighborhoods, one city.** Use `case_study_compare` to describe the contrast between Roseland and Lincoln Park in income, poverty, unemployment, vehicle availability and commuting, and place both in the context of all community areas (`case_study_ca`).
+- **Job access.** Compare the cumulative jobs reached within 15, 30, 45 and 60 minutes (`case_study_job_access`), the share of the region's jobs, and the jobs ratio. Look at how quickly access grows with travel time (`jobs_added`), and where the reachable jobs are (home community area, rest of Chicago, suburbs).
+- **Which jobs.** Compare access to low-, middle- and high-wage jobs, which relate differently to residents' occupations and incomes.
+- **Commuting outcomes.** Relate job access to commute mode shares and mean travel times: do residents of the area with less job access have longer commutes, or rely more on driving?
+- **Within the case study areas.** Map tract measures (`case_study_tracts`) to show variation within each area; the origin is a single central point, so access differs across each area.
+- **Beyond the two areas.** Join `case_study_ca` with Group 5's transit access and vulnerability measures, or add origins in other community areas (in `g7_focus`) to extend the comparison.
+
+## Limitations
+- **ACS estimates.** ACS data are survey estimates with margins of error, which can be large for tracts and small groups; summing tracts reduces relative error, but MOEs for community areas are approximations. Commuting data describe the usual mode over the previous week, and the 5-year period includes years affected by the COVID-19 pandemic (e.g., more working from home).
+- **Tract to community area lookup.** Each tract is assigned to a single community area, so community area totals are approximate where tracts cross boundaries. Medians for community areas are estimated from income brackets, and are not published ACS values.
+- **LODES jobs.** LODES counts jobs covered by unemployment insurance and federal jobs; it excludes self-employment and informal work. Some employers report jobs at a headquarters rather than at each work site (e.g., public agencies), which can overstate jobs downtown. Jobs in Indiana and Wisconsin are not included.
+- **One origin, one time.** Travel times are from a single point in each area, for weekday morning departures (`g7_departure`), using scheduled CTA and Metra service (no Pace buses or South Shore Line, unless their GTFS files are added to the r5r folder), walking at a constant speed. Real trips include delays, transfers, crowding and fares.
+- **Street network extent.** Blocks outside the OpenStreetMap extract cannot be reached; use a larger extract (e.g., Geofabrik Illinois) to include more of the suburbs.
+- **Isochrones.** Polygons are approximations created from travel times to points on the street network; the job counts use travel times to each block, so they may differ slightly from counts of blocks within the polygons.
