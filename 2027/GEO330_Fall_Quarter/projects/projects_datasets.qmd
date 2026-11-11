@@ -592,6 +592,85 @@ fx_table(ashland_community_areas, digits = 1)
 ```{r}
 #| label: group 3 settings
 g3_period <- paste0(min(g3_years), "-", max(g3_years))
+
+# distances (feet) shown in the map's dropdown list. Distances missing from the
+# saved datasets (e.g., 250 feet, if group03_pedestrian_crashes_stations.RData was
+# created before it was added to projects_dataprep.qmd) are counted here in the
+# same way: all crashes within the distance of each station (a crash near two
+# stations is counted for both)
+g3_map_radii_ft <- c(25, 50, 100, 250)
+g3_add_ft <- setdiff(g3_map_radii_ft, g3_radii_ft)
+if (length(g3_add_ft) > 0) {
+  g3_crashes_sp <- st_transform(pedestrian_crashes, 3435)
+  g3_stations_sp <- st_transform(station_ped_crashes, 3435)
+  g3_pairs <- st_is_within_distance(g3_crashes_sp, g3_stations_sp, dist = max(g3_add_ft))
+  g3_add_near <- tibble(crash_i = rep(seq_along(g3_pairs), lengths(g3_pairs)),
+                        station_i = unlist(g3_pairs)) %>%
+    mutate(station_id = g3_stations_sp$station_id[station_i],
+           dist_ft = as.numeric(st_distance(g3_crashes_sp[crash_i, ], g3_stations_sp[station_i, ],
+                                            by_element = TRUE),
+           crash_year = pedestrian_crashes$crash_year[crash_i],
+           ksi_crash = pedestrian_crashes$ksi_crash[crash_i],
+           n_pedestrians_injured = pedestrian_crashes$n_pedestrians_injured[crash_i],
+           n_pedestrians_seriously_injured = pedestrian_crashes$n_pedestrians_seriously_injured[crash_i],
+           n_pedestrians_killed = pedestrian_crashes$n_pedestrians_killed[crash_i]) %>%
+    crossing(radius_ft = g3_add_ft) %>%
+    filter(dist_ft <= radius_ft)
+
+  g3_add_count <- function(near, ...) {
+    near %>%
+      group_by(station_id, radius_ft, ...) %>%
+      summarise(crashes = n(),
+                crashes_ksi = sum(ksi_crash, na.rm = TRUE),
+                pedestrians_injured = sum(n_pedestrians_injured),
+                pedestrians_seriously_injured = sum(n_pedestrians_seriously_injured),
+                pedestrians_killed = sum(n_pedestrians_killed),
+                .groups = "drop")
+  }
+  g3_count_cols <- c("crashes", "crashes_ksi", "pedestrians_injured",
+                     "pedestrians_seriously_injured", "pedestrians_killed")
+
+  # station totals as columns (e.g., crashes_250ft), zeros where no crashes occurred
+  station_ped_crashes <- station_ped_crashes %>%
+    left_join(g3_add_count(g3_add_near) %>%
+                pivot_wider(names_from = radius_ft, values_from = all_of(g3_count_cols),
+                            names_glue = "{.value}_{radius_ft}ft"),
+              by = "station_id") %>%
+    mutate(across(all_of(as.vector(outer(g3_count_cols, paste0("_", g3_add_ft, "ft"), paste0))),
+                  ~ replace_na(.x, 0L)))
+
+  # counts by year
+  station_ped_crashes_year <- bind_rows(
+    station_ped_crashes_year,
+    g3_add_count(g3_add_near, crash_year) %>%
+      complete(station_id = station_ped_crashes$station_id, radius_ft = g3_add_ft, crash_year = g3_years) %>%
+      mutate(across(all_of(g3_count_cols), ~ replace_na(.x, 0L))) %>%
+      left_join(st_drop_geometry(station_ped_crashes) %>% select(station_id, station_name, station_line),
+                by = "station_id")) %>%
+    arrange(station_id, radius_ft, crash_year)
+
+  # circles around the stations, and flags for crashes within each distance
+  station_buffers <- bind_rows(
+    station_buffers,
+    map(g3_add_ft, function(r) {
+      g3_stations_sp %>%
+        select(station_id, station_name) %>%
+        mutate(radius_ft = r) %>%
+        st_buffer(r) %>%
+        st_transform(st_crs(station_buffers))
+    }) %>%
+      bind_rows() %>%
+      left_join(g3_add_count(g3_add_near) %>% select(station_id, radius_ft, crashes),
+                by = c("station_id", "radius_ft")) %>%
+      mutate(crashes = replace_na(crashes, 0L)))
+  for (r in g3_add_ft) {
+    pedestrian_crashes[[paste0("within_", r, "ft")]] <- pedestrian_crashes$station_dist_ft <= r
+  }
+
+  g3_radii_ft <- sort(union(g3_radii_ft, g3_add_ft))
+  rm(g3_crashes_sp, g3_stations_sp, g3_pairs, g3_add_near)
+}
+
 g3_max <- max(g3_radii_ft)
 g3_radii_text <- paste(paste(head(g3_radii_ft, -1), collapse = ", "), "and", g3_max, "feet")
 ```
