@@ -2415,12 +2415,24 @@ fx_download_year <- function(years, url_fun, cache_fun) {
 
 g7_tracts_raw <- read_portal_geojson(url_tracts_2020, file.path(data_dir, "census_tracts_2020_cache.geojson"))
 
-g7_geoid_col <- fx_find_col(g7_tracts_raw, c("^geoid20$", "^geoid"))
+# 11-digit tract GEOID (state, county and tract codes, e.g., 17031010100): the
+# first column that holds 11-digit codes (e.g., geoid20, tract_fips or tract_full);
+# otherwise built from Cook County's code (17031) and the 6-digit tract code
+# (tract_ce)
+fx_tract_geoid <- function(data) {
+  for (col in grep("^geoid|^tract_fips$|^tract_full$", names(data), value = TRUE, ignore.case = TRUE)) {
+    x <- str_remove_all(as.character(data[[col]]), "\\D")
+    if (mean(nchar(x) == 11, na.rm = TRUE) > 0.95) return(x)
+  }
+  ce_col <- fx_find_col(data, c("^tract_ce$", "^tractce"))
+  paste0("17031", str_pad(str_remove_all(as.character(data[[ce_col]]), "\\D"), 6, pad = "0"))
+}
 g7_ca_col <- fx_find_col(g7_tracts_raw, c("^commarea_n$", "^commarea$", "^community_area_number$", "^area_numbe"))
 
 g7_tracts_geo <- g7_tracts_raw %>%
-  transmute(geoid = str_pad(as.character(.data[[g7_geoid_col]]), 11, pad = "0"),
-            comarea_id = as.numeric(.data[[g7_ca_col]])) %>%
+  mutate(geoid = fx_tract_geoid(g7_tracts_raw),
+         comarea_id = as.numeric(.data[[g7_ca_col]])) %>%
+  select(geoid, comarea_id) %>%
   st_transform(3435) %>%
   filter(!is.na(comarea_id)) %>%
   distinct(geoid, .keep_all = TRUE)
