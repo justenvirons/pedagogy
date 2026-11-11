@@ -367,6 +367,13 @@ Key columns:
 - **Crash points** (`bike_crashes`): date and time; posted speed limit, traffic control, lighting, weather and road conditions; first crash type and primary and secondary contributing causes; dooring and hit-and-run flags; crash-level injuries and whether someone was killed or seriously injured (`ksi_crash`); bicyclists involved, injured, seriously injured and killed; the most severely injured bicyclist's injury, age, sex, action, visibility and location (e.g., in a bike lane); address, latitude and longitude, and community area.
 - **Community areas by year** (`bike_crashes_ca_year`): crashes, injury crashes, killed or seriously injured crashes, dooring and hit-and-run crashes, bicyclists injured, seriously injured and killed, and crashes per 10,000 residents and per square mile.
 
+### Data sources
+
+- Chicago Department of Public Health. "Population, 2020-2024." Chicago Health Atlas. Data from US Census Bureau, American Community Survey 5-year estimates. Accessed November 10, 2026. <https://chicagohealthatlas.org>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
+- City of Chicago. "Traffic Crashes - Crashes." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data>.
+- City of Chicago. "Traffic Crashes - People." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data>.
+
 ## Map
 
 ```{r}
@@ -457,6 +464,13 @@ fx_links(tribble(
 ```
 
 Key columns for bus routes and rail stations: average daily rides by day type over the latest 12 months (`avg_weekday_current`, `avg_saturday_current`, `avg_sunday_holiday_current`), average weekday rides in 2019 (`avg_weekday_baseline`), current weekday rides as a percent of 2019 (`weekday_pct_of_baseline`), and rank among all CTA bus routes or rail stations by current weekday rides (`weekday_rank`, 1 = busiest). Bus routes also have their role (`Ashland` or `connecting`), length, and miles running along the Ashland routes (`overlap_mi`); rail stations have their distance from the Ashland routes (`dist_ashland_ft`). Bus ridership is for each entire route, not only the part on Ashland Avenue.
+
+### Data sources
+
+- Chicago Department of Public Health. "Population, 2020-2024." Chicago Health Atlas. Data from US Census Bureau, American Community Survey 5-year estimates. Accessed November 10, 2026. <https://chicagohealthatlas.org>.
+- Chicago Transit Authority. "CTA General Transit Feed Specification (GTFS) Schedule Data." Accessed November 10, 2026. <https://www.transitchicago.com/developers/gtfs/>.
+- Chicago Transit Authority. "CTA Ridership." Bus and rail station ridership (1999-2026), bus routes, rail stations and rail lines. Northeastern Illinois Transportation Analytics (NITA) Data Hub. Accessed November 10, 2026. <https://datahub.nita.illinois.gov/media/datasets/cta-ridership>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
 
 ## Map
 
@@ -602,6 +616,12 @@ Key columns:
 - **Crash points** (`pedestrian_crashes`): the same crash columns as Group 1, plus pedestrians involved, injured, seriously injured and killed; the most severely injured pedestrian's injury, age, sex, action (e.g., crossing with or against the signal) and location (e.g., in a crosswalk); the nearest station (`station_name`) and distance (`station_dist_ft`); and whether the crash is within each distance of the station (`within_25ft`, ...).
 - **Stations** (`station_ped_crashes`): five-year counts within each distance, named by distance (e.g., `crashes_25ft`, `crashes_ksi_100ft`, `pedestrians_killed_100ft`), current and 2019 average weekday entries, and crashes within the largest distance per 1,000 average weekday entries (`crashes_per_1k_riders`). Counts are cumulative (crashes within 25 feet are also counted within 50 and 100 feet).
 
+### Data sources
+
+- Chicago Transit Authority. "CTA Ridership." Bus and rail station ridership (1999-2026), bus routes, rail stations and rail lines. Northeastern Illinois Transportation Analytics (NITA) Data Hub. Accessed November 10, 2026. <https://datahub.nita.illinois.gov/media/datasets/cta-ridership>.
+- City of Chicago. "Traffic Crashes - Crashes." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data>.
+- City of Chicago. "Traffic Crashes - People." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data>.
+
 ## Map
 
 ```{r}
@@ -723,6 +743,14 @@ fx_links(tribble(
 
 Key columns: motorcyclists killed (riding a motorcycle, as driver or passenger), others killed (e.g., pedestrians or people in other vehicles) and total killed; the age, sex, person type and recorded safety equipment (e.g., helmet use) of the motorcyclist(s) killed; motorcycle types; crash conditions, causes, time and location; and, by community area, motorcyclists killed per 100,000 residents.
 
+### Data sources
+
+- Chicago Department of Public Health. "Population, 2020-2024." Chicago Health Atlas. Data from US Census Bureau, American Community Survey 5-year estimates. Accessed November 10, 2026. <https://chicagohealthatlas.org>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
+- City of Chicago. "Traffic Crashes - Crashes." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if/about_data>.
+- City of Chicago. "Traffic Crashes - People." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-People/u6pd-qa9d/about_data>.
+- City of Chicago. "Traffic Crashes - Vehicles." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Transportation/Traffic-Crashes-Vehicles/68nd-jvt3/about_data>.
+
 ## Map
 
 ```{r}
@@ -827,6 +855,15 @@ fx_links(tribble(
 
 Key columns: rail stations, rail lines, rail line and track miles, bus stops (each direction counted), bus routes, bus route miles and miles of street with bus service, and their densities per square mile and per 10,000 residents; the Transit Availability Index (`ta_ind`) and its sub-indices for frequency (`freq_ind`), connectivity (`conn_ind`), proximity (`prox_ind`) and sidewalks (`walk_ind`), and the percent of area in each index class (`pct_area_ta_1`, ...); and the CCVI score, category and component ranks (1 = least, 77 = most vulnerable), `underserved`, `low_access` (index below the median community area) and `access_group`.
 
+### Data sources
+
+- Chicago Department of Public Health. "Chicago COVID-19 Community Vulnerability Index (CCVI)." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Health-Human-Services/Chicago-COVID-19-Community-Vulnerability-Index-CCV/xhc6-88s9/about_data>.
+- Chicago Department of Public Health. "Population, 2020-2024." Chicago Health Atlas. Data from US Census Bureau, American Community Survey 5-year estimates. Accessed November 10, 2026. <https://chicagohealthatlas.org>.
+- Chicago Metropolitan Agency for Planning. "Transit Availability Index, 2019." CMAP Data Hub. Accessed November 10, 2026. <https://datahub.cmap.illinois.gov/datasets/CMAPGIS::transit-availability-index-2019/about>.
+- Chicago Transit Authority. "CTA General Transit Feed Specification (GTFS) Schedule Data." Accessed November 10, 2026. <https://www.transitchicago.com/developers/gtfs/>.
+- Chicago Transit Authority. "CTA Ridership." Bus and rail station ridership (1999-2026), bus routes, rail stations and rail lines. Northeastern Illinois Transportation Analytics (NITA) Data Hub. Accessed November 10, 2026. <https://datahub.nita.illinois.gov/media/datasets/cta-ridership>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
+
 ## Map
 
 ```{r}
@@ -919,6 +956,17 @@ fx_links(tribble(
 ```
 
 Key columns (minutes): current travel time (`minutes_current`), with the Flyer (`minutes_with_flyer`) and minutes saved (`minutes_saved`); for community areas, also the fastest and slowest current times among their points, the percent of points for which the Flyer is faster (`pct_points_flyer_faster`) or Metra is the fastest current route (`pct_points_via_metra`), and whether the community area is along the proposed route (`along_route`).
+
+### Data sources
+
+- Chicago Department of Public Health. "Population, 2020-2024." Chicago Health Atlas. Data from US Census Bureau, American Community Survey 5-year estimates. Accessed November 10, 2026. <https://chicagohealthatlas.org>.
+- Chicago Transit Authority. "CTA General Transit Feed Specification (GTFS) Schedule Data." Accessed November 10, 2026. <https://www.transitchicago.com/developers/gtfs/>.
+- City of Chicago. "Boundaries - Community Areas." Chicago Data Portal. Accessed November 10, 2026. <https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Community-Areas/igwz-8jzy/about_data>.
+- Metra. "Metra GTFS Schedule Data." Accessed November 10, 2026. <https://metra.com/developers>.
+- OpenStreetMap contributors. "Chicago OpenStreetMap Extract." BBBike.org. Accessed November 10, 2026. <https://download.bbbike.org/osm/bbbike/Chicago/>.
+- Wikipedia. "O'Hare Flyer." Wikimedia Foundation. Accessed November 10, 2026. <https://en.wikipedia.org/wiki/O'Hare_Flyer>.
+
+The O'Hare Flyer's proposed route and stations were digitized from the project's published route map (*Trains* magazine, 2026) and August 2026 news coverage (see `projects_dataprep.qmd`).
 
 ## Map
 
